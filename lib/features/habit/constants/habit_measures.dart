@@ -1,7 +1,7 @@
 class HabitMeasures {
   static List<Map<String, dynamic>> measures = [
-    {'id': 0, 'name': 'count', 'symbol': '', 'type': 'unit'},
-    {'id': 1, 'name': 'times', 'symbol': 'x', 'type': 'unit'},
+    {'id': 0, 'name': 'times', 'symbol': 'x', 'type': 'unit'},
+    {'id': 1, 'name': 'count', 'symbol': '', 'type': 'unit'},
     {'id': 2, 'name': 'steps', 'symbol': 'steps', 'type': 'distance'},
     {'id': 3, 'name': 'km', 'symbol': 'km', 'type': 'distance'},
     {'id': 4, 'name': 'min', 'symbol': 'min', 'type': 'time'},

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/app/pages/home_page.dart';
 import 'package:pursuit/core/components/app_button.dart';
+import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
@@ -16,32 +17,47 @@ import 'package:pursuit/features/habit/presentation/pages/create/widgets/icon_pi
 import 'package:pursuit/features/widgets/my_card_widget.dart';
 
 class AddHabitScreen extends StatefulWidget {
-  const AddHabitScreen({super.key});
-
+  const AddHabitScreen({super.key, this.habit});
+  final Habit? habit;
   @override
   State<AddHabitScreen> createState() => _AddHabitScreenState();
 }
 
 class _AddHabitScreenState extends State<AddHabitScreen> {
+  final nameController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
   @override
   void initState() {
     super.initState();
-    context.read<HabitBloc>().add(AddHabitInitialEvent());
+    if (widget.habit != null) {
+      context.read<HabitBloc>().add(
+        UpdateHabitInitialEvent(habit: widget.habit!),
+      );
+      nameController.text = widget.habit!.name;
+    } else {
+      context.read<HabitBloc>().add(AddHabitInitialEvent());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final nameController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    return _HabitView(nameController: nameController, formKey: formKey);
+    return _HabitView(
+      nameController: nameController,
+      formKey: formKey,
+      habit: widget.habit,
+    );
   }
 }
 
 class _HabitView extends StatelessWidget {
   final TextEditingController nameController;
   final GlobalKey<FormState> formKey;
-  const _HabitView({required this.nameController, required this.formKey});
+  final Habit? habit;
+  const _HabitView({
+    required this.nameController,
+    required this.formKey,
+    required this.habit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +113,7 @@ class _HabitView extends StatelessWidget {
                             actions: [
                               MyCard(
                                 backgroundColor: backgroundColorDark,
-                                value: 'Save',
+                                value: habit != null ? 'Update' : 'Save',
                                 onTap: () => formKey.currentState!.validate()
                                     ? _saveHabit(context)
                                     : ScaffoldMessenger.of(
@@ -127,7 +143,7 @@ class _HabitView extends StatelessWidget {
                           SizedBox(
                             width: 200,
                             child: AppButton(
-                              title: 'Save',
+                              title: habit != null ? 'Update' : 'Save',
                               backgroundColor: backgroundColorDark,
                               onPressed: () => formKey.currentState!.validate()
                                   ? _saveHabit(context)
@@ -175,6 +191,8 @@ class _HabitView extends StatelessWidget {
         goalValue: state.goalValue,
         goalCount: state.goalCount,
         time: state.goalTime,
+        endDate: HelperFunctions.parseDate(state.endDate),
+        reminder: state.remainderTime,
         startDate: DateTime.now(),
         goalCompletedCount: 0,
         goalRecordCount: 0,

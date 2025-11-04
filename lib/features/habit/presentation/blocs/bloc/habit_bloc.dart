@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/functions/math_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/core/usecases/usecase.dart';
@@ -32,6 +33,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   }) : super(HabitInitial()) {
     // UI update events - only handle when state is AddHabitInitial
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
+    on<UpdateHabitInitialEvent>(_onUpdateHabitInitialEvent);
     on<HabitColorEvent>(_onHabitColorEvent);
     on<HabitNameEvent>(_onHabitNameEvent);
     on<HabitIconEvent>(_onHabitIconEvent);
@@ -62,7 +64,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
         icon: getRandomInt(HabitIcons.emojis.length - 1),
         name: '',
         habitType: 0,
-        goalCount: 10,
+        goalCount: 5,
         goalValue: 0,
         goalTime: 0,
         startDate: DateTime.now().toIso8601String(),
@@ -70,6 +72,30 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
         isExpanded: false,
         hasRemainder: false,
         remainderTime: '',
+      ),
+    );
+  }
+
+  void _onUpdateHabitInitialEvent(
+    UpdateHabitInitialEvent event,
+    Emitter<HabitState> emit,
+  ) {
+    emit(
+      AddHabitInitial(
+        color: event.habit.color,
+        icon: event.habit.icon,
+        name: event.habit.name,
+        habitType: event.habit.type,
+        goalCount: event.habit.goalCount,
+        goalValue: event.habit.goalValue,
+        goalTime: event.habit.time,
+        startDate: event.habit.startDate.toString(),
+        endDate: event.habit.endDate != null
+            ? HelperFunctions.formatDate(event.habit.endDate!)
+            : '',
+        isExpanded: event.habit.endDate != null,
+        hasRemainder: event.habit.reminder != null,
+        remainderTime: event.habit.reminder ?? '',
       ),
     );
   }
@@ -219,7 +245,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     Emitter<HabitState> emit,
   ) async {
     emit(HabitLoading());
-    
+
     final result = await deleteHabitUseCase(event.id);
     result.match(
       (failure) => emit(HabitError(failure.message)),

@@ -4,7 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/components/app_button.dart';
 import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
 
-void onDeleteHabit({required BuildContext context, required String id}) {
+void onDeleteHabit({
+  required BuildContext context,
+  required String id,
+  bool? fromHome,
+}) {
   showAdaptiveDialog(
     context: context,
     builder: (context) => AlertDialog(
@@ -23,7 +27,6 @@ void onDeleteHabit({required BuildContext context, required String id}) {
             textAlign: TextAlign.center,
           ),
         ],
-
       ),
       actionsAlignment: MainAxisAlignment.center,
       actions: [
@@ -41,7 +44,9 @@ void onDeleteHabit({required BuildContext context, required String id}) {
           backgroundColor: Colors.red.shade600,
           onPressed: () {
             context.read<HabitBloc>().add(DeleteHabitEvent(id));
-            Navigator.pop(context);
+            if (fromHome == null) {
+              Navigator.pop(context);
+            }
           },
         ),
       ],

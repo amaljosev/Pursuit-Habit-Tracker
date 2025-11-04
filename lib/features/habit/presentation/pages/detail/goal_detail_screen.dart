@@ -7,6 +7,7 @@ import 'package:pursuit/core/components/loading_widget.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
+import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
 
@@ -25,7 +26,6 @@ class GoalDetailScreen extends StatelessWidget {
               (Route<dynamic> route) => false,
             );
           }
-          
         },
         builder: (context, state) {
           if (state is HabitError) {
@@ -103,7 +103,12 @@ class GoalDetailScreen extends StatelessWidget {
                         ],
                         onSelected: (String value) {
                           if (value == 'edit') {
-                            onEdit();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    AddHabitScreen(habit: habit),
+                              ),
+                            );
                           } else if (value == 'delete') {
                             onDeleteHabit(context: context, id: habit.id);
                           }
@@ -120,12 +125,6 @@ class GoalDetailScreen extends StatelessWidget {
                           id: habit.color,
                         ),
                         value: HelperFunctions.getTypeById(habit.type),
-                      ),
-                      MyCard(
-                        backgroundColor: HelperFunctions.getColorById(
-                          id: habit.color,
-                        ),
-                        value: HelperFunctions.getTimingById(habit.time),
                       ),
                     ],
                   ),
@@ -211,6 +210,4 @@ class GoalDetailScreen extends StatelessWidget {
       ),
     );
   }
-
-  void onEdit() {}
 }

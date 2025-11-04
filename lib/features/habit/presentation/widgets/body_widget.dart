@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
-import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/goal_detail_screen.dart';
+import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
 
 SliverList buildBody(List<Habit> habits) {
   return SliverList.builder(
@@ -63,7 +62,7 @@ class ProgressTile extends StatelessWidget {
                 SlidableAction(
                   borderRadius: const BorderRadius.all(Radius.circular(20)),
                   onPressed: (context) =>
-                      context.read<HabitBloc>().add(DeleteHabitEvent(habit.id)),
+                      onDeleteHabit(context: context, id: habit.id),
                   backgroundColor: AppColors.error,
                   icon: Icons.delete,
                   label: 'Delete',
