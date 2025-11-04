@@ -5,6 +5,7 @@ import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
+import 'package:pursuit/features/habit/presentation/pages/detail/goal_detail_screen.dart';
 
 SliverList buildBody(List<Habit> habits) {
   return SliverList.builder(
@@ -30,7 +31,9 @@ class ProgressTile extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: HelperFunctions.getColorById(
+          id: habit.color,
+        ).withValues(alpha: 0.5),
         borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
       child: Stack(
@@ -44,7 +47,7 @@ class ProgressTile extends StatelessWidget {
               child: Container(
                 height: 80,
                 decoration: BoxDecoration(
-                  color: HelperFunctions.getColorById(habit.color),
+                  color: HelperFunctions.getColorById(id: habit.color),
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -97,6 +100,12 @@ class ProgressTile extends StatelessWidget {
               ),
               subtitleTextStyle: Theme.of(context).textTheme.titleSmall,
               trailing: Icon(Icons.circle_outlined, color: Colors.grey[700]),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GoalDetailScreen(habit: habit),
+                ),
+              ),
             ),
           ),
         ],

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,10 +17,9 @@ class HabitTimeWidget extends StatelessWidget {
         if (previous is AddHabitInitial && current is AddHabitInitial) {
           return previous.goalTime != current.goalTime;
         }
-        return true; 
+        return true;
       },
       builder: (context, state) {
-        log('goal time rebuild');
         if (state is AddHabitInitial) {
           return Theme(
             data: Theme.of(context).copyWith(

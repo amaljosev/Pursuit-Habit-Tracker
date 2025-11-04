@@ -85,6 +85,15 @@ class _HabitView extends StatelessWidget {
                             backgroundColor: Colors.transparent,
                             foregroundColor: Colors.black,
                             surfaceTintColor: Colors.transparent,
+                            leading: BackButton(
+                              onPressed: () => Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => HomePage(),
+                                ),
+                                (Route<dynamic> route) => false,
+                              ),
+                            ),
                             actions: [
                               MyCard(
                                 backgroundColor: backgroundColorDark,

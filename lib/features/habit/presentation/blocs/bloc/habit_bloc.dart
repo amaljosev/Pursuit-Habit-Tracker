@@ -170,7 +170,6 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   ) async {
     try {
       emit(HabitLoading());
-      await Future.delayed(Duration(seconds: 3));
       final result = await insertHabitUseCase(event.habit);
 
       result.match(
@@ -220,6 +219,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     Emitter<HabitState> emit,
   ) async {
     emit(HabitLoading());
+    
     final result = await deleteHabitUseCase(event.id);
     result.match(
       (failure) => emit(HabitError(failure.message)),

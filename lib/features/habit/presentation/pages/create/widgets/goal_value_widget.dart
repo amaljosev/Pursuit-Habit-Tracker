@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/components/app_button.dart';
@@ -39,9 +37,7 @@ class GoalValueWidget extends StatelessWidget {
               return false;
             },
             builder: (context, state) {
-              log('goal count rebuild');
               if (state is AddHabitInitial) {
-
                 return MyCard(
                   backgroundColor: backgroundColor,
                   value: state.goalCount.toString(),
@@ -180,7 +176,6 @@ class GoalValueWidget extends StatelessWidget {
               return false;
             },
             builder: (context, state) {
-              log('goal value rebuild');
               if (state is AddHabitInitial) {
                 return MyCard(
                   backgroundColor: backgroundColor,
