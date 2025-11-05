@@ -65,4 +65,21 @@ class HabitRepositoryImpl implements HabitRepository {
       return Left(DatabaseFailure(message: 'Failed to get habit: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> updateGoalCount({
+    required String id,
+    required int value,
+  }) async {
+    try {
+      await localDataSource.updateHabitField(
+        id: id,
+        fieldName: 'goalCompletedCount',
+        newValue: value,
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(DatabaseFailure(message: 'Failed to update goal count: $e'));
+    }
+  }
 }

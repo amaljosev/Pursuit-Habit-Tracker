@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
-import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
+import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 
 class ColorPickerWidget extends StatelessWidget {
   const ColorPickerWidget({super.key});

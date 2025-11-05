@@ -10,6 +10,11 @@ abstract class HabitLocalDataSource {
   Future<void> deleteHabit(String id);
   Future<void> updateHabit(HabitModel habit);
   Future<HabitModel?> getHabitById(String id);
+  Future<void> updateHabitField({
+    required String id,
+    required String fieldName,
+    required dynamic newValue,
+  });
 }
 
 class HabitLocalDataSourceImpl implements HabitLocalDataSource {
@@ -23,17 +28,17 @@ class HabitLocalDataSourceImpl implements HabitLocalDataSource {
   }
 
   Future<Database> _initDB() async {
-  try {
-    final dbPath = await getDatabasesPath();
+    try {
+      final dbPath = await getDatabasesPath();
 
-    final path = join(dbPath, 'habits.db');
+      final path = join(dbPath, 'habits.db');
 
-    final db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        log('Step 4: Creating habits table...');
-        await db.execute('''
+      final db = await openDatabase(
+        path,
+        version: 1,
+        onCreate: (db, version) async {
+          log('Step 4: Creating habits table...');
+          await db.execute('''
           CREATE TABLE $_tableName (
             id TEXT PRIMARY KEY,
             name TEXT,
@@ -62,16 +67,15 @@ class HabitLocalDataSourceImpl implements HabitLocalDataSource {
             achievements TEXT
           )
         ''');
-      },
-    );
+        },
+      );
 
-    return db;
-  } catch (e, st) {
-    log('Database initialization failed: $e\n$st');
-    rethrow;
+      return db;
+    } catch (e, st) {
+      log('Database initialization failed: $e\n$st');
+      rethrow;
+    }
   }
-}
-
 
   @override
   Future<void> insertHabit(HabitModel habit) async {
@@ -118,7 +122,11 @@ class HabitLocalDataSourceImpl implements HabitLocalDataSource {
   Future<void> deleteHabit(String id) async {
     try {
       final db = await database;
-      final count = await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
+      final count = await db.delete(
+        _tableName,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
       log('Deleted $count habit(s) with id: $id');
     } catch (e, st) {
       log('Error deleting habit: $e\n$st');
@@ -176,6 +184,28 @@ class HabitLocalDataSourceImpl implements HabitLocalDataSource {
       });
     } catch (e, st) {
       log('Error fetching habit by ID: $e\n$st');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateHabitField({
+    required String id,
+    required String fieldName,
+    required dynamic newValue,
+  }) async {
+    final db = await database;
+
+    try {
+      await db.update(
+        _tableName,
+        {fieldName: newValue},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      log('✅ Updated $fieldName for habit $id to $newValue');
+    } catch (e, st) {
+      log('❌ Failed to update $fieldName for habit $id: $e\n$st');
       rethrow;
     }
   }

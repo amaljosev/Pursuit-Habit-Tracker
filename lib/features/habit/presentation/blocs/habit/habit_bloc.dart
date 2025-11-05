@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:equatable/equatable.dart';
@@ -12,6 +13,7 @@ import 'package:pursuit/features/habit/domain/usecases/delete_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_all_habits.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_habit_by_id.dart';
 import 'package:pursuit/features/habit/domain/usecases/insert_habit.dart';
+import 'package:pursuit/features/habit/domain/usecases/update_goal_count.dart';
 import 'package:pursuit/features/habit/domain/usecases/update_habit.dart';
 
 part 'habit_event.dart';
@@ -23,6 +25,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   final UpdateHabitUseCase updateHabitUseCase;
   final DeleteHabitUseCase deleteHabitUseCase;
   final GetHabitByIdUseCase getHabitByIdUseCase;
+  final UpdateGoalCountUseCase updateGoalCountUseCase;
 
   HabitBloc({
     required this.insertHabitUseCase,
@@ -30,6 +33,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     required this.updateHabitUseCase,
     required this.deleteHabitUseCase,
     required this.getHabitByIdUseCase,
+    required this.updateGoalCountUseCase,
   }) : super(HabitInitial()) {
     // UI update events - only handle when state is AddHabitInitial
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
@@ -52,6 +56,10 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     on<UpdateHabitEvent>(_onUpdateHabit);
     on<DeleteHabitEvent>(_onDeleteHabit);
     on<GetHabitByIdEvent>(_onGetHabitById);
+
+    //Operations
+    on<GoalCountIncrementEvent>(_onCountIncrement);
+    on<GoalCountDecrementEvent>(_onCountDecrement);
   }
 
   void _onAddHabitInitialEvent(
@@ -259,6 +267,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     Emitter<HabitState> emit,
   ) async {
     emit(HabitLoading());
+    // await Future.delayed(Duration(seconds: 1));
     final result = await getHabitByIdUseCase(event.id);
 
     result.match((failure) => emit(HabitError(failure.message)), (habit) {
@@ -267,6 +276,39 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       } else {
         emit(HabitDetailLoaded(habit));
       }
+    });
+  }
+
+  FutureOr<void> _onCountIncrement(
+    GoalCountIncrementEvent event,
+    Emitter<HabitState> emit,
+  ) async {
+    emit(HabitLoading());
+    // await Future.delayed(Duration(seconds: 1));
+    final UpdateGoalCountParams params = UpdateGoalCountParams(
+      id: event.id,
+      value: event.value,
+    );
+    final result = await updateGoalCountUseCase(params);
+
+    result.match((failure) => emit(HabitError(failure.message)), (_) {
+      emit(HabitCountUpdateSuccess('Count incremented'));
+    });
+  }
+  FutureOr<void> _onCountDecrement(
+    GoalCountDecrementEvent event,
+    Emitter<HabitState> emit,
+  ) async {
+    emit(HabitLoading());
+    // await Future.delayed(Duration(seconds: 1));
+    final UpdateGoalCountParams params = UpdateGoalCountParams(
+      id: event.id,
+      value: event.value,
+    );
+    final result = await updateGoalCountUseCase(params);
+
+    result.match((failure) => emit(HabitError(failure.message)), (_) {
+      emit(HabitCountUpdateSuccess('Count decremented'));
     });
   }
 }

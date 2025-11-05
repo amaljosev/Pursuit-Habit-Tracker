@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pursuit/core/components/app_button.dart';
 
 class ErrorScreenWidget extends StatelessWidget {
-  const ErrorScreenWidget({super.key, this.onTap});
-  final void Function()? onTap;
+  const ErrorScreenWidget({super.key, this.onRetry});
+  final void Function()? onRetry;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -20,7 +20,7 @@ class ErrorScreenWidget extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
-            if (onTap != null) AppButton(title: 'Retry'),
+            if (onRetry != null) AppButton(title: 'Retry'),
           ],
         ),
       ),

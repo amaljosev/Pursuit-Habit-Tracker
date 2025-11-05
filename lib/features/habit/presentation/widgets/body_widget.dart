@@ -102,7 +102,7 @@ class ProgressTile extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => GoalDetailScreen(habit: habit),
+                  builder: (context) => GoalDetailScreen(habitId: habit.id),
                 ),
               ),
             ),

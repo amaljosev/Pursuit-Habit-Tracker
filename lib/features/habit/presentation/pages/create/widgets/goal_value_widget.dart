@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/components/app_button.dart';
 import 'package:pursuit/features/habit/constants/habit_measures.dart';
-import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
+import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
 
 class GoalValueWidget extends StatelessWidget {

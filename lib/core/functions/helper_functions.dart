@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
-import 'package:pursuit/features/habit/constants/habit_category.dart';
 import 'package:pursuit/features/habit/constants/habit_icons.dart';
 import 'package:pursuit/features/habit/constants/habit_measures.dart';
 import 'package:pursuit/features/habit/constants/habit_timings.dart';
+import 'package:pursuit/features/habit/constants/habit_types.dart';
 
 class HelperFunctions {
   static String getEmojiById(int id) {
@@ -32,7 +32,7 @@ class HelperFunctions {
 
   static String getTypeById(int id) {
     try {
-      return HabitCategory.categories.firstWhere(
+      return HabitTypes.types.firstWhere(
             (emoji) => emoji['id'] == id,
           )['name'] ??
           '❓';

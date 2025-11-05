@@ -5,7 +5,7 @@ import 'package:pursuit/core/components/app_button.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
-import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
+import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/color_picker.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/goal_end_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/goal_time_widget.dart';
@@ -41,10 +41,13 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return _HabitView(
-      nameController: nameController,
-      formKey: formKey,
-      habit: widget.habit,
+    return PopScope(
+      canPop: false,
+      child: _HabitView(
+        nameController: nameController,
+        formKey: formKey,
+        habit: widget.habit,
+      ),
     );
   }
 }

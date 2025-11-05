@@ -6,11 +6,13 @@ sealed class HabitEvent extends Equatable {
   @override
   List<Object> get props => [];
 }
+
 final class AddHabitInitialEvent extends HabitEvent {
   const AddHabitInitialEvent();
   @override
   List<Object> get props => [];
 }
+
 final class UpdateHabitInitialEvent extends HabitEvent {
   final Habit habit;
   const UpdateHabitInitialEvent({required this.habit});
@@ -105,6 +107,7 @@ final class HabitRemainderEvent extends HabitEvent {
   @override
   List<Object> get props => [remainderTime];
 }
+
 /// 🟢 Add new habit
 final class AddHabitEvent extends HabitEvent {
   final Habit habit;
@@ -142,4 +145,22 @@ final class GetHabitByIdEvent extends HabitEvent {
 
   @override
   List<Object> get props => [id];
+}
+
+class GoalCountIncrementEvent extends HabitEvent {
+  final String id;
+  final int value;
+  const GoalCountIncrementEvent({required this.id, required this.value});
+
+  @override
+  List<Object> get props => [id, value];
+}
+
+class GoalCountDecrementEvent extends HabitEvent {
+  final String id;
+  final int value;
+  const GoalCountDecrementEvent({required this.id, required this.value});
+
+  @override
+  List<Object> get props => [id, value];
 }

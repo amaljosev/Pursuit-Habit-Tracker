@@ -1,10 +1,8 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/features/habit/constants/habit_types.dart';
-import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
+import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 
 class HabitTypeWidget extends StatelessWidget {
   const HabitTypeWidget({super.key, required this.bgColor});
@@ -14,7 +12,6 @@ class HabitTypeWidget extends StatelessWidget {
     return BlocBuilder<HabitBloc, HabitState>(
       buildWhen: (previous, current) {
         if (previous is AddHabitInitial && current is AddHabitInitial) {
-          log(current.habitType.toString());
           return previous.habitType != current.habitType;
         }
         return false;

@@ -8,4 +8,8 @@ abstract class HabitRepository {
   Future<Either<Failure, void>> deleteHabit(String id);
   Future<Either<Failure, void>> updateHabit(Habit habit);
   Future<Either<Failure, Habit?>> getHabitById(String id);
+  Future<Either<Failure, void>> updateGoalCount({
+    required String id,
+    required int value,
+  });
 }

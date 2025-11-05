@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pursuit/features/habit/presentation/blocs/bloc/habit_bloc.dart';
-import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
+import 'package:pursuit/core/components/error_widget.dart';
+import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/goals_empty_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/header_widget.dart';
@@ -36,7 +36,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
               }
             },
             builder: (context, state) {
-              if (state is HabitLoading) {
+              if (state is HabitLoading ||
+                  state is AddHabitInitial ||
+                  state is HabitDetailLoaded) {
                 return const Center(child: CircularProgressIndicator());
               } else if (state is HabitLoaded) {
                 final habits = state.habits;
@@ -47,17 +49,18 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   slivers: [buildHeader(size, context), buildBody(habits)],
                 );
               } else if (state is HabitError) {
-                return Center(child: Text(state.message));
+                return ErrorScreenWidget(
+                  onRetry: () =>
+                      context.read<HabitBloc>().add(GetAllHabitsEvent()),
+                );
               } else {
-                return const GoalsEmptyWidget();
+                return SizedBox.shrink();
               }
             },
           ),
           FloatingActionButton(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const AddHabitScreen()),
-              );
+              Navigator.of(context).pushNamed('/add');
             },
             child: const Icon(Icons.add),
           ),
