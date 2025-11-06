@@ -17,5 +17,6 @@ class HabitMeasures {
     {'id': 14, 'name': 'sessions', 'symbol': 'sessions', 'type': 'unit'},
     {'id': 15, 'name': 'days', 'symbol': 'days', 'type': 'time'},
     {'id': 16, 'name': 'money', 'symbol': '₹', 'type': 'money'},
+    {'id': 17, 'name': 'meter', 'symbol': 'm', 'type': 'distance'},
   ];
 }

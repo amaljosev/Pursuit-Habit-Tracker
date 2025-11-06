@@ -58,8 +58,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     on<GetHabitByIdEvent>(_onGetHabitById);
 
     //Operations
-    on<GoalCountIncrementEvent>(_onCountIncrement);
-    on<GoalCountDecrementEvent>(_onCountDecrement);
+    on<GoalCountUpdateEvent>(_onCountIncrement);
   }
 
   void _onAddHabitInitialEvent(
@@ -280,35 +279,18 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   }
 
   FutureOr<void> _onCountIncrement(
-    GoalCountIncrementEvent event,
+    GoalCountUpdateEvent event,
     Emitter<HabitState> emit,
   ) async {
-    emit(HabitLoading());
-    // await Future.delayed(Duration(seconds: 1));
-    final UpdateGoalCountParams params = UpdateGoalCountParams(
-      id: event.id,
-      value: event.value,
+    final result = await updateGoalCountUseCase(
+      UpdateGoalCountParams(id: event.id, value: event.value),
     );
-    final result = await updateGoalCountUseCase(params);
 
-    result.match((failure) => emit(HabitError(failure.message)), (_) {
-      emit(HabitCountUpdateSuccess('Count incremented'));
-    });
-  }
-  FutureOr<void> _onCountDecrement(
-    GoalCountDecrementEvent event,
-    Emitter<HabitState> emit,
-  ) async {
-    emit(HabitLoading());
-    // await Future.delayed(Duration(seconds: 1));
-    final UpdateGoalCountParams params = UpdateGoalCountParams(
-      id: event.id,
-      value: event.value,
+    result.match(
+      (failure) => emit(HabitError(failure.message)),
+      (_) => emit(HabitCountUpdateSuccess(event.value.toDouble())),
     );
-    final result = await updateGoalCountUseCase(params);
-
-    result.match((failure) => emit(HabitError(failure.message)), (_) {
-      emit(HabitCountUpdateSuccess('Count decremented'));
-    });
   }
+
+  
 }

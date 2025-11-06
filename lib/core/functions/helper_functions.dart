@@ -51,6 +51,18 @@ class HelperFunctions {
       return '❓';
     }
   }
+
+  static String getMeasureTypeById(int id) {
+    try {
+      return HabitMeasures.measures.firstWhere(
+            (emoji) => emoji['id'] == id,
+          )['type'] ??
+          '❓';
+    } catch (e) {
+      return '❓';
+    }
+  }
+
   static String getTimingById(int id) {
     try {
       return HabitTimings.times.firstWhere(
@@ -61,26 +73,26 @@ class HelperFunctions {
       return '❓';
     }
   }
+
   static DateTime? parseDate(String dateString) {
-  try {
-    final parts = dateString.split('-');
-    if (parts.length != 3) return null;
+    try {
+      final parts = dateString.split('-');
+      if (parts.length != 3) return null;
 
-    final day = int.parse(parts[0]);
-    final month = int.parse(parts[1]);
-    final year = int.parse(parts[2]);
+      final day = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final year = int.parse(parts[2]);
 
-    return DateTime(year, month, day);
-  } catch (e) {
-    debugPrint('Error parsing date: $e');
-    return null;
+      return DateTime(year, month, day);
+    } catch (e) {
+      debugPrint('Error parsing date: $e');
+      return null;
+    }
   }
-}
-static String formatDate(DateTime date) {
-  String day = date.day.toString().padLeft(2, '0');
-  String month = date.month.toString().padLeft(2, '0');
-  return "$day-$month-${date.year}";
-}
 
-
+  static String formatDate(DateTime date) {
+    String day = date.day.toString().padLeft(2, '0');
+    String month = date.month.toString().padLeft(2, '0');
+    return "$day-$month-${date.year}";
+  }
 }

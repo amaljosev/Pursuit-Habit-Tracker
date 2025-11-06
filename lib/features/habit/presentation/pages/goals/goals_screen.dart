@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/components/error_widget.dart';
@@ -15,6 +14,8 @@ class GoalsScreen extends StatefulWidget {
 }
 
 class _GoalsScreenState extends State<GoalsScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _valueCtrl = TextEditingController();
   @override
   void initState() {
     context.read<HabitBloc>().add(GetAllHabitsEvent());
@@ -34,6 +35,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
               if (state is HabitOperationSuccess) {
                 context.read<HabitBloc>().add(GetAllHabitsEvent());
               }
+              if (state is HabitCountUpdateSuccess) {
+                context.read<HabitBloc>().add(GetAllHabitsEvent());
+              }
             },
             builder: (context, state) {
               if (state is HabitLoading ||
@@ -46,7 +50,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   return const GoalsEmptyWidget();
                 }
                 return CustomScrollView(
-                  slivers: [buildHeader(size, context), buildBody(habits)],
+                  slivers: [
+                    buildHeader(size, context),
+                    buildBody(
+                      habits: habits,
+                      formKey: _formKey,
+                      valueCtrl: _valueCtrl,
+                    ),
+                  ],
                 );
               } else if (state is HabitError) {
                 return ErrorScreenWidget(

@@ -115,9 +115,8 @@ class HabitDetailLoaded extends HabitState {
   List<Object> get props => [habit];
 }
 class HabitCountUpdateSuccess extends HabitState {
-  final String message;
-  const HabitCountUpdateSuccess(this.message);
-
+  final double updatedCount;
+  const HabitCountUpdateSuccess(this.updatedCount);
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [updatedCount];
 }

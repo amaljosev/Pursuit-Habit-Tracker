@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
+import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/goal_detail_screen.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
+import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
 
-SliverList buildBody(List<Habit> habits) {
+SliverList buildBody({
+  required List<Habit> habits,
+  required GlobalKey<FormState> formKey,
+  required TextEditingController valueCtrl,
+}) {
   return SliverList.builder(
     itemBuilder: (context, index) => Padding(
       padding: const EdgeInsets.only(bottom: 15),
-      child: ProgressTile(habit: habits[index]),
+      child: ProgressTile(
+        habit: habits[index],
+        formKey: formKey,
+        valueCtrl: valueCtrl,
+      ),
     ),
 
     itemCount: habits.length,
@@ -19,48 +30,62 @@ SliverList buildBody(List<Habit> habits) {
 
 class ProgressTile extends StatelessWidget {
   final Habit habit;
+  final GlobalKey<FormState> formKey;
+  final TextEditingController valueCtrl;
 
-  const ProgressTile({super.key, required this.habit});
+  const ProgressTile({
+    super.key,
+    required this.habit,
+    required this.formKey,
+    required this.valueCtrl,
+  });
 
   @override
   Widget build(BuildContext context) {
     final double progress = (habit.goalCount > 0)
-        ? habit.goalCompletedCount / habit.goalCount
-        : 0;
+        ? (habit.goalCompletedCount / habit.goalCount).clamp(0.0, 1.0)
+        : 0.0;
+
+    final baseColor = HelperFunctions.getColorById(id: habit.color);
 
     return Container(
       decoration: BoxDecoration(
-        color: HelperFunctions.getColorById(
-          id: habit.color,
-        ).withValues(alpha: 0.5),
-        borderRadius: BorderRadius.all(Radius.circular(12)),
+        color: baseColor.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FractionallySizedBox(
-              widthFactor: progress,
-
-              child: Container(
-                height: 80,
-                decoration: BoxDecoration(
-                  color: HelperFunctions.getColorById(id: habit.color),
-                  borderRadius: BorderRadius.circular(12),
+          /// Animated progress background
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: progress),
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: FractionallySizedBox(
+                  widthFactor: value,
+                  child: Container(
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: baseColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
 
-          // Foreground content
+          /// Foreground content
           Slidable(
             endActionPane: ActionPane(
               extentRatio: 0.2,
               motion: const DrawerMotion(),
               children: [
                 SlidableAction(
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  borderRadius: BorderRadius.circular(12),
                   onPressed: (context) =>
                       onDeleteHabit(context: context, id: habit.id),
                   backgroundColor: AppColors.error,
@@ -90,15 +115,57 @@ class ProgressTile extends StatelessWidget {
               ),
               title: Text(
                 habit.name,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
-                "${habit.goalCompletedCount} of ${habit.goalCount} completed",
+                habit.goalCompletedCount >= habit.goalCount
+                    ? 'Today’s goal achieved'
+                    : "${habit.goalCompletedCount} of ${habit.goalCount} completed",
+                style: Theme.of(context).textTheme.titleSmall,
               ),
-              subtitleTextStyle: Theme.of(context).textTheme.titleSmall,
-              trailing: Icon(Icons.circle_outlined, color: Colors.grey[700]),
+              trailing: habit.goalCompletedCount >= habit.goalCount
+                  ? Image.asset(
+                      'assets/img/success_home.png',
+                      height: 40,
+                      width: 40,
+                    )
+                  : GestureDetector(
+                      onTap: () async {
+                        valueCtrl.text = habit.goalCount > 2
+                            ? (habit.goalCount - 2).toString()
+                            : '1';
+                        final result = await numberInputField(
+                          context: context,
+                          formKey: formKey,
+                          controller: valueCtrl,
+                          backgroundColor:
+                              HelperFunctions.getColorById(id: habit.color, isDark: true),
+                              goalCount: habit.goalCount
+                        );
+                        if (result != null && result.isNotEmpty) {
+                          if (context.mounted) {
+                            final int val = int.parse(result);
+                            context.read<HabitBloc>().add(
+                              GoalCountUpdateEvent(
+                                id: habit.id,
+                                value: habit.goalCompletedCount + val,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: Icon(
+                        Icons.add_circle_outline_sharp,
+                        size: 30,
+                        color: HelperFunctions.getColorById(
+                          id: habit.color,
+                          isDark: true,
+                        ),
+                      ),
+                    ),
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(

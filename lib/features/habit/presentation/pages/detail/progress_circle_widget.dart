@@ -1,180 +1,163 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 
-class WaterFillGlassProgress extends StatefulWidget {
+class AnimatedRoundedProgress extends StatefulWidget {
   final double totalValue;
-  final double currentValue;
-  final double width;
-  final double height;
+  final double completedValue;
   final Color color;
-  final Color backgroundColor;
 
-  const WaterFillGlassProgress({
+  const AnimatedRoundedProgress({
     super.key,
     required this.totalValue,
-    required this.currentValue,
+    required this.completedValue,
     required this.color,
-    this.backgroundColor = Colors.blue,
-    this.width = 150,
-    this.height = 250,
   });
 
   @override
-  State<WaterFillGlassProgress> createState() => _WaterFillGlassProgressState();
+  AnimatedRoundedProgressState createState() => AnimatedRoundedProgressState();
 }
 
-class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
+class AnimatedRoundedProgressState extends State<AnimatedRoundedProgress>
     with SingleTickerProviderStateMixin {
-  late AnimationController _waveController;
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  double _oldCompleted = 0;
 
   @override
   void initState() {
     super.initState();
-    _waveController = AnimationController(
+    _oldCompleted = widget.completedValue;
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
+      duration: const Duration(milliseconds: 600),
+    );
+    _animation = Tween<double>(
+      begin: _oldCompleted,
+      end: widget.completedValue,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(covariant AnimatedRoundedProgress oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.completedValue != oldWidget.completedValue) {
+      _oldCompleted = oldWidget.completedValue;
+      _animation = Tween<double>(
+        begin: _oldCompleted,
+        end: widget.completedValue,
+      ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+      _controller
+        ..value = 0
+        ..forward();
+    }
   }
 
   @override
   void dispose() {
-    _waveController.dispose();
+    _controller.dispose();
     super.dispose();
+  }
+
+  /// Helper function to generate a lighter version of the user's color
+  Color _getLightShade(Color color) {
+    final hsl = HSLColor.fromColor(color);
+    final lighter = hsl.withLightness((hsl.lightness + 0.6).clamp(0.0, 1.0));
+    return lighter.toColor();
   }
 
   @override
   Widget build(BuildContext context) {
+    final total = widget.totalValue;
+    final backgroundColor = _getLightShade(widget.color);
+
     return AnimatedBuilder(
-      animation: _waveController,
+      animation: _animation,
       builder: (context, child) {
-        final progress = (widget.currentValue / widget.totalValue).clamp(0.0, 1.0);
+        double current = _animation.value;
+        double percent = (total > 0) ? (current / total).clamp(0.0, 1.0) : 0.0;
+
         return CustomPaint(
-          painter: _GlassPainter(
-            progress: progress,
-            wavePhase: _waveController.value * 2 * pi,
-            color: widget.color,
-            backgroundColor: widget.backgroundColor,
+          painter: _CircleProgressPainter(
+            backgroundColor: backgroundColor,
+            progressColor: widget.color,
+            strokeWidth: 20,
+            percent: percent,
           ),
-          size: Size(widget.width, widget.height),
+          child: SizedBox(
+            width: 300,
+            height: 300,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "${(percent * 100).toStringAsFixed(0)}%",
+                    style:Theme.of(context).textTheme.displayMedium!.copyWith(
+                    fontWeight: FontWeight.bold,color: widget.color
+                  ),
+                  ),
+                  Text('Completed',style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                    fontWeight: FontWeight.bold,color: widget.color
+                  ),)
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
   }
 }
 
-class _GlassPainter extends CustomPainter {
-  final double progress;
-  final double wavePhase;
-  final Color color;
+class _CircleProgressPainter extends CustomPainter {
   final Color backgroundColor;
+  final Color progressColor;
+  final double strokeWidth;
+  final double percent;
 
-  _GlassPainter({
-    required this.progress,
-    required this.wavePhase,
-    required this.color,
+  _CircleProgressPainter({
     required this.backgroundColor,
+    required this.progressColor,
+    required this.strokeWidth,
+    required this.percent,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double glassTopWidth = size.width * 0.9;
-    final double glassBottomWidth = size.width * 0.6;
-    final double glassHeight = size.height * 0.9;
-    final double radius = 16.0;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width / 2) - (strokeWidth / 2);
 
-    // Create a curved glass shape
-    final Path glassPath = Path()
-      ..moveTo((size.width - glassTopWidth) / 2 + radius, 0)
-      ..lineTo((size.width + glassTopWidth) / 2 - radius, 0)
-      ..quadraticBezierTo(
-        (size.width + glassTopWidth) / 2,
-        0,
-        (size.width + glassTopWidth) / 2,
-        radius,
-      )
-      ..lineTo((size.width + glassBottomWidth) / 2, glassHeight - radius)
-      ..quadraticBezierTo(
-        (size.width + glassBottomWidth) / 2,
-        glassHeight,
-        (size.width + glassBottomWidth) / 2 - radius,
-        glassHeight,
-      )
-      ..lineTo((size.width - glassBottomWidth) / 2 + radius, glassHeight)
-      ..quadraticBezierTo(
-        (size.width - glassBottomWidth) / 2,
-        glassHeight,
-        (size.width - glassBottomWidth) / 2,
-        glassHeight - radius,
-      )
-      ..lineTo((size.width - glassTopWidth) / 2, radius)
-      ..quadraticBezierTo(
-        (size.width - glassTopWidth) / 2,
-        0,
-        (size.width - glassTopWidth) / 2 + radius,
-        0,
-      )
-      ..close();
-
-    // Glass outline
-    final borderPaint = Paint()
-      ..color = Colors.blueGrey.shade300.withOpacity(0.8)
+    final backgroundPaint = Paint()
+      ..color = backgroundColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    canvas.drawPath(glassPath, borderPaint);
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
 
-    // Clip to glass shape
-    canvas.save();
-    canvas.clipPath(glassPath);
+    final progressPaint = Paint()
+      ..color = progressColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
 
-    // Background (glass inner)
-    final bgPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          backgroundColor.withOpacity(0.2),
-          backgroundColor.withOpacity(0.05),
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawPath(glassPath, bgPaint);
+    // Draw background circle
+    canvas.drawCircle(center, radius, backgroundPaint);
 
-    // Draw water wave
-    final wavePaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          color.withOpacity(0.4),
-          color.withOpacity(0.6),
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
-    final Path wavePath = Path();
-    final double baseHeight = glassHeight * (1 - progress);
-    const double waveAmplitude = 6.0;
-    final double waveLength = size.width / 1.5;
-
-    wavePath.moveTo(0, baseHeight);
-    for (double x = 0; x <= size.width; x++) {
-      final y = baseHeight + sin((x / waveLength * 2 * pi) + wavePhase) * waveAmplitude;
-      wavePath.lineTo(x, y);
-    }
-    wavePath.lineTo(size.width, glassHeight);
-    wavePath.lineTo(0, glassHeight);
-    wavePath.close();
-
-    canvas.drawPath(wavePath, wavePaint);
-    canvas.restore();
-
-    // Glass highlight (light reflection)
-    final highlight = Paint()
-      ..color = Colors.white.withOpacity(0.3)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-    canvas.drawPath(glassPath, highlight);
+    // Draw progress arc
+    double sweepAngle = 2 * 3.141592653589793 * percent;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -3.141592653589793 / 2,
+      sweepAngle,
+      false,
+      progressPaint,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _GlassPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.wavePhase != wavePhase;
+  bool shouldRepaint(covariant _CircleProgressPainter old) {
+    return old.percent != percent ||
+        old.progressColor != progressColor ||
+        old.backgroundColor != backgroundColor ||
+        old.strokeWidth != strokeWidth;
+  }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pursuit/core/components/app_button.dart';
 import 'package:pursuit/features/habit/constants/habit_measures.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
+import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
 
 class GoalValueWidget extends StatelessWidget {
@@ -43,116 +43,11 @@ class GoalValueWidget extends StatelessWidget {
                   value: state.goalCount.toString(),
                   onTap: () async {
                     valueCtrl.text = state.goalCount.toString();
-                    final result = await showModalBottomSheet(
+                    final result = await numberInputField(
                       context: context,
-                      isScrollControlled: true,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                      ),
-                      builder: (context) {
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).viewInsets.bottom,
-                            left: 20,
-                            right: 20,
-                            top: 20,
-                          ),
-                          child: Form(
-                            key: formKey,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              spacing: 20,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      "Enter value (Count)",
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleMedium,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.close),
-                                      onPressed: () => Navigator.pop(context),
-                                    ),
-                                  ],
-                                ),
-                                TextFormField(
-                                  controller: valueCtrl,
-                                  keyboardType: TextInputType.number,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  decoration: InputDecoration(
-                                    hintText: "eg: 20",
-                                    filled: true,
-                                    fillColor: backgroundColor.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                      horizontal: 16,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return null;
-                                    }
-                                    final numberRegex = RegExp(r'^\d*\.?\d+$');
-                                    if (!numberRegex.hasMatch(value.trim())) {
-                                      return 'Enter a valid number';
-                                    }
-                                    final number = int.parse(value);
-                                    if (number < 1) {
-                                      return 'Minimum 1 is required';
-                                    }
-
-                                    if (value.length > 5) {
-                                      return 'Number is too long';
-                                    }
-
-                                    return null;
-                                  },
-                                  onFieldSubmitted: (value) {
-                                    if (formKey.currentState!.validate()) {
-                                      Navigator.pop(context, value);
-                                    }
-                                  },
-                                ),
-
-                                SafeArea(
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: AppButton(
-                                          backgroundColor: backgroundColor,
-                                          title: 'Save',
-                                          onPressed: () {
-                                            if (formKey.currentState!
-                                                .validate()) {
-                                              Navigator.pop(
-                                                context,
-                                                valueCtrl.text,
-                                              );
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                      formKey: formKey,
+                      backgroundColor: backgroundColor,
+                      controller: valueCtrl,
                     );
                     if (result != null && result.isNotEmpty) {
                       if (context.mounted) {

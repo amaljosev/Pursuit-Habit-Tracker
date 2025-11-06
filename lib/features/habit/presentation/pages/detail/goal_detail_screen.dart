@@ -9,7 +9,9 @@ import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/progress_circle_widget.dart';
+import 'package:pursuit/features/habit/presentation/pages/detail/widgets/glass_animation_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
+import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
 
 class GoalDetailScreen extends StatefulWidget {
@@ -21,6 +23,8 @@ class GoalDetailScreen extends StatefulWidget {
 }
 
 class _GoalDetailScreenState extends State<GoalDetailScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _valueCtrl = TextEditingController();
   @override
   void initState() {
     context.read<HabitBloc>().add(GetHabitByIdEvent(widget.habitId));
@@ -54,143 +58,10 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             }
             if (state is HabitDetailLoaded) {
               final Habit habit = state.habit;
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      HelperFunctions.getColorById(id: habit.color),
-                      Colors.white,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    spacing: 20,
-                    children: [
-                      AppBar(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.black,
-                        surfaceTintColor: Colors.transparent,
-                        leading: BackButton(
-                          onPressed: () => Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => HomePage(),
-                            ),
-                            (Route<dynamic> route) => false,
-                          ),
-                        ),
-                        title: Text(
-                          habit.name,
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        actions: [OptionsWidget(habit: habit)],
-                      ),
-                      MyCard(
-                        backgroundColor: HelperFunctions.getColorById(
-                          id: habit.color,
-                          isDark: true,
-                        ),
-                        value:
-                            "Goal to ${HelperFunctions.getTypeById(habit.type)}",
-                      ),
-              
-                      Stack(
-                        alignment: AlignmentGeometry.center,
-                        children: [
-                          // AnimatedCircularProgress(
-                          //   totalValue: habit.goalCount.toDouble(),
-                          //   currentValue: habit.goalCompletedCount.toDouble(),
-                          //   color: HelperFunctions.getColorById(
-                          //     id: habit.color,
-                          //     isDark: true,
-                          //   ),
-                          //   strokeWidth: 20.0,
-                          //   size: 300,
-                          // ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            spacing: 20,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                spacing: 20,
-                                children: [
-                                  IconButton(
-                                    onPressed: () =>
-                                        context.read<HabitBloc>().add(
-                                          GoalCountIncrementEvent(
-                                            id: habit.id,
-                                            value:
-                                                habit.goalCompletedCount - 1,
-                                          ),
-                                        ),
-                                    icon: Icon(Icons.remove),
-                                  ),
-                                  Text(
-                                    HelperFunctions.getEmojiById(habit.icon),
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.displayLarge,
-                                  ),
-                                  IconButton(
-                                    onPressed: () =>
-                                        context.read<HabitBloc>().add(
-                                          GoalCountIncrementEvent(
-                                            id: habit.id,
-                                            value:
-                                                habit.goalCompletedCount + 1,
-                                          ),
-                                        ),
-                                    icon: Icon(Icons.add),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-              
-                      WaterFillGlassProgress(
-                        totalValue: habit.goalCount.toDouble(),
-                        currentValue: habit.goalCompletedCount.toDouble(),
-                        color: Colors.blue,
-                      ),
-                      Text(
-                        "${habit.goalCompletedCount} ${HelperFunctions.getMeasureById(habit.goalValue)} / ${habit.goalCount} ${HelperFunctions.getMeasureById(habit.goalValue)}",
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: HelperFunctions.getColorById(
-                              id: habit.color,
-                              isDark: true,
-                            ),
-                            child: Icon(Icons.refresh),
-                          ),
-                          AppButton(
-                            title: 'Add',
-                            backgroundColor: HelperFunctions.getColorById(
-                              id: habit.color,
-                              isDark: true,
-                            ),
-                          ),
-                          CircleAvatar(
-                            backgroundColor: HelperFunctions.getColorById(
-                              id: habit.color,
-                              isDark: true,
-                            ),
-                            child: Icon(Icons.check),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+              return GoalDetailContent(
+                habit: habit,
+                formKey: _formKey,
+                valueCtrl: _valueCtrl,
               );
             } else {
               return const SizedBox.shrink();
@@ -198,6 +69,201 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+class GoalDetailContent extends StatelessWidget {
+  const GoalDetailContent({
+    super.key,
+    required this.habit,
+    required this.formKey,
+    required this.valueCtrl,
+  });
+  final Habit habit;
+  final GlobalKey<FormState> formKey;
+  final TextEditingController valueCtrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = HelperFunctions.getColorById(id: habit.color, isDark: true);
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            HelperFunctions.getColorById(id: habit.color),
+            Colors.white,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          spacing: 20,
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.black,
+              surfaceTintColor: Colors.transparent,
+              leading: BackButton(
+                onPressed: () => Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+                  (route) => false,
+                ),
+              ),
+              title: Text(
+                habit.name,
+                style: const TextStyle(color: Colors.black),
+                maxLines: 2,
+              ),
+              actions: [OptionsWidget(habit: habit)],
+            ),
+            Text(
+              HelperFunctions.getEmojiById(habit.icon),
+              style: Theme.of(context).textTheme.displayLarge,
+            ),
+
+            // 👇 Progress section separated
+            ProgressSection(habit: habit, color: color),
+
+            Form(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                    onTap: () => context.read<HabitBloc>().add(
+                      GoalCountUpdateEvent(id: habit.id, value: 0),
+                    ),
+                    child: CircleAvatar(
+                      backgroundColor: color.withValues(alpha: 0.2),
+                      child: Icon(Icons.refresh, color: color),
+                    ),
+                  ),
+                  AppButton(
+                    title: 'Add',
+                    backgroundColor: color,
+                    onPressed: () async {
+                      valueCtrl.text = habit.goalCount > 2
+                          ? (habit.goalCount - 2).toString()
+                          : '1';
+                      final result = await numberInputField(
+                        context: context,
+                        formKey: formKey,
+                        controller: valueCtrl,
+                        goalCount: habit.goalCount,
+                        backgroundColor: HelperFunctions.getColorById(
+                          id: habit.color,
+                          isDark: true,
+                        ),
+                      );
+                      if (result != null && result.isNotEmpty) {
+                        if (context.mounted) {
+                          final int val = int.parse(result);
+                          context.read<HabitBloc>().add(
+                            GoalCountUpdateEvent(
+                              id: habit.id,
+                              value: habit.goalCompletedCount + val,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                  GestureDetector(
+                    onTap: () => context.read<HabitBloc>().add(
+                      GoalCountUpdateEvent(
+                        id: habit.id,
+                        value: habit.goalCount,
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      backgroundColor: color.withValues(alpha: 0.2),
+                      child: Icon(Icons.check, color: color),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ProgressSection extends StatelessWidget {
+  final Habit habit;
+  final Color color;
+
+  const ProgressSection({super.key, required this.habit, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<HabitBloc, HabitState, double>(
+      selector: (state) {
+        if (state is HabitDetailLoaded) {
+          return state.habit.goalCompletedCount.toDouble();
+        } else if (state is HabitCountUpdateSuccess) {
+          return state.updatedCount.toDouble();
+        }
+        return habit.goalCompletedCount.toDouble();
+      },
+      builder: (context, completedValue) {
+        final int completedCount = completedValue.toInt();
+        final goalType = HelperFunctions.getMeasureTypeById(habit.goalValue);
+        final goalValue = HelperFunctions.getMeasureById(habit.goalValue);
+        return Column(
+          children: [
+            goalType == 'volume'
+                ? WaterFillGlassProgress(
+                    totalValue: habit.goalCount.toDouble(),
+                    currentValue: habit.goalCompletedCount.toDouble(),
+                    color: color,
+                  )
+                : AnimatedRoundedProgress(
+                    totalValue: habit.goalCount.toDouble(),
+                    completedValue: completedValue,
+                    color: color,
+                  ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 20,
+              children: [
+                MyCard(
+                  onTap: () => context.read<HabitBloc>().add(
+                    GoalCountUpdateEvent(
+                      id: habit.id,
+                      value: completedCount - 1,
+                    ),
+                  ),
+                  value: '-1 $goalValue',
+                  backgroundColor: color.withValues(alpha: 0.4),
+                  textStyle: TextStyle(color: color),
+                ),
+                Text(
+                  "${completedValue.toInt()} / "
+                  "${habit.goalCount} $goalValue",
+                ),
+                MyCard(
+                  onTap: () => context.read<HabitBloc>().add(
+                    GoalCountUpdateEvent(
+                      id: habit.id,
+                      value: completedCount + 1,
+                    ),
+                  ),
+                  value: '+1 $goalValue',
+                  backgroundColor: color.withValues(alpha: 0.4),
+                  textStyle: TextStyle(color: color),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -253,96 +319,6 @@ class OptionsWidget extends StatelessWidget {
           onDeleteHabit(context: context, id: habit.id);
         }
       },
-    );
-  }
-}
-
-class AnimatedCircularProgress extends StatefulWidget {
-  final double totalValue;
-  final double currentValue;
-  final Color color;
-  final double strokeWidth;
-  final double size;
-  final Color backgroundColor;
-
-  const AnimatedCircularProgress({
-    super.key,
-    required this.totalValue,
-    required this.currentValue,
-    required this.color,
-    this.strokeWidth = 10.0,
-    this.size = 120.0,
-    this.backgroundColor = Colors.grey,
-  });
-
-  @override
-  State<AnimatedCircularProgress> createState() =>
-      _AnimatedCircularProgressState();
-}
-
-class _AnimatedCircularProgressState extends State<AnimatedCircularProgress>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  double _oldValue = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _oldValue = widget.currentValue;
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _animateTo(widget.currentValue);
-  }
-
-  @override
-  void didUpdateWidget(covariant AnimatedCircularProgress oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentValue != widget.currentValue) {
-      _oldValue = oldWidget.currentValue;
-      _animateTo(widget.currentValue);
-    }
-  }
-
-  void _animateTo(double newValue) {
-    final oldProgress = (_oldValue / widget.totalValue).clamp(0.0, 1.0);
-    final newProgress = (newValue / widget.totalValue).clamp(0.0, 1.0);
-
-    _animation = Tween<double>(
-      begin: oldProgress,
-      end: newProgress,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    _controller
-      ..reset()
-      ..forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: widget.size,
-      width: widget.size,
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          return CircularProgressIndicator(
-            year2023: false,
-            value: _animation.value,
-            strokeWidth: widget.strokeWidth,
-            color: widget.color,
-            backgroundColor: widget.backgroundColor,
-          );
-        },
-      ),
     );
   }
 }
