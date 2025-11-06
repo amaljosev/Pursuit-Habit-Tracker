@@ -101,7 +101,8 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
             ? HelperFunctions.formatDate(event.habit.endDate!)
             : '',
         isExpanded: event.habit.endDate != null,
-        hasRemainder: event.habit.reminder != null,
+        hasRemainder:
+            event.habit.reminder != null && event.habit.reminder!.isNotEmpty,
         remainderTime: event.habit.reminder ?? '',
       ),
     );
@@ -239,6 +240,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     Emitter<HabitState> emit,
   ) async {
     emit(HabitLoading());
+    // await Future.delayed(Duration(seconds: 2));
     final result = await updateHabitUseCase(event.habit);
     result.match(
       (failure) => emit(HabitError(failure.message)),
@@ -291,6 +293,4 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       (_) => emit(HabitCountUpdateSuccess(event.value.toDouble())),
     );
   }
-
-  
 }

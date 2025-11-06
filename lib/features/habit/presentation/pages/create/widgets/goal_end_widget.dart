@@ -24,7 +24,7 @@ class HabitEndWidget extends StatelessWidget {
         }
 
         final bool isExpanded = state.isExpanded;
-        final String? endDate = state.endDate;
+        final String endDate = state.endDate;
 
         return Theme(
           data: Theme.of(context).copyWith(
@@ -96,7 +96,7 @@ class HabitEndWidget extends StatelessWidget {
                           ),
                           MyCard(
                             backgroundColor: backgroundColor,
-                            value: (endDate != null && endDate.isNotEmpty)
+                            value: ( endDate.isNotEmpty)
                                 ? endDate
                                 : 'No End',
                             onTap: () => showBottomSheet(

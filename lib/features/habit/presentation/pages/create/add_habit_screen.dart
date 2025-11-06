@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/app/pages/home_page.dart';
 import 'package:pursuit/core/components/app_button.dart';
+import 'package:pursuit/core/components/error_widget.dart';
+import 'package:pursuit/core/components/loading_widget.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
@@ -14,6 +16,7 @@ import 'package:pursuit/features/habit/presentation/pages/create/widgets/habit_r
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/habit_title_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/habit_type_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/icon_picker_widget.dart';
+import 'package:pursuit/features/habit/presentation/pages/detail/goal_detail_screen.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
 
 class AddHabitScreen extends StatefulWidget {
@@ -68,11 +71,22 @@ class _HabitView extends StatelessWidget {
       body: BlocConsumer<HabitBloc, HabitState>(
         listener: (context, state) {
           if (state is HabitOperationSuccess) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => HomePage()),
-              (Route<dynamic> route) => false,
-            );
+            if (habit != null) {
+               Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GoalDetailScreen(habitId: habit!.id),
+                ),
+                (Route<dynamic> route) => false,
+              );
+             
+            } else {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+                (Route<dynamic> route) => false,
+              );
+            }
           }
         },
         buildWhen: (previous, current) {
@@ -118,7 +132,11 @@ class _HabitView extends StatelessWidget {
                                 backgroundColor: backgroundColorDark,
                                 value: habit != null ? 'Update' : 'Save',
                                 onTap: () => formKey.currentState!.validate()
-                                    ? _saveHabit(context)
+                                    ? _saveHabit(
+                                        context: context,
+                                        isUpdate: habit != null,
+                                        updateHabit: habit,
+                                      )
                                     : ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
@@ -149,7 +167,11 @@ class _HabitView extends StatelessWidget {
                               title: habit != null ? 'Update' : 'Save',
                               backgroundColor: backgroundColorDark,
                               onPressed: () => formKey.currentState!.validate()
-                                  ? _saveHabit(context)
+                                  ? _saveHabit(
+                                      context: context,
+                                      isUpdate: habit != null,
+                                      updateHabit: habit,
+                                    )
                                   : ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
@@ -167,9 +189,20 @@ class _HabitView extends StatelessWidget {
               ),
             );
           } else if (state is HabitLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const AppLoading();
           } else if (state is HabitError) {
-            return Center(child: Text(state.message));
+            return ErrorScreenWidget(
+              onRetry: () {
+                if (habit != null) {
+                  context.read<HabitBloc>().add(
+                    UpdateHabitInitialEvent(habit: habit!),
+                  );
+                  nameController.text = habit!.name;
+                } else {
+                  context.read<HabitBloc>().add(AddHabitInitialEvent());
+                }
+              },
+            );
           }
           return const SizedBox.shrink();
         },
@@ -177,16 +210,19 @@ class _HabitView extends StatelessWidget {
     );
   }
 
-  void _saveHabit(BuildContext context) {
+  void _saveHabit({
+    required BuildContext context,
+    required bool isUpdate,
+
+    required Habit? updateHabit,
+  }) {
     final formState = formKey.currentState;
     if (formState == null || !formState.validate()) return;
-
     final bloc = context.read<HabitBloc>();
     final state = bloc.state;
-
     if (state is AddHabitInitial) {
       final habit = Habit(
-        id: DateTime.now().toString(),
+        id: updateHabit?.id ?? DateTime.now().toString(),
         name: nameController.text,
         icon: state.icon,
         color: state.color,
@@ -194,25 +230,28 @@ class _HabitView extends StatelessWidget {
         goalValue: state.goalValue,
         goalCount: state.goalCount,
         time: state.goalTime,
-        endDate: HelperFunctions.parseDate(state.endDate),
-        reminder: state.remainderTime,
+        endDate: state.isExpanded
+            ? HelperFunctions.parseDate(state.endDate)
+            : null,
+        reminder: state.hasRemainder ? state.remainderTime : null,
         startDate: DateTime.now(),
-        goalCompletedCount: 0,
-        goalRecordCount: 0,
-        isCompleteToday: false,
-        streakCount: 0,
-        bestStreak: 0,
-        countThisMonth: 0,
-        countLastMonth: 0,
-        countThisWeek: 0,
-        countLastWeek: 0,
-        countThisYear: 0,
-        countLastYear: 0,
-        completedDays: [],
-        achievements: {},
+        goalCompletedCount: updateHabit?.goalCompletedCount ?? 0,
+        goalRecordCount: updateHabit?.goalRecordCount ?? 0,
+        isCompleteToday: updateHabit?.isCompleteToday ?? false,
+        streakCount: updateHabit?.streakCount ?? 0,
+        bestStreak: updateHabit?.bestStreak ?? 0,
+        countThisMonth: updateHabit?.countThisMonth ?? 0,
+        countLastMonth: updateHabit?.countLastMonth ?? 0,
+        countThisWeek: updateHabit?.countThisWeek ?? 0,
+        countLastWeek: updateHabit?.countLastWeek ?? 0,
+        countThisYear: updateHabit?.countThisYear ?? 0,
+        countLastYear: updateHabit?.countLastYear ?? 0,
+        completedDays: updateHabit?.completedDays ?? [],
+        achievements: updateHabit?.achievements ?? {},
       );
-
-      bloc.add(AddHabitEvent(habit));
+      isUpdate
+          ? bloc.add(UpdateHabitEvent(habit))
+          : bloc.add(AddHabitEvent(habit));
     }
   }
 }
