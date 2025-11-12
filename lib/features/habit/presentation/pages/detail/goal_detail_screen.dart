@@ -8,8 +8,10 @@ import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
-import 'package:pursuit/features/habit/presentation/pages/detail/progress_circle_widget.dart';
+import 'package:pursuit/features/habit/presentation/pages/detail/widgets/progress_circle_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/glass_animation_widget.dart';
+import 'package:pursuit/features/habit/presentation/pages/detail/widgets/timer_widget.dart';
+import 'package:pursuit/features/habit/presentation/pages/detail/widgets/walking_animation.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
 import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
@@ -87,6 +89,8 @@ class GoalDetailContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = HelperFunctions.getColorById(id: habit.color, isDark: true);
+    final goalType = HelperFunctions.getMeasureTypeById(habit.goalValue);
+    final goalVal = HelperFunctions.getMeasureById(habit.goalValue);
 
     return Container(
       decoration: BoxDecoration(
@@ -127,66 +131,112 @@ class GoalDetailContent extends StatelessWidget {
             ),
 
             // 👇 Progress section separated
-            ProgressSection(habit: habit, color: color),
-
-            Form(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  GestureDetector(
-                    onTap: () => context.read<HabitBloc>().add(
-                      GoalCountUpdateEvent(id: habit.id, value: 0),
-                    ),
-                    child: CircleAvatar(
-                      backgroundColor: color.withValues(alpha: 0.2),
-                      child: Icon(Icons.refresh, color: color),
-                    ),
-                  ),
-                  AppButton(
-                    title: 'Add',
-                    backgroundColor: color,
-                    onPressed: () async {
-                      valueCtrl.text = habit.goalCount > 2
-                          ? (habit.goalCount - 2).toString()
-                          : '1';
-                      final result = await numberInputField(
-                        context: context,
-                        formKey: formKey,
-                        controller: valueCtrl,
-                        goalCount: habit.goalCount,
-                        backgroundColor: HelperFunctions.getColorById(
-                          id: habit.color,
-                          isDark: true,
-                        ),
-                      );
-                      if (result != null && result.isNotEmpty) {
-                        if (context.mounted) {
-                          final int val = int.parse(result);
-                          context.read<HabitBloc>().add(
+            goalType == 'distance'
+                ? WalkingProgressIndicator(
+                    unit: HelperFunctions.getMeasureById(habit.goalValue),
+                    totalGoal: habit.goalCount.toDouble(),
+                    completedCount: habit.goalCompletedCount.toDouble(),
+                    iconEmoji: HelperFunctions.getEmojiById(habit.icon),
+                    primaryColor: color,
+                    secondaryColor: color.withValues(alpha: 0.5),
+                    onDecrease: habit.goalCompletedCount <= 0
+                        ? () {}
+                        : () => context.read<HabitBloc>().add(
                             GoalCountUpdateEvent(
                               id: habit.id,
-                              value: habit.goalCompletedCount + val,
+                              value: habit.goalCompletedCount - 1,
                             ),
-                          );
-                        }
-                      }
-                    },
-                  ),
-                  GestureDetector(
-                    onTap: () => context.read<HabitBloc>().add(
+                          ),
+                    onIncrease: () => context.read<HabitBloc>().add(
                       GoalCountUpdateEvent(
                         id: habit.id,
-                        value: habit.goalCount,
+                        value: habit.goalCompletedCount + 1,
                       ),
                     ),
-                    child: CircleAvatar(
-                      backgroundColor: color.withValues(alpha: 0.2),
-                      child: Icon(Icons.check, color: color),
+                  )
+                : goalType == 'time'
+                ? ModernTimerWidget(
+                    key: ValueKey(habit.goalCompletedCount),
+                    completedGoalCount: habit.goalCompletedCount,
+                    goalValue: goalVal,
+                    saveTime: () => context.read<HabitBloc>().add(
+                      GoalCountUpdateEvent(
+                        id: habit.id,
+                        value: habit.goalCompletedCount + 1,
+                      ),
                     ),
-                  ),
-                ],
+                    onTimerComplete: () => context.read<HabitBloc>().add(
+                      GoalCountUpdateEvent(id: habit.id, value: habit.goalCount),
+                    ),
+                    onResetTimer: () => context.read<HabitBloc>().add(
+                      GoalCountUpdateEvent(id: habit.id, value: 0),
+                    ),
+                    totalGoalCount: habit.goalCount,
+                    size: 300,
+                    primaryColor: color,
+                    progressColor: color,
+                  )
+                : ProgressSection(habit: habit, color: color),
+
+            if (goalType != 'time')
+              Form(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.read<HabitBloc>().add(
+                        GoalCountUpdateEvent(id: habit.id, value: 0),
+                      ),
+                      child: CircleAvatar(
+                        backgroundColor: color.withValues(alpha: 0.2),
+                        child: Icon(Icons.refresh, color: color),
+                      ),
+                    ),
+                    AppButton(
+                      title: 'Add',
+                      backgroundColor: color,
+                      onPressed: () async {
+                        valueCtrl.text = habit.goalCount > 2
+                            ? (habit.goalCount - 2).toString()
+                            : '1';
+                        final result = await numberInputField(
+                          context: context,
+                          formKey: formKey,
+                          controller: valueCtrl,
+                          goalCount: habit.goalCount,
+                          backgroundColor: HelperFunctions.getColorById(
+                            id: habit.color,
+                            isDark: true,
+                          ),
+                        );
+                        if (result != null && result.isNotEmpty) {
+                          if (context.mounted) {
+                            final int val = int.parse(result);
+                            context.read<HabitBloc>().add(
+                              GoalCountUpdateEvent(
+                                id: habit.id,
+                                value: habit.goalCompletedCount + val,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                    GestureDetector(
+                      onTap: () => context.read<HabitBloc>().add(
+                        GoalCountUpdateEvent(
+                          id: habit.id,
+                          value: habit.goalCount,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        backgroundColor: color.withValues(alpha: 0.2),
+                        child: Icon(Icons.check, color: color),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),

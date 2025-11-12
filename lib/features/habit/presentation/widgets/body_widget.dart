@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
+import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/goal_detail_screen.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
+import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
 
 SliverList buildBody({
   required List<Habit> habits,
@@ -226,21 +229,47 @@ class _HabitTileState extends State<HabitTile> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             trailing: habit.goalCompletedCount >= habit.goalCount
-                ? Image.asset(
-                    'assets/img/success_home.png',
-                    height: 40,
-                    width: 40,
-                  )
-                : GestureDetector(
-                    onTap: () async {
-                      // your existing number input logic...
-                    },
-                    child: Icon(
-                      Icons.add_circle_outline_sharp,
-                      size: 30,
-                      color: Colors.blue,
+                  ? Image.asset(
+                      'assets/img/success_home.png',
+                      height: 40,
+                      width: 40,
+                    )
+                  : GestureDetector(
+                      onTap: () async {
+                        widget.valueCtrl.text = habit.goalCount > 2
+                            ? (habit.goalCount - 2).toString()
+                            : '1';
+                        final result = await numberInputField(
+                          context: context,
+                          formKey: widget.formKey,
+                          controller: widget.valueCtrl,
+                          backgroundColor: HelperFunctions.getColorById(
+                            id: habit.color,
+                            isDark: true,
+                          ),
+                          goalCount: habit.goalCount,
+                        );
+                        if (result != null && result.isNotEmpty) {
+                          if (context.mounted) {
+                            final int val = int.parse(result);
+                            context.read<HabitBloc>().add(
+                              GoalCountUpdateEvent(
+                                id: habit.id,
+                                value: habit.goalCompletedCount + val,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: Icon(
+                        Icons.add_circle_outline_sharp,
+                        size: 30,
+                        color: HelperFunctions.getColorById(
+                          id: habit.color,
+                          isDark: true,
+                        ),
+                      ),
                     ),
-                  ),
             onTap: () {
               Navigator.push(
                 context,
