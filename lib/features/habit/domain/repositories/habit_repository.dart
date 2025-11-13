@@ -12,4 +12,6 @@ abstract class HabitRepository {
     required String id,
     required int value,
   });
+    Future<Either<Failure, void>> checkAndPerformDailyReset();
+
 }

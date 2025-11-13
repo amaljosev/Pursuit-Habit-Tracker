@@ -156,3 +156,4 @@ class GoalCountUpdateEvent extends HabitEvent {
   List<Object> get props => [id, value];
 }
 
+class CheckDailyResetEvent extends HabitEvent {}

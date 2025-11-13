@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -9,10 +12,12 @@ import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
+import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_complete_func.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/progress_circle_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/glass_animation_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/timer_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/walking_animation.dart';
+import 'package:pursuit/features/habit/presentation/pages/progress/progress_page.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
 import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
@@ -28,6 +33,7 @@ class GoalDetailScreen extends StatefulWidget {
 class _GoalDetailScreenState extends State<GoalDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   final _valueCtrl = TextEditingController();
+  bool isGoalAchievedTody = false;
   @override
   void initState() {
     context.read<HabitBloc>().add(GetHabitByIdEvent(widget.habitId));
@@ -51,6 +57,10 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             if (state is HabitCountUpdateSuccess) {
               context.read<HabitBloc>().add(GetHabitByIdEvent(widget.habitId));
             }
+            if (state is HabitUpdateSuccessState) {
+              isGoalAchievedTody = true;
+              context.read<HabitBloc>().add(GetHabitByIdEvent(widget.habitId));
+            }
           },
           builder: (context, state) {
             if (state is HabitError) {
@@ -61,10 +71,16 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             }
             if (state is HabitDetailLoaded) {
               final Habit habit = state.habit;
+              if (state.habit.goalCompletedCount >= state.habit.goalCount &&
+                  !habit.isCompleteToday) {
+                final updatedHabit = updateHabitOnCompletion(state.habit);
+                context.read<HabitBloc>().add(UpdateHabitEvent(updatedHabit));
+              }
               return GoalDetailContent(
                 habit: habit,
                 formKey: _formKey,
                 valueCtrl: _valueCtrl,
+                isGoalAchievedTody: isGoalAchievedTody,
               );
             } else {
               return const SizedBox.shrink();
@@ -82,10 +98,12 @@ class GoalDetailContent extends StatelessWidget {
     required this.habit,
     required this.formKey,
     required this.valueCtrl,
+    required this.isGoalAchievedTody,
   });
   final Habit habit;
   final GlobalKey<FormState> formKey;
   final TextEditingController valueCtrl;
+  final bool isGoalAchievedTody;
 
   @override
   Widget build(BuildContext context) {
@@ -243,6 +261,16 @@ class GoalDetailContent extends StatelessWidget {
                                 }
                               },
                             ),
+                            AppButton(
+                              title: 'Progress',
+                              icon: CupertinoIcons.chart_bar,
+                              backgroundColor: color,
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => ProgressPage(habit: habit),
+                                ),
+                              ),
+                            ),
                             GestureDetector(
                               onTap: () => context.read<HabitBloc>().add(
                                 GoalCountUpdateEvent(
@@ -264,7 +292,7 @@ class GoalDetailContent extends StatelessWidget {
             ),
           ),
         ),
-        if (habit.goalCompletedCount == habit.goalCount)
+        if (isGoalAchievedTody)
           Lottie.asset('assets/lottie/party_pop.json', repeat: false),
       ],
     );

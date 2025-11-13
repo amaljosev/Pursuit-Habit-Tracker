@@ -15,6 +15,7 @@ abstract class HabitLocalDataSource {
     required String fieldName,
     required dynamic newValue,
   });
+  Future<void> updateHabits(List<HabitModel> habits);
 }
 
 class HabitLocalDataSourceImpl implements HabitLocalDataSource {
@@ -206,6 +207,29 @@ class HabitLocalDataSourceImpl implements HabitLocalDataSource {
       log('✅ Updated $fieldName for habit $id to $newValue');
     } catch (e, st) {
       log('❌ Failed to update $fieldName for habit $id: $e\n$st');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateHabits(List<HabitModel> habits) async {
+    try {
+      final db = await database;
+      final batch = db.batch();
+
+      for (final habit in habits) {
+        final data = habit.toJson();
+        data['completedDays'] = jsonEncode(habit.completedDays);
+        data['achievements'] = jsonEncode(habit.achievements);
+        data['isCompleteToday'] = habit.isCompleteToday ? 1 : 0;
+
+        batch.update(_tableName, data, where: 'id = ?', whereArgs: [habit.id]);
+      }
+
+      await batch.commit();
+      log('✅ Updated ${habits.length} habits in batch');
+    } catch (e, st) {
+      log('❌ Error updating habits in batch: $e\n$st');
       rethrow;
     }
   }

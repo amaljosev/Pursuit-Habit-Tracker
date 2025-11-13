@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:pursuit/features/habit/data/datasources/habit_local_datasource.dart';
 import 'package:pursuit/features/habit/data/repositories/habit_repository_implementation.dart';
 import 'package:pursuit/features/habit/domain/repositories/habit_repository.dart';
+import 'package:pursuit/features/habit/domain/usecases/check_daily_reset.dart';
 import 'package:pursuit/features/habit/domain/usecases/delete_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_habit_by_id.dart';
 import 'package:pursuit/features/habit/domain/usecases/insert_habit.dart';
@@ -24,23 +25,24 @@ Future<void> init() async {
   );
 
   // 🔹 Use cases
-sl.registerLazySingleton(() => InsertHabitUseCase(sl()));
-sl.registerLazySingleton(() => GetAllHabitsUseCase(sl()));
-sl.registerLazySingleton(() => UpdateHabitUseCase(sl()));
-sl.registerLazySingleton(() => DeleteHabitUseCase(sl()));
-sl.registerLazySingleton(() => GetHabitByIdUseCase(sl()));
-sl.registerLazySingleton(() => UpdateGoalCountUseCase(sl()));
+  sl.registerLazySingleton(() => InsertHabitUseCase(sl()));
+  sl.registerLazySingleton(() => GetAllHabitsUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateHabitUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteHabitUseCase(sl()));
+  sl.registerLazySingleton(() => GetHabitByIdUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateGoalCountUseCase(sl()));
+  sl.registerLazySingleton(() => CheckDailyResetUseCase(sl()));
 
-// 🔹 Bloc
-sl.registerFactory(
-  () => HabitBloc(
-    insertHabitUseCase: sl(),
-    getAllHabitsUseCase: sl(),
-    updateHabitUseCase: sl(),
-    deleteHabitUseCase: sl(),
-    getHabitByIdUseCase: sl(),
-    updateGoalCountUseCase: sl()
-  ),
-);
-
+  // 🔹 Bloc
+  sl.registerFactory(
+    () => HabitBloc(
+      insertHabitUseCase: sl(),
+      getAllHabitsUseCase: sl(),
+      updateHabitUseCase: sl(),
+      deleteHabitUseCase: sl(),
+      getHabitByIdUseCase: sl(),
+      updateGoalCountUseCase: sl(),
+      checkDailyResetUseCase: sl(),
+    ),
+  );
 }

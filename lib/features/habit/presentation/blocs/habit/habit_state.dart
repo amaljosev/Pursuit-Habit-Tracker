@@ -6,7 +6,9 @@ sealed class HabitState extends Equatable {
   @override
   List<Object> get props => [];
 }
-final class HabitInitial extends HabitState{}
+
+final class HabitInitial extends HabitState {}
+
 final class AddHabitInitial extends HabitState {
   final int icon;
   final int color;
@@ -81,6 +83,7 @@ final class AddHabitInitial extends HabitState {
     remainderTime,
   ];
 }
+
 class HabitLoading extends HabitState {}
 
 class HabitLoaded extends HabitState {
@@ -114,9 +117,19 @@ class HabitDetailLoaded extends HabitState {
   @override
   List<Object> get props => [habit];
 }
+
 class HabitCountUpdateSuccess extends HabitState {
   final double updatedCount;
   const HabitCountUpdateSuccess(this.updatedCount);
   @override
   List<Object> get props => [updatedCount];
+}
+
+class HabitDailyResetCompleted extends HabitState {}
+class HabitUpdateSuccessState extends HabitState {
+  final String message;
+  const HabitUpdateSuccessState(this.message);
+
+  @override
+  List<Object> get props => [message];
 }

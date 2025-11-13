@@ -1,5 +1,7 @@
 import 'dart:developer';
 
+import 'package:pursuit/core/utils/date_utils.dart';
+import 'package:pursuit/core/utils/shared_prefs_utils.dart';
 import 'package:pursuit/features/habit/data/datasources/habit_local_datasource.dart';
 import 'package:pursuit/features/habit/data/models/habit_model.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
@@ -81,5 +83,74 @@ class HabitRepositoryImpl implements HabitRepository {
     } catch (e) {
       return Left(DatabaseFailure(message: 'Failed to update goal count: $e'));
     }
+  }
+
+  @override
+  Future<Either<Failure, void>> checkAndPerformDailyReset() async {
+    try {
+      // Check if reset is needed
+      final needsReset = await _needsDailyReset();
+
+      if (!needsReset) {
+        return const Right(null);
+      }
+
+      // Get all habits from database
+      final habits = await localDataSource.getAllHabits();
+
+      // Reset each habit for new day
+      final updatedHabits = habits.map(_resetHabitForNewDay).toList();
+
+      // Update all habits in database
+      for (final habit in updatedHabits) {
+        await localDataSource.updateHabit(habit);
+      }
+
+      // Update last reset date
+      await SharedPrefsUtils.setLastResetDate(DateTime.now());
+
+      print('✅ Daily reset completed for ${habits.length} habits');
+      return const Right(null);
+    } catch (e) {
+      print('❌ Daily reset failed: $e');
+      return Left(
+        DatabaseFailure(message: 'Failed to perform daily reset: $e'),
+      );
+    }
+  }
+
+  Future<bool> _needsDailyReset() async {
+    final lastResetString = await SharedPrefsUtils.getLastResetDate();
+
+    if (lastResetString == null) {
+      // First time - set today as reset date
+      await SharedPrefsUtils.setLastResetDate(DateTime.now());
+      return false;
+    }
+
+    final lastReset = DateTime.parse(lastResetString);
+    final today = DateTime.now();
+
+    // Check if we're on a different day
+    return !DateUtils.isSameDay(lastReset, today);
+  }
+
+  HabitModel _resetHabitForNewDay(HabitModel habit) {
+    // Check if habit was completed yesterday to maintain streak
+    final bool wasCompletedYesterday =
+        habit.lastCompleted != null &&
+        DateUtils.isYesterday(habit.lastCompleted!);
+
+    // Reset streak if not completed yesterday
+    int newStreak = habit.streakCount;
+    if (!wasCompletedYesterday && habit.streakCount > 0) {
+      newStreak = 0; // Reset streak for missed day
+    }
+
+    return habit.copyWith(
+      isCompleteToday: false,
+      goalCompletedCount: 0, 
+      streakCount: newStreak,
+    );
   }
 }

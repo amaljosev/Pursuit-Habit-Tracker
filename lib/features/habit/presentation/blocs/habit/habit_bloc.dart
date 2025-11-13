@@ -9,6 +9,7 @@ import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/core/usecases/usecase.dart';
 import 'package:pursuit/features/habit/constants/habit_icons.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
+import 'package:pursuit/features/habit/domain/usecases/check_daily_reset.dart';
 import 'package:pursuit/features/habit/domain/usecases/delete_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_all_habits.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_habit_by_id.dart';
@@ -26,6 +27,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   final DeleteHabitUseCase deleteHabitUseCase;
   final GetHabitByIdUseCase getHabitByIdUseCase;
   final UpdateGoalCountUseCase updateGoalCountUseCase;
+   final CheckDailyResetUseCase checkDailyResetUseCase;
 
   HabitBloc({
     required this.insertHabitUseCase,
@@ -34,6 +36,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     required this.deleteHabitUseCase,
     required this.getHabitByIdUseCase,
     required this.updateGoalCountUseCase,
+    required this.checkDailyResetUseCase
   }) : super(HabitInitial()) {
     // UI update events - only handle when state is AddHabitInitial
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
@@ -59,6 +62,9 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
 
     //Operations
     on<GoalCountUpdateEvent>(_onCountIncrement);
+
+    // Add daily reset event handler
+    on<CheckDailyResetEvent>(_onCheckDailyReset);
   }
 
   void _onAddHabitInitialEvent(
@@ -244,7 +250,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     final result = await updateHabitUseCase(event.habit);
     result.match(
       (failure) => emit(HabitError(failure.message)),
-      (_) => emit(HabitOperationSuccess("Habit updated successfully")),
+      (_) => emit(HabitUpdateSuccessState("Habit updated successfully")),
     );
   }
 
@@ -292,5 +298,28 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       (failure) => emit(HabitError(failure.message)),
       (_) => emit(HabitCountUpdateSuccess(event.value.toDouble())),
     );
+  }
+  Future<void> _onCheckDailyReset(
+    CheckDailyResetEvent event,
+    Emitter<HabitState> emit,
+  ) async {
+    try {
+      emit(HabitLoading());
+      final result = await checkDailyResetUseCase();
+
+      result.fold(
+        (failure) {
+          emit(HabitError(failure.message));
+          log('❌ Daily reset failed: ${failure.message}');
+        },
+        (_) {
+          emit(HabitDailyResetCompleted());
+          log('✅ Daily reset completed successfully');
+        },
+      );
+    } catch (e, s) {
+      log('CheckDailyReset error: $e\n$s');
+      emit(HabitError('Daily reset failed: $e'));
+    }
   }
 }

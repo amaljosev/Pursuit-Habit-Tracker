@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pursuit/app/pages/home_page.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
+import 'package:pursuit/features/habit/presentation/pages/splash/splash_screen.dart';
 import 'core/di/injection_container.dart';
 
 import 'core/theme/app_theme.dart';
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
         themeMode: ThemeMode.system,
         debugShowCheckedModeBanner: false,
         routes: {
-          '/': (context) => HomePage(),
+          '/': (context) => SplashScreen(),
           '/add': (context) => AddHabitScreen(),
         },
         initialRoute: '/',
