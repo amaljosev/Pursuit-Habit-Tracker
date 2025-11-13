@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:flutter/cupertino.dart';
 import 'package:pursuit/core/utils/date_utils.dart';
 import 'package:pursuit/core/utils/shared_prefs_utils.dart';
 import 'package:pursuit/features/habit/data/datasources/habit_local_datasource.dart';
@@ -109,10 +110,10 @@ class HabitRepositoryImpl implements HabitRepository {
       // Update last reset date
       await SharedPrefsUtils.setLastResetDate(DateTime.now());
 
-      print('✅ Daily reset completed for ${habits.length} habits');
+      debugPrint('✅ Daily reset completed for ${habits.length} habits');
       return const Right(null);
     } catch (e) {
-      print('❌ Daily reset failed: $e');
+      debugPrint('❌ Daily reset failed: $e');
       return Left(
         DatabaseFailure(message: 'Failed to perform daily reset: $e'),
       );
@@ -149,7 +150,7 @@ class HabitRepositoryImpl implements HabitRepository {
 
     return habit.copyWith(
       isCompleteToday: false,
-      goalCompletedCount: 0, 
+      goalCompletedCount: 0,
       streakCount: newStreak,
     );
   }

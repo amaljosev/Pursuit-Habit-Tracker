@@ -154,6 +154,7 @@ class HabitModel extends Habit {
     completedDays: completedDays,
     achievements: achievements,
   );
+  @override
   HabitModel copyWith({
     String? id,
     String? name,

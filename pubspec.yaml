@@ -43,6 +43,7 @@ dependencies:
   flutter_slidable: ^4.0.3
   lottie: ^3.3.2
   shared_preferences: ^2.5.3
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:
