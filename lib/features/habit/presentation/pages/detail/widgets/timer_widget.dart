@@ -6,9 +6,8 @@ import 'package:flutter/material.dart';
 class ModernTimerWidget extends StatefulWidget {
   final int totalGoalCount;
   final int completedGoalCount;
-  final String goalValue; // 'min' or 'hr'
+  final String goalValue;
   final VoidCallback saveTime;
-
   final Color primaryColor;
   final Color progressColor;
   final double size;
@@ -44,9 +43,8 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
   Timer? _saveTimer;
   bool _isRunning = false;
 
-  Duration get _unitDuration => widget.goalValue == 'min'
-      ? const Duration(minutes: 1)
-      : const Duration(hours: 1);
+  Duration get _unitDuration =>
+      widget.goalValue == 'min' ? const Duration(minutes: 1) : const Duration(hours: 1);
 
   Duration get _totalDuration => _unitDuration * widget.totalGoalCount;
 
@@ -56,21 +54,19 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
 
     _currentGoalCount = widget.completedGoalCount;
 
-    // AnimationController duration = total time goal
     _progressController = AnimationController(
       vsync: this,
       duration: _totalDuration,
     )..value = _currentGoalCount / widget.totalGoalCount;
 
-    _progressAnimation =
-        CurvedAnimation(parent: _progressController, curve: Curves.linear)
-          ..addStatusListener((status) {
-            if (status == AnimationStatus.completed) {
-              setState(() => _isRunning = false);
-              widget.onTimerComplete?.call();
-              _saveTimer?.cancel();
-            }
-          });
+    _progressAnimation = CurvedAnimation(parent: _progressController, curve: Curves.linear)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          setState(() => _isRunning = false);
+          widget.onTimerComplete?.call();
+          _saveTimer?.cancel();
+        }
+      });
   }
 
   @override
@@ -89,21 +85,31 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
     setState(() => _isRunning = true);
     widget.onTimerStart?.call();
 
-    // Resume from where it left off
+    // Continue from where left off
     final remainingProgress = 1.0 - _progressController.value;
     final remainingDuration = _totalDuration * remainingProgress;
-    _progressController.duration = remainingDuration;
-    _progressController.forward();
 
-    // Start periodic saveTime() call
+    _progressController.forward(from: _progressController.value);
+
+    // Save progress every unit duration
     _saveTimer?.cancel();
     _saveTimer = Timer.periodic(_unitDuration, (timer) {
       if (!_isRunning) return;
+
       if (_currentGoalCount < widget.totalGoalCount) {
         setState(() => _currentGoalCount++);
         widget.saveTime();
       } else {
         _saveTimer?.cancel();
+      }
+    });
+
+    // Ensure duration sync
+    Future.delayed(remainingDuration, () {
+      if (mounted) {
+        setState(() => _isRunning = false);
+        _saveTimer?.cancel();
+        widget.onTimerComplete?.call();
       }
     });
   }
@@ -125,16 +131,12 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
     });
   }
 
-  /// Format remaining time as HH:MM:SS
   String _formatTime(double progress) {
     final totalSeconds = _totalDuration.inSeconds;
     final remainingSeconds = (totalSeconds * (1 - progress)).ceil();
 
     final hours = (remainingSeconds ~/ 3600).toString().padLeft(2, '0');
-    final minutes = ((remainingSeconds % 3600) ~/ 60).toString().padLeft(
-      2,
-      '0',
-    );
+    final minutes = ((remainingSeconds % 3600) ~/ 60).toString().padLeft(2, '0');
     final seconds = (remainingSeconds % 60).toString().padLeft(2, '0');
     return '$hours:$minutes:$seconds';
   }
@@ -144,135 +146,146 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
     final circleSize = widget.size;
     final progressSize = circleSize * 0.9;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 20,
-      children: [
-        AnimatedBuilder(
-          animation: _progressAnimation,
-          builder: (context, child) {
-            final progress = _progressAnimation.value;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedBuilder(
+                animation: _progressAnimation,
+                builder: (context, child) {
+                  final progress = _progressAnimation.value;
 
-            return Container(
-              width: circleSize,
-              height: circleSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.primaryColor.withValues(alpha: 0.2),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: progressSize,
-                    height: progressSize,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  SizedBox(
-                    width: progressSize,
-                    height: progressSize,
-                    child: CustomPaint(
-                      painter: _TimerProgressPainter(
-                        progress: progress,
-                        progressColor: widget.progressColor,
-                        backgroundColor: Colors.grey[200]!,
-                        strokeWidth: circleSize * 0.06,
-                      ),
-                    ),
-                  ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: progressSize * 0.85,
-                    height: progressSize * 0.85,
+                  return Container(
+                    width: circleSize,
+                    height: circleSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          widget.primaryColor.withValues(
-                            alpha: _isRunning ? 0.1 : 0.05,
-                          ),
-                          Colors.transparent,
-                        ],
-                        stops: const [0.1, 0.8],
-                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.primaryColor.withValues(alpha: 0.2),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ),
-                  AnimatedScale(
-                    duration: const Duration(milliseconds: 200),
-                    scale: _isRunning ? 1.05 : 1.0,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        Text(
-                          progress == 1.0 ? '🎉' : _formatTime(progress),
-                          style: TextStyle(
-                            fontSize: circleSize * 0.14,
-                            fontWeight: FontWeight.w700,
-                            color: widget.primaryColor,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 2,
-                                offset: const Offset(0, 1),
+                        Container(
+                          width: progressSize,
+                          height: progressSize,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[50],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(
+                          width: progressSize,
+                          height: progressSize,
+                          child: CustomPaint(
+                            painter: _TimerProgressPainter(
+                              progress: progress,
+                              progressColor: widget.progressColor,
+                              backgroundColor: Colors.grey[200]!,
+                              strokeWidth: circleSize * 0.06,
+                            ),
+                          ),
+                        ),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          width: progressSize * 0.85,
+                          height: progressSize * 0.85,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                widget.primaryColor.withValues(
+                                  alpha: _isRunning ? 0.1 : 0.05,
+                                ),
+                                Colors.transparent,
+                              ],
+                              stops: const [0.1, 0.8],
+                            ),
+                          ),
+                        ),
+                        AnimatedScale(
+                          duration: const Duration(milliseconds: 200),
+                          scale: _isRunning ? 1.05 : 1.0,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                progress == 1.0 ? '🎉' : _formatTime(progress),
+                                style: TextStyle(
+                                  fontSize: circleSize * 0.14,
+                                  fontWeight: FontWeight.w700,
+                                  color: widget.primaryColor,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 2,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                progress == 1.0
+                                    ? 'Completed'
+                                    : _isRunning
+                                        ? 'Running'
+                                        : 'Paused',
+                                style: TextStyle(
+                                  fontSize: circleSize * 0.06,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          progress == 1.0
-                              ? 'Completed'
-                              : _isRunning
-                              ? 'Running'
-                              : 'Paused',
-                          style: TextStyle(
-                            fontSize: circleSize * 0.06,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
                       ],
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-            );
-          },
-        ),
-        SizedBox(height: circleSize * 0.16),
-        _buildTimerControls(),
-        SizedBox(height: circleSize * 0.08),
-
-        Text(
-          '$_currentGoalCount / ${widget.totalGoalCount} ${widget.goalValue}',
-          style: TextStyle(
-            fontSize: circleSize * 0.06,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
+              SizedBox(height: circleSize * 0.16),
+              _buildTimerControls(),
+              SizedBox(height: circleSize * 0.08),
+              Text(
+                '$_currentGoalCount / ${widget.totalGoalCount} ${widget.goalValue}',
+                style: TextStyle(
+                  fontSize: circleSize * 0.06,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  "💡 A minimum of 1 ${widget.goalValue == 'min' ? 'minute' : 'hour'} is required for auto-save. "
+                  "Progress will be saved automatically every ${widget.goalValue == 'min' ? 'minute' : 'hour'}.",
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 30),
+            ],
           ),
-        ),
-
-        Text(
-          "💡 A minimum of 1 ${widget.goalValue == 'min' ? 'minute' : 'hour'} is required for auto-save. "
-          "Progress will be saved automatically every ${widget.goalValue == 'min' ? 'minute' : 'hour'}.",
-          textAlign: TextAlign.center,
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -349,7 +362,6 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
     required String label,
   }) {
     return Column(
-      spacing: 5,
       children: [
         Tooltip(
           message: tooltip,

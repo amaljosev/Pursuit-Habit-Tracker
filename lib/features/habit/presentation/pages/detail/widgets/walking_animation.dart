@@ -240,6 +240,8 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
                 backgroundColor: Colors.grey[100]!,
                 iconColor: widget.primaryColor,
                 size: 80,
+                label: "-1 ${widget.unit}"
+
               ),
               _buildCircleButton(
                 icon: Icons.add_rounded,
@@ -247,6 +249,7 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
                 backgroundColor: widget.secondaryColor,
                 iconColor: Colors.white,
                 size: 80,
+                label: "+1 ${widget.unit}"
               ),
             ],
           ),
@@ -261,25 +264,32 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
     required Color backgroundColor,
     required Color iconColor,
     double size = 50,
+    required String label
   }) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: iconColor.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+    return Column(
+      spacing: 5,
+      children: [
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: iconColor.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: IconButton(
-        onPressed: onTap,
-        icon: Icon(icon, color: iconColor, size: size * 0.45),
-      ),
+          child: IconButton(
+            onPressed: onTap,
+            icon: Icon(icon, color: iconColor, size: size * 0.45),
+          ),
+        ),
+        Text(label)
+      ],
     );
   }
 }
