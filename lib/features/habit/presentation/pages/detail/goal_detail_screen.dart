@@ -43,6 +43,12 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
     return Scaffold(
       body: PopScope(
         canPop: false,
+        onPopInvokedWithResult: (didPop, result) =>
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+              (Route<dynamic> route) => false,
+            ),
         child: BlocConsumer<HabitBloc, HabitState>(
           listener: (context, state) {
             if (state is HabitOperationSuccess) {
@@ -175,12 +181,14 @@ class GoalDetailContent extends StatelessWidget {
                                   GoalCountUpdateEvent(
                                     id: habit.id,
                                     value: habit.goalCompletedCount - 1,
+                                    habit: habit,
                                   ),
                                 ),
                           onIncrease: () => context.read<HabitBloc>().add(
                             GoalCountUpdateEvent(
                               id: habit.id,
                               value: habit.goalCompletedCount + 1,
+                              habit: habit,
                             ),
                           ),
                         )
@@ -194,6 +202,7 @@ class GoalDetailContent extends StatelessWidget {
                               GoalCountUpdateEvent(
                                 id: habit.id,
                                 value: habit.goalCompletedCount + 1,
+                                habit: habit,
                               ),
                             ),
                             onTimerComplete: () =>
@@ -201,10 +210,15 @@ class GoalDetailContent extends StatelessWidget {
                                   GoalCountUpdateEvent(
                                     id: habit.id,
                                     value: habit.goalCount,
+                                    habit: habit,
                                   ),
                                 ),
                             onResetTimer: () => context.read<HabitBloc>().add(
-                              GoalCountUpdateEvent(id: habit.id, value: 0),
+                              GoalCountUpdateEvent(
+                                id: habit.id,
+                                value: 0,
+                                habit: habit,
+                              ),
                             ),
                             totalGoalCount: habit.goalCount,
                             size: 300,
@@ -214,77 +228,104 @@ class GoalDetailContent extends StatelessWidget {
                         )
                       : ProgressSection(habit: habit, color: color),
 
-                  if (goalType != 'time')
-                    SafeArea(
-                      child: Form(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            GestureDetector(
-                              onTap: () => context.read<HabitBloc>().add(
-                                GoalCountUpdateEvent(id: habit.id, value: 0),
-                              ),
-                              child: CircleAvatar(
-                                backgroundColor: color.withValues(alpha: 0.2),
-                                child: Icon(Icons.refresh, color: color),
-                              ),
-                            ),
-                            AppButton(
-                              title: 'Add',
-                              backgroundColor: color,
-                              onPressed: () async {
-                                valueCtrl.text = habit.goalCount > 2
-                                    ? (habit.goalCount - 2).toString()
-                                    : '1';
-                                final result = await numberInputField(
-                                  context: context,
-                                  formKey: formKey,
-                                  controller: valueCtrl,
-                                  goalCount: habit.goalCount,
-                                  backgroundColor: HelperFunctions.getColorById(
-                                    id: habit.color,
-                                    isDark: true,
+                  goalType != 'time'
+                      ? SafeArea(
+                          child: Form(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => context.read<HabitBloc>().add(
+                                    GoalCountUpdateEvent(
+                                      id: habit.id,
+                                      value: 0,
+                                      habit: habit,
+                                    ),
                                   ),
-                                );
-                                if (result != null && result.isNotEmpty) {
-                                  if (context.mounted) {
-                                    final int val = int.parse(result);
-                                    context.read<HabitBloc>().add(
-                                      GoalCountUpdateEvent(
-                                        id: habit.id,
-                                        value: habit.goalCompletedCount + val,
-                                      ),
+                                  child: CircleAvatar(
+                                    backgroundColor: color.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    child: Icon(Icons.refresh, color: color),
+                                  ),
+                                ),
+                                AppButton(
+                                  title: 'Add',
+                                  backgroundColor: color,
+                                  onPressed: () async {
+                                    valueCtrl.text = habit.goalCount > 2
+                                        ? (habit.goalCount - 2).toString()
+                                        : '1';
+                                    final result = await numberInputField(
+                                      context: context,
+                                      formKey: formKey,
+                                      controller: valueCtrl,
+                                      goalCount: habit.goalCount,
+                                      backgroundColor:
+                                          HelperFunctions.getColorById(
+                                            id: habit.color,
+                                            isDark: true,
+                                          ),
                                     );
-                                  }
-                                }
-                              },
-                            ),
-                            AppButton(
-                              title: 'Progress',
-                              icon: CupertinoIcons.chart_bar,
-                              backgroundColor: color,
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => ProgressPage(habit: habit),
+                                    if (result != null && result.isNotEmpty) {
+                                      if (context.mounted) {
+                                        final int val = int.parse(result);
+                                        context.read<HabitBloc>().add(
+                                          GoalCountUpdateEvent(
+                                            id: habit.id,
+                                            value:
+                                                habit.goalCompletedCount + val,
+                                            habit: habit,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
                                 ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context.read<HabitBloc>().add(
-                                GoalCountUpdateEvent(
-                                  id: habit.id,
-                                  value: habit.goalCount,
+                                AppButton(
+                                  title: 'Progress',
+                                  icon: CupertinoIcons.chart_bar,
+                                  backgroundColor: color,
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProgressPage(habit: habit),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              child: CircleAvatar(
-                                backgroundColor: color.withValues(alpha: 0.2),
-                                child: Icon(Icons.check, color: color),
+                                GestureDetector(
+                                  onTap: () => context.read<HabitBloc>().add(
+                                    GoalCountUpdateEvent(
+                                      id: habit.id,
+                                      value: habit.goalCount,
+                                      habit: habit,
+                                    ),
+                                  ),
+                                  child: CircleAvatar(
+                                    backgroundColor: color.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    child: Icon(Icons.check, color: color),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : SafeArea(
+                          top: false,
+                          child: AppButton(
+                            title: 'Progress',
+                            icon: CupertinoIcons.chart_bar,
+                            backgroundColor: color,
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ProgressPage(habit: habit),
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -341,6 +382,7 @@ class ProgressSection extends StatelessWidget {
                     GoalCountUpdateEvent(
                       id: habit.id,
                       value: completedCount - 1,
+                      habit: habit,
                     ),
                   ),
                   value: '-1 $goalValue',
@@ -356,6 +398,7 @@ class ProgressSection extends StatelessWidget {
                     GoalCountUpdateEvent(
                       id: habit.id,
                       value: completedCount + 1,
+                      habit: habit,
                     ),
                   ),
                   value: '+1 $goalValue',

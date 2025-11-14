@@ -8,6 +8,8 @@ class WaterFillGlassProgress extends StatefulWidget {
   final double height;
   final Color color;
   final Color backgroundColor;
+  final TextStyle? textStyle;
+  final bool showPercentage;
 
   const WaterFillGlassProgress({
     super.key,
@@ -17,6 +19,8 @@ class WaterFillGlassProgress extends StatefulWidget {
     this.backgroundColor = Colors.blue,
     this.width = 150,
     this.height = 250,
+    this.textStyle,
+    this.showPercentage = true,
   });
 
   @override
@@ -27,7 +31,9 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
     with TickerProviderStateMixin {
   late AnimationController _waveController;
   late AnimationController _fillController;
+  late AnimationController _textController;
   late Animation<double> _fillAnimation;
+  late Animation<int> _percentageAnimation;
 
   double _oldValue = 0.0;
 
@@ -47,7 +53,19 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
       duration: const Duration(milliseconds: 1200),
     );
 
+    // Text animation controller
+    _textController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
     _oldValue = widget.currentValue;
+    _setupAnimations();
+    _fillController.forward();
+    _textController.forward();
+  }
+
+  void _setupAnimations() {
     _fillAnimation = Tween<double>(begin: _oldValue, end: widget.currentValue)
         .animate(
           CurvedAnimation(
@@ -56,7 +74,17 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
           ),
         );
 
-    _fillController.forward();
+    final currentPercentage = ((widget.currentValue / widget.totalValue) * 100)
+        .round();
+    final oldPercentage = ((_oldValue / widget.totalValue) * 100).round();
+
+    _percentageAnimation =
+        IntTween(begin: oldPercentage, end: currentPercentage).animate(
+          CurvedAnimation(
+            parent: _textController,
+            curve: Curves.easeInOutCubic,
+          ),
+        );
   }
 
   @override
@@ -65,16 +93,13 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
 
     if (widget.currentValue != oldWidget.currentValue) {
       _oldValue = oldWidget.currentValue;
-      _fillAnimation = Tween<double>(begin: _oldValue, end: widget.currentValue)
-          .animate(
-            CurvedAnimation(
-              parent: _fillController,
-              curve: Curves.easeInOutCubicEmphasized,
-            ),
-          );
+      _setupAnimations();
 
-      // ✅ Restart fill animation smoothly
+      // ✅ Restart animations smoothly
       _fillController
+        ..reset()
+        ..forward();
+      _textController
         ..reset()
         ..forward();
     }
@@ -84,29 +109,74 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
   void dispose() {
     _waveController.dispose();
     _fillController.dispose();
+    _textController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_waveController, _fillAnimation]),
+      animation: Listenable.merge([
+        _waveController,
+        _fillAnimation,
+        _percentageAnimation,
+      ]),
       builder: (context, child) {
         final progress = (widget.totalValue > 0)
             ? (_fillAnimation.value / widget.totalValue).clamp(0.0, 1.0)
             : 0.0;
 
-        return CustomPaint(
-          painter: _GlassPainter(
-            progress: progress,
-            wavePhase: _waveController.value * 2 * pi,
-            color: widget.color,
-            backgroundColor: widget.backgroundColor,
-          ),
-          size: Size(widget.width, widget.height),
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            CustomPaint(
+              painter: _GlassPainter(
+                progress: progress,
+                wavePhase: _waveController.value * 2 * pi,
+                color: widget.color,
+                backgroundColor: widget.backgroundColor,
+              ),
+              size: Size(widget.width, widget.height),
+            ),
+            if (widget.showPercentage)
+              Container(
+                width: widget.width,
+                height: widget.height,
+                alignment: Alignment.center,
+                child: Text(
+                  '${_percentageAnimation.value}%\nCompleted',
+                  style:
+                      widget.textStyle ??
+                      TextStyle(
+                        fontSize: min(widget.width, widget.height) * 0.1,
+                        fontWeight: FontWeight.bold,
+                        color: _getTextColor(progress),
+                        shadows: [
+                          Shadow(
+                            blurRadius: 2.0,
+                            color: Colors.black.withValues(alpha: 0.3),
+                            offset: const Offset(1.0, 1.0),
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                ),
+              ),
+          ],
         );
       },
     );
+  }
+
+  Color _getTextColor(double progress) {
+    // Change text color based on water level for better visibility
+    if (progress > 0.7) {
+      return Colors.white;
+    } else if (progress > 0.4) {
+      return Colors.white.withValues(alpha: 0.9);
+    } else {
+      return Colors.black.withValues(alpha: 0.8);
+    }
   }
 }
 

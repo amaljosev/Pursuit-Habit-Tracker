@@ -1,6 +1,5 @@
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
-
 Habit updateHabitOnCompletion(Habit habit) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
@@ -10,6 +9,13 @@ Habit updateHabitOnCompletion(Habit habit) {
       habit.lastCompleted != null && 
       HelperFunctions.isToday(habit.lastCompleted!)) {
     return habit;
+  }
+
+  // Check if month has changed since last completion
+  bool monthChanged = false;
+  if (habit.lastCompleted != null) {
+    final lastCompleted = habit.lastCompleted!;
+    monthChanged = lastCompleted.month != now.month || lastCompleted.year != now.year;
   }
 
   // Calculate new streak
@@ -40,26 +46,40 @@ Habit updateHabitOnCompletion(Habit habit) {
     (day) => day['date'] == todayString
   );
 
+  int todayCount = 1;
   if (existingDayIndex >= 0) {
     // Update existing day
+    todayCount = (updatedCompletedDays[existingDayIndex]['count'] as int) + 1;
     updatedCompletedDays[existingDayIndex] = {
       'date': todayString,
-      'count': (updatedCompletedDays[existingDayIndex]['count'] as int) + 1,
+      'count': todayCount,
     };
   } else {
     // Add new day
     updatedCompletedDays.add({
       'date': todayString,
-      'count': 1,
+      'count': todayCount,
     });
   }
 
-  // Get current period counts
-  final currentMonth = now.month;
+  // Handle month transition
+  int newCountThisMonth = habit.countThisMonth;
+  int newCountLastMonth = habit.countLastMonth;
+  
+  if (monthChanged) {
+    // Month has changed, move current month to last month
+    newCountLastMonth = habit.countThisMonth;
+    newCountThisMonth = todayCount; // Reset for new month, starting with today's completion
+  } else {
+    // Same month, just increment current month count
+    newCountThisMonth = habit.countThisMonth + 1;
+    // Keep existing last month count
+    newCountLastMonth = habit.countLastMonth;
+  }
+
+  // Calculate counts for current periods
   final currentYear = now.year;
   
-  // Calculate counts for current periods
-  int thisMonthCount = 0;
   int thisWeekCount = 0;
   int thisYearCount = 0;
   
@@ -70,11 +90,7 @@ Habit updateHabitOnCompletion(Habit habit) {
     if (date.year == currentYear) {
       thisYearCount += count;
       
-      if (date.month == currentMonth) {
-        thisMonthCount += count;
-      }
-      
-      // Calculate week (simple implementation - you might want to use a proper week calculation)
+      // Calculate week (simple implementation)
       final now = DateTime.now();
       final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
       final endOfWeek = startOfWeek.add(const Duration(days: 6));
@@ -86,19 +102,26 @@ Habit updateHabitOnCompletion(Habit habit) {
     }
   }
 
+  // Calculate goal completion and records
+  int newGoalCompletedCount = habit.goalCompletedCount + 1;
+  int newGoalRecordCount = habit.goalRecordCount;
+  
+  // Update goal record if current completion count exceeds previous record
+  if (newGoalCompletedCount > habit.goalRecordCount) {
+    newGoalRecordCount = newGoalCompletedCount;
+  }
+
   return habit.copyWith(
-    goalCompletedCount: habit.goalCount, // Set to max since completed
+    goalCompletedCount: habit.goalCount,
     isCompleteToday: true,
     lastCompleted: today,
     streakCount: newStreak,
     bestStreak: newBestStreak,
-    countThisMonth: thisMonthCount,
+    countThisMonth: newCountThisMonth,
+    countLastMonth: newCountLastMonth,
     countThisWeek: thisWeekCount,
     countThisYear: thisYearCount,
     completedDays: updatedCompletedDays,
-    // Update goal record if current completion exceeds previous record
-    goalRecordCount: habit.goalCompletedCount > habit.goalRecordCount 
-        ? habit.goalCompletedCount 
-        : habit.goalRecordCount,
+    goalRecordCount: newGoalRecordCount,
   );
 }

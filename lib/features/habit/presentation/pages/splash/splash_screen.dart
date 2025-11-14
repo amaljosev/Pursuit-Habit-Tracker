@@ -18,7 +18,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     // Trigger daily reset check when screen loads
-    context.read<HabitBloc>().add( CheckDailyResetEvent());
+   context.read<HabitBloc>().add( CheckDailyResetEvent());
   }
 
   void _navigateToHome() {
@@ -42,6 +42,7 @@ class _SplashScreenState extends State<SplashScreen> {
             // Small delay to show completion state
             Future.delayed(const Duration(milliseconds: 500), _navigateToHome);
           }
+
         },
         child: Center(
           child: Column(

@@ -42,8 +42,8 @@ class AppColors {
   { "id": 14, "color": Colors.orange[200]! },
   { "id": 15, "color": Colors.deepOrange[200]! },
   { "id": 16, "color": Colors.brown[200]! },
-  { "id": 17, "color": Colors.grey[200]! },
-  { "id": 18, "color": Colors.blueGrey[200]! },
+  // { "id": 17, "color": Colors.grey[200]! },
+  // { "id": 17, "color": Colors.blueGrey[200]! },
 ];
 
 static final List<Map<String, dynamic>> darkColors = [
@@ -64,8 +64,8 @@ static final List<Map<String, dynamic>> darkColors = [
   { "id": 14, "color": Colors.orange[700]! },
   { "id": 15, "color": Colors.deepOrange[700]! },
   { "id": 16, "color": Colors.brown[700]! },
-  { "id": 17, "color": Colors.grey[700]! },
-  { "id": 18, "color": Colors.blueGrey[700]! },
+  // { "id": 17, "color": Colors.grey[700]! },
+  // { "id": 17, "color": Colors.blueGrey[700]! },
 ];
 
 }

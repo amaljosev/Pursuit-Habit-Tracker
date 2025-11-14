@@ -46,6 +46,15 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
+      onPopInvokedWithResult: (didPop, result) => Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => widget.habit != null
+              ? GoalDetailScreen(habitId: widget.habit!.id)
+              : HomePage(),
+        ),
+        (Route<dynamic> route) => false,
+      ),
       child: _HabitView(
         nameController: nameController,
         formKey: formKey,
@@ -72,14 +81,13 @@ class _HabitView extends StatelessWidget {
         listener: (context, state) {
           if (state is HabitOperationSuccess) {
             if (habit != null) {
-               Navigator.pushAndRemoveUntil(
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
                   builder: (context) => GoalDetailScreen(habitId: habit!.id),
                 ),
                 (Route<dynamic> route) => false,
               );
-             
             } else {
               Navigator.pushAndRemoveUntil(
                 context,
@@ -87,6 +95,15 @@ class _HabitView extends StatelessWidget {
                 (Route<dynamic> route) => false,
               );
             }
+          }
+          if (state is HabitUpdateSuccessState && habit != null) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GoalDetailScreen(habitId: habit!.id),
+              ),
+              (Route<dynamic> route) => false,
+            );
           }
         },
         buildWhen: (previous, current) {

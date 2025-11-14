@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/components/error_widget.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
+import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_complete_func.dart';
 import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/goals_empty_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/header_widget.dart';
+import 'package:sqflite/sqflite.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -36,6 +38,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 context.read<HabitBloc>().add(GetAllHabitsEvent());
               }
               if (state is HabitCountUpdateSuccess) {
+                if (state.updatedCount >= state.habit.goalCount &&
+                    !state.habit.isCompleteToday) {
+                  final updatedHabit = updateHabitOnCompletion(state.habit);
+                  context.read<HabitBloc>().add(UpdateHabitEvent(updatedHabit));
+                }
                 context.read<HabitBloc>().add(GetAllHabitsEvent());
               }
             },
@@ -46,6 +53,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 return const Center(child: CircularProgressIndicator());
               } else if (state is HabitLoaded) {
                 final habits = state.habits;
+
                 if (habits.isEmpty) {
                   return const GoalsEmptyWidget();
                 }
@@ -71,6 +79,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           ),
           FloatingActionButton(
             onPressed: () {
+              // showDatabaseDump(context);
               Navigator.of(context).pushNamed('/add');
             },
             child: const Icon(Icons.add),
@@ -79,4 +88,26 @@ class _GoalsScreenState extends State<GoalsScreen> {
       ),
     );
   }
+}
+Future<void> showDatabaseDump(BuildContext context) async {
+  final db = await openDatabase('habits.db');
+  final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
+
+  final result = <String, dynamic>{};
+
+  for (var t in tables) {
+    final tableName = t['name'];
+    final rows = await db.query(tableName as String);
+    result[tableName] = rows;
+  }
+
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: Text("Database Dump"),
+      content: SingleChildScrollView(
+        child: Text(result.toString()),
+      ),
+    ),
+  );
 }

@@ -27,7 +27,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   final DeleteHabitUseCase deleteHabitUseCase;
   final GetHabitByIdUseCase getHabitByIdUseCase;
   final UpdateGoalCountUseCase updateGoalCountUseCase;
-   final CheckDailyResetUseCase checkDailyResetUseCase;
+  final CheckDailyResetUseCase checkDailyResetUseCase;
 
   HabitBloc({
     required this.insertHabitUseCase,
@@ -36,7 +36,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     required this.deleteHabitUseCase,
     required this.getHabitByIdUseCase,
     required this.updateGoalCountUseCase,
-    required this.checkDailyResetUseCase
+    required this.checkDailyResetUseCase,
   }) : super(HabitInitial()) {
     // UI update events - only handle when state is AddHabitInitial
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
@@ -296,9 +296,15 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
 
     result.match(
       (failure) => emit(HabitError(failure.message)),
-      (_) => emit(HabitCountUpdateSuccess(event.value.toDouble())),
+      (_) => emit(
+        HabitCountUpdateSuccess(
+          updatedCount: event.value.toDouble(),
+          habit: event.habit,
+        ),
+      ),
     );
   }
+
   Future<void> _onCheckDailyReset(
     CheckDailyResetEvent event,
     Emitter<HabitState> emit,

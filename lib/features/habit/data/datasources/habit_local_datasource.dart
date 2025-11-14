@@ -38,7 +38,6 @@ class HabitLocalDataSourceImpl implements HabitLocalDataSource {
         path,
         version: 1,
         onCreate: (db, version) async {
-          log('Step 4: Creating habits table...');
           await db.execute('''
           CREATE TABLE $_tableName (
             id TEXT PRIMARY KEY,

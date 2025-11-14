@@ -256,6 +256,7 @@ class _HabitTileState extends State<HabitTile> {
                               GoalCountUpdateEvent(
                                 id: habit.id,
                                 value: habit.goalCompletedCount + val,
+                                habit: habit
                               ),
                             );
                           }

@@ -119,13 +119,18 @@ class HabitDetailLoaded extends HabitState {
 }
 
 class HabitCountUpdateSuccess extends HabitState {
+  final Habit habit;
   final double updatedCount;
-  const HabitCountUpdateSuccess(this.updatedCount);
+  const HabitCountUpdateSuccess({
+    required this.updatedCount,
+    required this.habit,
+  });
   @override
-  List<Object> get props => [updatedCount];
+  List<Object> get props => [updatedCount,habit];
 }
 
 class HabitDailyResetCompleted extends HabitState {}
+
 class HabitUpdateSuccessState extends HabitState {
   final String message;
   const HabitUpdateSuccessState(this.message);

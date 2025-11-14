@@ -150,10 +150,15 @@ final class GetHabitByIdEvent extends HabitEvent {
 class GoalCountUpdateEvent extends HabitEvent {
   final String id;
   final int value;
-  const GoalCountUpdateEvent({required this.id, required this.value});
+  final Habit habit;
+  const GoalCountUpdateEvent({
+    required this.id,
+    required this.value,
+    required this.habit,
+  });
 
   @override
-  List<Object> get props => [id, value];
+  List<Object> get props => [id, value,habit];
 }
 
 class CheckDailyResetEvent extends HabitEvent {}
