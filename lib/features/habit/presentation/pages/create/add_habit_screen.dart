@@ -4,6 +4,7 @@ import 'package:pursuit/app/pages/home_page.dart';
 import 'package:pursuit/core/components/app_button.dart';
 import 'package:pursuit/core/components/error_widget.dart';
 import 'package:pursuit/core/components/loading_widget.dart';
+import 'package:pursuit/core/extensions/context_extensions.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
@@ -123,85 +124,105 @@ class _HabitView extends StatelessWidget {
               height: MediaQuery.of(context).size.height,
               color: backgroundColorLight,
               child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: SingleChildScrollView(
-                  child: SafeArea(
-                    child: Form(
-                      key: formKey,
-                      child: Column(
-                        spacing: 10,
-                        children: [
-                          AppBar(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.black,
-                            surfaceTintColor: Colors.transparent,
-                            leading: BackButton(
-                              onPressed: () => Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => HomePage(),
-                                ),
-                                (Route<dynamic> route) => false,
-                              ),
+                padding: EdgeInsets.all(context.screenWidth * 0.04),
+                child: CustomScrollView(
+                  slivers: [
+                    // Top app bar sliver
+                    SliverAppBar(
+                      backgroundColor: Colors.transparent,
+                      surfaceTintColor: Colors.transparent,
+                      automaticallyImplyLeading: false,
+                      expandedHeight: 0,
+                      pinned: true,
+                      toolbarHeight: kToolbarHeight,
+                      flexibleSpace: AppBar(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.black,
+                        surfaceTintColor: Colors.transparent,
+                        leading: BackButton(
+                          onPressed: () => Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HomePage(),
                             ),
-                            actions: [
-                              MyCard(
-                                backgroundColor: backgroundColorDark,
-                                value: habit != null ? 'Update' : 'Save',
-                                onTap: () => formKey.currentState!.validate()
-                                    ? _saveHabit(
-                                        context: context,
-                                        isUpdate: habit != null,
-                                        updateHabit: habit,
-                                      )
-                                    : ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Please give required data',
-                                          ),
-                                        ),
-                                      ),
-                              ),
-                            ],
+                            (Route<dynamic> route) => false,
                           ),
-                          IconPickerWidget(),
-                          InputFieldWidget(
-                            controller: nameController,
-                            color: backgroundColorDark,
-                            formKey: formKey,
-                          ),
-                          const ColorPickerWidget(),
-                          HabitTypeWidget(bgColor: state.color),
-                          GoalWidget(backgroundColor: backgroundColorDark),
-                          HabitRemainderWidget(
+                        ),
+                        actions: [
+                          MyCard(
                             backgroundColor: backgroundColorDark,
-                          ),
-                          SizedBox(
-                            width: 200,
-                            child: AppButton(
-                              title: habit != null ? 'Update' : 'Save',
-                              backgroundColor: backgroundColorDark,
-                              onPressed: () => formKey.currentState!.validate()
-                                  ? _saveHabit(
-                                      context: context,
-                                      isUpdate: habit != null,
-                                      updateHabit: habit,
-                                    )
-                                  : ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Please give required data',
-                                        ),
+                            value: habit != null ? 'Update' : 'Save',
+                            onTap: () => formKey.currentState!.validate()
+                                ? _saveHabit(
+                                    context: context,
+                                    isUpdate: habit != null,
+                                    updateHabit: habit,
+                                  )
+                                : ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                        'Please give required data',
                                       ),
                                     ),
-                            ),
+                                  ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+
+                    // Content sliver
+                    SliverList(
+                      delegate: SliverChildListDelegate([
+                        Form(
+                          key: formKey,
+                          child: Column(
+                            spacing: 10,
+                            children: [
+                              IconPickerWidget(),
+                              InputFieldWidget(
+                                controller: nameController,
+                                color: backgroundColorDark,
+                                formKey: formKey,
+                              ),
+                              const ColorPickerWidget(),
+                              HabitTypeWidget(bgColor: state.color),
+                              GoalWidget(backgroundColor: backgroundColorDark),
+                              HabitRemainderWidget(
+                                backgroundColor: backgroundColorDark,
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: AppButton(
+                                      title: habit != null ? 'Update' : 'Save',
+                                      backgroundColor: backgroundColorDark,
+                                      onPressed: () =>
+                                          formKey.currentState!.validate()
+                                          ? _saveHabit(
+                                              context: context,
+                                              isUpdate: habit != null,
+                                              updateHabit: habit,
+                                            )
+                                          : ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: const Text(
+                                                  'Please give required data',
+                                                ),
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 100),
+                            ],
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -230,7 +251,6 @@ class _HabitView extends StatelessWidget {
   void _saveHabit({
     required BuildContext context,
     required bool isUpdate,
-
     required Habit? updateHabit,
   }) {
     final formState = formKey.currentState;

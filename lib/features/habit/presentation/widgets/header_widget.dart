@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
-SliverAppBar buildHeader(Size size, BuildContext context) {
+SliverAppBar buildHeader(BuildContext context) {
   return SliverAppBar.large(
-    expandedHeight: size.height * 0.2,
+    expandedHeight: MediaQuery.of(context).size.width >= 600
+        ? 220
+        : MediaQuery.of(context).size.height * 0.2,
+
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    surfaceTintColor: Colors.transparent,
     flexibleSpace: FlexibleSpaceBar(
       background: SafeArea(
         child: Padding(
@@ -20,7 +24,9 @@ SliverAppBar buildHeader(Size size, BuildContext context) {
                 'for today',
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: Colors.grey,
-                  fontSize: size.width * 0.08,
+                  fontSize: MediaQuery.of(context).size.width >= 600
+                      ? 32
+                      : MediaQuery.of(context).size.width * 0.08,
                 ),
               ),
             ],
@@ -37,6 +43,7 @@ SliverAppBar buildHeader(Size size, BuildContext context) {
     centerTitle: true,
     automaticallyImplyLeading: false,
     elevation: 0,
+   
     pinned: true,
   );
 }

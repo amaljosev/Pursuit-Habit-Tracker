@@ -1,6 +1,6 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:pursuit/core/extensions/context_extensions.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/presentation/pages/progress/widgets/appbar_widget.dart';
@@ -54,6 +54,7 @@ class ProgressPageState extends State<ProgressPage>
           buildStatsOverview(context, _fadeAnimation, widget),
           _buildChartsSection(),
           _buildActivityCalendar(),
+          SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
@@ -67,6 +68,7 @@ class ProgressPageState extends State<ProgressPage>
 
   Widget _buildChartSelector() {
     return Container(
+      width: context.screenWidth,
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -76,13 +78,17 @@ class ProgressPageState extends State<ProgressPage>
           BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, 2)),
         ],
       ),
-      child: Wrap(
-        runAlignment: WrapAlignment.center,
-        children: [
-          _buildChartTypeButton('Active Days', 0),
-          _buildChartTypeButton('Streak Trend', 1),
-          _buildChartTypeButton('Monthly Progress', 2),
-        ],
+      child: SizedBox(
+        height: 50,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+
+          children: [
+            _buildChartTypeButton('Active Days', 0),
+            _buildChartTypeButton('Streak Trend', 1),
+            _buildChartTypeButton('Monthly Progress', 2),
+          ],
+        ),
       ),
     );
   }
@@ -97,7 +103,7 @@ class ProgressPageState extends State<ProgressPage>
           backgroundColor: isSelected
               ? HelperFunctions.getColorById(
                   id: widget.habit.color,
-                ).withOpacity(0.1)
+                ).withValues(alpha: 0.1)
               : Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -150,7 +156,7 @@ class ProgressPageState extends State<ProgressPage>
       case 1:
         return _buildStreakTrendChart();
       case 2:
-        return _buildMonthlyComparisonChart();
+        return _buildComparisonChart();
       default:
         return _buildMostActiveDaysChart();
     }
@@ -254,7 +260,7 @@ class ProgressPageState extends State<ProgressPage>
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: habitColor.withOpacity(0.1),
+                color: habitColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
@@ -398,8 +404,8 @@ class ProgressPageState extends State<ProgressPage>
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        habitColor.withOpacity(0.3),
-                        habitColor.withOpacity(0.1),
+                        habitColor.withValues(alpha: 0.3),
+                        habitColor.withValues(alpha: 0.1),
                       ],
                     ),
                   ),
@@ -415,7 +421,7 @@ class ProgressPageState extends State<ProgressPage>
                     },
                   ),
                   shadow: Shadow(
-                    color: habitColor.withOpacity(0.3),
+                    color: habitColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: Offset(0, 4),
                   ),
@@ -517,7 +523,7 @@ class ProgressPageState extends State<ProgressPage>
       horizontalLines: [
         HorizontalLine(
           y: average,
-          color: Colors.orange.withOpacity(0.5),
+          color: Colors.orange.withValues(alpha: 0.5),
           strokeWidth: 1,
           dashArray: [5, 5],
           label: HorizontalLineLabel(
@@ -598,28 +604,23 @@ class ProgressPageState extends State<ProgressPage>
             ],
           ),
           SizedBox(height: 8),
-          ...insights
-              .map(
-                (insight) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('• ', style: TextStyle(color: Colors.blue[700])),
-                      Expanded(
-                        child: Text(
-                          insight,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[800],
-                          ),
-                        ),
-                      ),
-                    ],
+          ...insights.map(
+            (insight) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: TextStyle(color: Colors.blue[700])),
+                  Expanded(
+                    child: Text(
+                      insight,
+                      style: TextStyle(fontSize: 12, color: Colors.blue[800]),
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -669,267 +670,250 @@ class ProgressPageState extends State<ProgressPage>
     return streak;
   }
 
-  Widget _buildMonthlyComparisonChart() {
+  Widget _buildComparisonChart() {
     final habitColor = HelperFunctions.getColorById(id: widget.habit.color);
-    final previousColor = Colors.grey[400]!;
+    final previousColor = Colors.grey.withValues(alpha: 0.3);
 
-    // Data for all comparison periods
-    final comparisonData = [
-      {
-        'label': 'Weekly',
-        'current': widget.habit.countThisWeek.toDouble(),
-        'previous': widget.habit.countLastWeek.toDouble(),
-        'days': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      },
-      {
-        'label': 'Monthly',
-        'current': widget.habit.countThisMonth.toDouble(),
-        'previous': widget.habit.countLastMonth.toDouble(),
-        'days': ['W1', 'W2', 'W3', 'W4'],
-      },
-      {
-        'label': 'Yearly',
-        'current': widget.habit.countThisYear.toDouble(),
-        'previous': widget.habit.countLastYear.toDouble(),
-        'days': ['Q1', 'Q2', 'Q3', 'Q4'],
-      },
-    ];
+    // --- 1. DATA PROCESSING LOGIC ---
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
-    final currentData = comparisonData[_currentComparisonPeriod];
-    final currentValue = currentData['current'] as double;
-    final previousValue = currentData['previous'] as double;
-    final days = currentData['days'] as List<String>;
+    int getCountForDate(DateTime date) {
+      final dateStr = date.toIso8601String().split('T')[0];
+      final entry = widget.habit.completedDays.firstWhere(
+        (e) => e['date'] == dateStr,
+        orElse: () => {'date': dateStr, 'count': 0},
+      );
+      return entry['count'] as int;
+    }
 
-    // Create realistic sample data for demonstration
+    List<double> currentValues = [];
+    List<double> previousValues = [];
+    List<String> labels = [];
+    int currentTotal = 0;
+    int previousTotal = 0;
+
+    if (_currentComparisonPeriod == 0) {
+      // WEEKLY (Mon-Sun)
+      final currentWeekStart = today.subtract(
+        Duration(days: today.weekday - 1),
+      );
+      final previousWeekStart = currentWeekStart.subtract(
+        const Duration(days: 7),
+      );
+      labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+      for (int i = 0; i < 7; i++) {
+        final cVal = getCountForDate(
+          currentWeekStart.add(Duration(days: i)),
+        ).toDouble();
+        final pVal = getCountForDate(
+          previousWeekStart.add(Duration(days: i)),
+        ).toDouble();
+        currentValues.add(cVal);
+        previousValues.add(pVal);
+        currentTotal += cVal.toInt();
+        previousTotal += pVal.toInt();
+      }
+    } else if (_currentComparisonPeriod == 1) {
+      // MONTHLY (4 Weeks)
+      labels = ['W1', 'W2', 'W3', 'W4'];
+      final startThisMonth = DateTime(today.year, today.month, 1);
+      final startLastMonth = (today.month == 1)
+          ? DateTime(today.year - 1, 12, 1)
+          : DateTime(today.year, today.month - 1, 1);
+      for (int i = 0; i < 4; i++) {
+        double cSum = 0;
+        double pSum = 0;
+        for (int d = 0; d < 7; d++) {
+          final dayNum = (i * 7) + d + 1;
+          try {
+            final cDate = DateTime(
+              startThisMonth.year,
+              startThisMonth.month,
+              dayNum,
+            );
+            if (cDate.month == startThisMonth.month)
+              cSum += getCountForDate(cDate);
+            final pDate = DateTime(
+              startLastMonth.year,
+              startLastMonth.month,
+              dayNum,
+            );
+            if (pDate.month == startLastMonth.month)
+              pSum += getCountForDate(pDate);
+          } catch (_) {}
+        }
+        currentValues.add(cSum);
+        previousValues.add(pSum);
+        currentTotal += cSum.toInt();
+        previousTotal += pSum.toInt();
+      }
+    } else {
+      // YEARLY (Jan-Dec)
+      labels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+      Map<int, int> thisY = {};
+      Map<int, int> lastY = {};
+      for (var entry in widget.habit.completedDays) {
+        final d = DateTime.parse(entry['date']);
+        if (d.year == today.year)
+          thisY[d.month] = (thisY[d.month] ?? 0) + (entry['count'] as int);
+        else if (d.year == today.year - 1)
+          lastY[d.month] = (lastY[d.month] ?? 0) + (entry['count'] as int);
+      }
+      for (int i = 1; i <= 12; i++) {
+        currentValues.add((thisY[i] ?? 0).toDouble());
+        previousValues.add((lastY[i] ?? 0).toDouble());
+        currentTotal += currentValues.last.toInt();
+        previousTotal += previousValues.last.toInt();
+      }
+    }
+
+    // --- 2. CHART GROUPS ---
+    double maxY = 0;
     List<BarChartGroupData> barGroups = [];
-    for (int i = 0; i < days.length; i++) {
-      // Create realistic sample values that add up to the total
-      double currentBarValue =
-          (currentValue / days.length) * (i + 0.5 + Random().nextDouble());
-      double previousBarValue =
-          (previousValue / days.length) * (i + 0.5 + Random().nextDouble());
-
-      // Ensure values don't exceed the total
-      currentBarValue = currentBarValue.clamp(0, currentValue);
-      previousBarValue = previousBarValue.clamp(0, previousValue);
-
+    for (int i = 0; i < currentValues.length; i++) {
+      if (currentValues[i] > maxY) maxY = currentValues[i];
+      if (previousValues[i] > maxY) maxY = previousValues[i];
       barGroups.add(
-        makeGroupData(
-          i,
-          previousBarValue,
-          currentBarValue,
-          previousColor,
-          habitColor,
+        BarChartGroupData(
+          x: i,
+          barRods: [
+            BarChartRodData(
+              toY: previousValues[i],
+              color: previousColor,
+              width: 8,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            BarChartRodData(
+              toY: currentValues[i],
+              color: habitColor,
+              width: 8,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ],
+          barsSpace: 4,
         ),
       );
     }
+    maxY = (maxY * 1.2).ceilToDouble();
+    if (maxY < 5) maxY = 5;
 
-    // Calculate max Y value for the chart
-    double maxY = 0;
-    for (var group in barGroups) {
-      for (var rod in group.barRods) {
-        if (rod.toY > maxY) maxY = rod.toY;
-      }
-    }
-    maxY = (maxY * 1.2).ceilToDouble(); // Add 20% padding
-
+    // --- 3. UI RENDERING ---
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header with period selector
-        Text(
-          'Progress Comparison',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Progress',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Container(
+              height: 32,
+              padding: EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  _buildPeriodBtn('Week', 0, habitColor),
+                  _buildPeriodBtn('Month', 1, habitColor),
+                  _buildPeriodBtn('Year', 2, habitColor),
+                ],
+              ),
+            ),
+          ],
         ),
-        Container(
-          padding: EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildPeriodButton('Week', 0),
-              _buildPeriodButton('Month', 1),
-              _buildPeriodButton('Year', 2),
-            ],
-          ),
-        ),
-        SizedBox(height: 16),
-
-        // Quick stats - Fixed to use proper values
-        _buildComparisonQuickStats(currentValue, previousValue, habitColor),
         SizedBox(height: 20),
 
-        // Double Bar Chart - Fixed implementation
+        // Quick Stats Section
+        _buildComparisonQuickStats(
+          currentTotal.toDouble(),
+          previousTotal.toDouble(),
+          habitColor,
+        ),
+
+        SizedBox(height: 24),
+
+        // Chart
         Container(
-          height: 250,
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
+          height: 200,
           child: BarChart(
             BarChartData(
-              barTouchData: BarTouchData(
-                enabled: true,
-                touchTooltipData: BarTouchTooltipData(
-                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    final periodNames = ['Previous', 'Current'];
-                    return BarTooltipItem(
-                      '${periodNames[rodIndex]}\n${rod.toY.toStringAsFixed(1)}',
-                      TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              titlesData: FlTitlesData(
+              maxY: maxY,
+              gridData: FlGridData(
                 show: true,
+                drawVerticalLine: false,
+                getDrawingHorizontalLine: (v) =>
+                    FlLine(color: Colors.grey[100]!, strokeWidth: 1),
+              ),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                topTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
                 rightTitles: AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
-                topTitles: AxisTitles(
+                leftTitles: AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index >= 0 && index < days.length) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            days[index],
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                            ),
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                    reservedSize: 42,
+                    getTitlesWidget: (v, m) => Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        labels[v.toInt()],
+                        style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                      ),
+                    ),
                   ),
                 ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      if (value == meta.min || value == meta.max) {
-                        return const SizedBox.shrink();
-                      }
-                      return Text(
-                        value.toInt().toString(),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(
-                show: true,
-                border: Border.all(color: Colors.grey[300]!, width: 1),
               ),
               barGroups: barGroups,
-              gridData: FlGridData(
-                show: true,
-                drawHorizontalLine: true,
-                drawVerticalLine: false,
-                getDrawingHorizontalLine: (value) {
-                  return FlLine(color: Colors.grey[100]!, strokeWidth: 1);
-                },
-              ),
-              alignment: BarChartAlignment.spaceAround,
-              groupsSpace: 12, // Space between groups
-              maxY: maxY,
             ),
           ),
         ),
-        SizedBox(height: 16),
 
-        // Legend
+        SizedBox(height: 16),
         _buildChartLegend(previousColor, habitColor),
-        SizedBox(height: 16),
+        SizedBox(height: 20),
 
-        // Insights
-        _buildComparisonInsights(currentValue, previousValue, habitColor),
-      ],
-    );
-  }
-
-  BarChartGroupData makeGroupData(
-    int x,
-    double y1,
-    double y2,
-    Color leftColor,
-    Color rightColor,
-  ) {
-    return BarChartGroupData(
-      x: x,
-      barsSpace: 8, // Space between bars in the same group
-      barRods: [
-        BarChartRodData(
-          toY: y1,
-          color: leftColor,
-          width: 8, // Width of individual bars
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(2),
-            topRight: Radius.circular(2),
-          ),
-        ),
-        BarChartRodData(
-          toY: y2,
-          color: rightColor,
-          width: 8,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(2),
-            topRight: Radius.circular(2),
-          ),
+        // Insights Section
+        _buildComparisonInsights(
+          currentTotal.toDouble(),
+          previousTotal.toDouble(),
+          habitColor,
         ),
       ],
     );
   }
 
-  Widget _buildPeriodButton(String label, int index) {
+  // --- SUPPORTING UI METHODS ---
+
+  Widget _buildPeriodBtn(String label, int index, Color color) {
     final isSelected = _currentComparisonPeriod == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _currentComparisonPeriod = index),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? HelperFunctions.getColorById(id: widget.habit.color)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey[600],
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+    return GestureDetector(
+      onTap: () => setState(() => _currentComparisonPeriod = index),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: isSelected
+              ? [BoxShadow(color: Colors.black12, blurRadius: 2)]
+              : [],
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? color : Colors.grey,
             ),
           ),
         ),
@@ -937,96 +921,84 @@ class ProgressPageState extends State<ProgressPage>
     );
   }
 
-  // Fixed quick stats method
   Widget _buildComparisonQuickStats(
     double current,
     double previous,
     Color habitColor,
   ) {
-    final difference = current - previous;
-    final isImproving = difference >= 0;
-
+    final diff = current - previous;
+    final isUp = diff >= 0;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildQuickStatItem(
+        _statItem(
           'Current',
           current.toInt().toString(),
           habitColor,
-          Icons.trending_up,
+          Icons.bolt,
         ),
-        _buildQuickStatItem(
+        _statItem(
           'Previous',
           previous.toInt().toString(),
           Colors.grey[600]!,
           Icons.history,
         ),
-        _buildQuickStatItem(
+        _statItem(
           'Change',
-          '${isImproving ? '+' : ''}${difference.toInt()}',
-          isImproving ? Colors.green : Colors.red,
-          isImproving ? Icons.arrow_upward : Icons.arrow_downward,
+          '${isUp ? '+' : ''}${diff.toInt()}',
+          isUp ? Colors.green : Colors.red,
+          isUp ? Icons.trending_up : Icons.trending_down,
         ),
       ],
     );
   }
 
-  // Fixed stat item method
-  Widget _buildQuickStatItem(
-    String label,
-    String value,
-    Color color,
-    IconData icon,
-  ) {
+  Widget _statItem(String label, String val, Color col, IconData icon) {
     return Column(
       children: [
-        Container(
-          padding: EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 16, color: color),
+        CircleAvatar(
+          radius: 14,
+          backgroundColor: col.withValues(alpha: 0.1),
+          child: Icon(icon, size: 14, color: col),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: 6),
         Text(
-          value,
+          val,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: color,
+            color: col,
           ),
         ),
-        SizedBox(height: 2),
-        Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+        Text(label, style: TextStyle(fontSize: 10, color: Colors.grey)),
       ],
     );
   }
 
-  Widget _buildChartLegend(Color previousColor, Color currentColor) {
+  Widget _buildChartLegend(Color prevCol, Color currCol) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildLegendItem('Previous Period', previousColor),
+        _legendItem('Previous', prevCol),
         SizedBox(width: 20),
-        _buildLegendItem('Current Period', currentColor),
+        _legendItem('Current', currCol),
       ],
     );
   }
 
-  Widget _buildLegendItem(String text, Color color) {
+  Widget _legendItem(String txt, Color col) {
     return Row(
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
-            color: color,
+            color: col,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
         SizedBox(width: 6),
-        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        Text(txt, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
       ],
     );
   }
@@ -1036,96 +1008,76 @@ class ProgressPageState extends State<ProgressPage>
     double previous,
     Color habitColor,
   ) {
-    final difference = current - previous;
-    final percentageChange = previous > 0
-        ? ((difference / previous) * 100).abs()
+    final diff = current - previous;
+    final isImproving = diff >= 0;
+    final percent = previous > 0
+        ? ((diff / previous) * 100).abs()
         : (current > 0 ? 100.0 : 0.0);
-    final isImproving = difference >= 0;
-
-    final insights = <Widget>[];
-
-    if (current > previous) {
-      insights.add(
-        _buildInsightItem(
-          Icons.rocket_launch,
-          'Excellent progress! ${difference.toInt()} more than previous period',
-          Colors.green,
-        ),
-      );
-    } else if (current < previous) {
-      insights.add(
-        _buildInsightItem(
-          Icons.lightbulb_outline,
-          '${difference.abs().toInt()} less than previous period. Keep consistent!',
-          Colors.orange,
-        ),
-      );
-    } else {
-      insights.add(
-        _buildInsightItem(
-          Icons.autorenew,
-          'Steady performance - maintaining your habit consistently',
-          Colors.blue,
-        ),
-      );
-    }
-
-    if (percentageChange > 25) {
-      insights.add(
-        _buildInsightItem(
-          Icons.star,
-          '${isImproving ? 'Significant improvement' : 'Noticeable decrease'} (${percentageChange.toStringAsFixed(1)}%)',
-          isImproving ? Colors.green : Colors.red,
-        ),
-      );
-    }
 
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: habitColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: habitColor.withOpacity(0.1)),
+        color: habitColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: habitColor.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.analytics, size: 16, color: habitColor),
+              Icon(Icons.auto_awesome, size: 18, color: habitColor),
               SizedBox(width: 8),
               Text(
-                'Performance Insights',
+                'Smart Insights',
                 style: TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                   color: habitColor,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 8),
-          Column(children: insights),
+          SizedBox(height: 12),
+          _insightRow(
+            isImproving ? Icons.rocket_launch : Icons.lightbulb,
+            isImproving
+                ? 'Great job! You\'re up by ${percent.toStringAsFixed(0)}% compared to last period.'
+                : 'You\'re slightly behind your last period. Try a small win today!',
+            isImproving ? Colors.green : Colors.orange,
+          ),
+          if (current == 0 && previous > 0)
+            _insightRow(
+              Icons.warning_amber_rounded,
+              'Don\'t let your streak slip! Start today to rebuild momentum.',
+              Colors.red,
+            ),
+          if (current > widget.habit.bestStreak)
+            _insightRow(
+              Icons.emoji_events,
+              'New Personal Record incoming! Keep pushing.',
+              Colors.blue,
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildInsightItem(IconData icon, String text, Color color) {
+  Widget _insightRow(IconData icon, String text, Color col) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14, color: color),
-          SizedBox(width: 8),
+          Icon(icon, size: 14, color: col),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey[700],
-                height: 1.3,
+                height: 1.4,
               ),
             ),
           ),
@@ -1226,7 +1178,7 @@ class ProgressPageState extends State<ProgressPage>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: Offset(0, 4),
           ),
@@ -1237,9 +1189,9 @@ class ProgressPageState extends State<ProgressPage>
         lastDay: DateTime.utc(2030, 12, 31),
         focusedDay: _focusedDay,
         calendarFormat: _calendarFormat,
-        onFormatChanged: (format) {
-          setState(() => _calendarFormat = format);
-        },
+        // onFormatChanged: (format) {
+        //   setState(() => _calendarFormat = format);
+        // },
         onPageChanged: (focusedDay) {
           setState(() => _focusedDay = focusedDay);
         },
@@ -1294,7 +1246,7 @@ class ProgressPageState extends State<ProgressPage>
 
           // Today styling
           todayDecoration: BoxDecoration(
-            color: habitColor.withOpacity(0.1),
+            color: habitColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
             border: Border.all(color: habitColor, width: 2),
           ),
@@ -1309,7 +1261,7 @@ class ProgressPageState extends State<ProgressPage>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: habitColor.withOpacity(0.3),
+                color: habitColor.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: Offset(0, 2),
               ),
@@ -1416,12 +1368,12 @@ class ProgressPageState extends State<ProgressPage>
     if (maxValue == 0) {
       return HelperFunctions.getColorById(
         id: widget.habit.color,
-      ).withOpacity(0.3);
+      ).withValues(alpha: 0.3);
     }
 
     final intensity = value / maxValue;
     return HelperFunctions.getColorById(
       id: widget.habit.color,
-    ).withOpacity(0.5 + intensity * 0.5);
+    ).withValues(alpha: 0.5 + intensity * 0.5);
   }
 }

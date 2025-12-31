@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
@@ -24,7 +22,6 @@ class HabitRemainderWidget extends StatelessWidget {
       },
       builder: (context, state) {
         if (state is! AddHabitInitial) return const SizedBox.shrink();
-        log(state.remainderTime.toString());
         final bool isExpanded = state.hasRemainder;
         final String time = state.remainderTime;
 
@@ -44,7 +41,10 @@ class HabitRemainderWidget extends StatelessWidget {
                   trailing: Switch.adaptive(
                     value: isExpanded,
                     activeThumbColor: backgroundColor,
-                    inactiveThumbColor: backgroundColor,
+                    inactiveThumbColor:
+                        Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : backgroundColor,
                     trackOutlineColor: WidgetStatePropertyAll(backgroundColor),
                     onChanged: (value) {
                       context.read<HabitBloc>().add(

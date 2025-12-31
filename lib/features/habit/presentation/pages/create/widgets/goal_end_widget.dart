@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/widgets/date_picker_widget.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
+
 class HabitEndWidget extends StatelessWidget {
   const HabitEndWidget({super.key, required this.backgroundColor});
 
@@ -43,18 +44,21 @@ class HabitEndWidget extends StatelessWidget {
                 trailing: Switch.adaptive(
                   value: isExpanded,
                   activeThumbColor: backgroundColor,
-                  inactiveThumbColor: backgroundColor,
+                  inactiveThumbColor:
+                      Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : backgroundColor,
                   trackOutlineColor: WidgetStatePropertyAll(backgroundColor),
                   onChanged: (value) {
-                    context
-                        .read<HabitBloc>()
-                        .add(HabitEndDateExpand(isExpand: value));
+                    context.read<HabitBloc>().add(
+                      HabitEndDateExpand(isExpand: value),
+                    );
                   },
                 ),
                 onTap: () {
-                  context
-                      .read<HabitBloc>()
-                      .add(HabitEndDateExpand(isExpand: !isExpanded));
+                  context.read<HabitBloc>().add(
+                    HabitEndDateExpand(isExpand: !isExpanded),
+                  );
                 },
               ),
               AnimatedCrossFade(
@@ -73,10 +77,14 @@ class HabitEndWidget extends StatelessWidget {
                         children: [
                           Text(
                             'Start Date',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall!
-                                .copyWith(color: Colors.grey),
+                            style: Theme.of(context).textTheme.titleSmall!
+                                .copyWith(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.grey,
+                                ),
                           ),
                           MyCard(
                             backgroundColor: backgroundColor,
@@ -89,16 +97,18 @@ class HabitEndWidget extends StatelessWidget {
                         children: [
                           Text(
                             'End Date',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall!
-                                .copyWith(color: Colors.grey),
+                            style: Theme.of(context).textTheme.titleSmall!
+                                .copyWith(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.grey,
+                                ),
                           ),
                           MyCard(
                             backgroundColor: backgroundColor,
-                            value: ( endDate.isNotEmpty)
-                                ? endDate
-                                : 'No End',
+                            value: (endDate.isNotEmpty) ? endDate : 'No End',
                             onTap: () => showBottomSheet(
                               showDragHandle: true,
                               context: context,
@@ -111,14 +121,15 @@ class HabitEndWidget extends StatelessWidget {
                                       AppDatePicker(
                                         onDateSelected: (day, month, year) {
                                           context.read<HabitBloc>().add(
-                                                HabitEndDateEvent(
-                                                  endDate: day == 0 &&
-                                                          month == 0 &&
-                                                          year == 0
-                                                      ? ''
-                                                      : "$day-$month-$year",
-                                                ),
-                                              );
+                                            HabitEndDateEvent(
+                                              endDate:
+                                                  day == 0 &&
+                                                      month == 0 &&
+                                                      year == 0
+                                                  ? ''
+                                                  : "$day-$month-$year",
+                                            ),
+                                          );
                                         },
                                       ),
                                     ],

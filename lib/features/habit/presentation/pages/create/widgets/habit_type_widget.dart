@@ -53,8 +53,11 @@ class HabitTypeWidget extends StatelessWidget {
                             borderRadius: const BorderRadius.all(
                               Radius.circular(20),
                             ),
-                            color: AppColors.darkColors[bgColor]['color']
-                                .withValues(alpha: 0.3),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.black12
+                                : AppColors.darkColors[bgColor]['color']
+                                      .withValues(alpha: 0.3),
                           ),
                           child: SizedBox(
                             height: 30,

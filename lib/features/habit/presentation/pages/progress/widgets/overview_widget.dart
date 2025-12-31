@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pursuit/core/extensions/context_extensions.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/features/habit/presentation/pages/progress/progress_page.dart';
 
@@ -51,12 +52,6 @@ SliverToBoxAdapter buildStatsOverview(
                   '${calculateCompletionRate(widget)}%',
                   widget,
                 ),
-                _buildStatItem(
-                  '🏆',
-                  'All-Time Record',
-                  '${widget.habit.goalRecordCount} ${HelperFunctions.getMeasureById(widget.habit.goalValue)}',
-                  widget,
-                ),
               ],
             ),
             SizedBox(height: 20),
@@ -88,6 +83,7 @@ SliverToBoxAdapter buildStatsOverview(
                         'Last Week',
                         widget.habit.countLastWeek,
                         widget,
+                        context,
                       ),
                       SizedBox(width: 12),
                       _buildComparisonCard(
@@ -96,6 +92,7 @@ SliverToBoxAdapter buildStatsOverview(
                         'Last Month',
                         widget.habit.countLastMonth,
                         widget,
+                        context,
                       ),
                       SizedBox(width: 12),
                       _buildComparisonCard(
@@ -104,6 +101,7 @@ SliverToBoxAdapter buildStatsOverview(
                         'Last Year',
                         widget.habit.countLastYear,
                         widget,
+                        context,
                       ),
                     ],
                   ),
@@ -123,12 +121,15 @@ Widget _buildComparisonCard(
   String previousLabel,
   int previousValue,
   ProgressPage widget,
+  BuildContext context,
 ) {
   final bool isIncrease = currentValue >= previousValue;
   final habitColor = HelperFunctions.getColorById(id: widget.habit.color);
 
   return Container(
-    width: 140,
+    width: context.screenWidth > 760
+        ? context.screenWidth * 0.25
+        : context.screenWidth * 0.5,
     padding: EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: Colors.white,
@@ -198,7 +199,7 @@ Widget _buildStatItem(
       CircleAvatar(
         backgroundColor: HelperFunctions.getColorById(
           id: widget.habit.color,
-        ).withOpacity(0.5),
+        ).withValues(alpha: 0.5),
         child: Text(emoji, style: TextStyle(fontSize: 24)),
       ),
       SizedBox(height: 8),

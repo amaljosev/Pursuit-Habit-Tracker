@@ -122,6 +122,25 @@ final ThemeData darkTheme = ThemeData.dark().copyWith(
       color: Colors.white,
     ),
   ),
+  tabBarTheme: TabBarThemeData(
+    indicatorSize: TabBarIndicatorSize.tab,
+    dividerColor: Colors.transparent,
+    indicator: BoxDecoration(
+      borderRadius: const BorderRadius.all(Radius.circular(20)),
+    ),
+    splashBorderRadius: const BorderRadius.all(Radius.circular(20)),
+    labelStyle: TextStyle(
+      fontFamily: 'Poppins',
+      fontWeight: FontWeight.w600,
+      color: AppColors.lightCardBackground
+    )
+  ),
+  cardTheme: CardThemeData(
+    color: Colors.black45
+  ),
+  switchTheme: SwitchThemeData(
+    trackColor: WidgetStatePropertyAll(Colors.black12)
+  ),
 
   colorScheme: const ColorScheme.dark(
     primary: AppColors.primaryLight,
@@ -131,4 +150,8 @@ final ThemeData darkTheme = ThemeData.dark().copyWith(
     onPrimary: Colors.white,
     onSurface: AppColors.darkTextColor,
   ),
+  bottomSheetTheme: BottomSheetThemeData(
+    backgroundColor: AppColors.darkCardBackground
+  ),
+  
 );
