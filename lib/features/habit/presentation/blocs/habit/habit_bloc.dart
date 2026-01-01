@@ -281,7 +281,12 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       if (habit == null) {
         emit(const HabitError("Habit not found"));
       } else {
-        emit(HabitDetailLoaded(habit));
+        emit(
+          HabitDetailLoaded(
+            habit: habit,
+            goalCompletedCount: habit.goalCompletedCount,
+          ),
+        );
       }
     });
   }
@@ -297,9 +302,9 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     result.match(
       (failure) => emit(HabitError(failure.message)),
       (_) => emit(
-        HabitCountUpdateSuccess(
-          updatedCount: event.value.toDouble(),
+        (state as HabitDetailLoaded).copyWith(
           habit: event.habit,
+          goalCompletedCount: event.value,
         ),
       ),
     );

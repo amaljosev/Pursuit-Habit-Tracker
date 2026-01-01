@@ -43,8 +43,9 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
   Timer? _saveTimer;
   bool _isRunning = false;
 
-  Duration get _unitDuration =>
-      widget.goalValue == 'min' ? const Duration(minutes: 1) : const Duration(hours: 1);
+  Duration get _unitDuration => widget.goalValue == 'min'
+      ? const Duration(minutes: 1)
+      : const Duration(hours: 1);
 
   Duration get _totalDuration => _unitDuration * widget.totalGoalCount;
 
@@ -59,14 +60,15 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
       duration: _totalDuration,
     )..value = _currentGoalCount / widget.totalGoalCount;
 
-    _progressAnimation = CurvedAnimation(parent: _progressController, curve: Curves.linear)
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() => _isRunning = false);
-          widget.onTimerComplete?.call();
-          _saveTimer?.cancel();
-        }
-      });
+    _progressAnimation =
+        CurvedAnimation(parent: _progressController, curve: Curves.linear)
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              setState(() => _isRunning = false);
+              widget.onTimerComplete?.call();
+              _saveTimer?.cancel();
+            }
+          });
   }
 
   @override
@@ -136,7 +138,10 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
     final remainingSeconds = (totalSeconds * (1 - progress)).ceil();
 
     final hours = (remainingSeconds ~/ 3600).toString().padLeft(2, '0');
-    final minutes = ((remainingSeconds % 3600) ~/ 60).toString().padLeft(2, '0');
+    final minutes = ((remainingSeconds % 3600) ~/ 60).toString().padLeft(
+      2,
+      '0',
+    );
     final seconds = (remainingSeconds % 60).toString().padLeft(2, '0');
     return '$hours:$minutes:$seconds';
   }
@@ -234,7 +239,9 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
                                   ],
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.1,
+                                      ),
                                       blurRadius: 2,
                                       offset: const Offset(0, 1),
                                     ),
@@ -246,8 +253,8 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
                                 progress == 1.0
                                     ? 'Completed'
                                     : _isRunning
-                                        ? 'Running'
-                                        : 'Paused',
+                                    ? 'Running'
+                                    : 'Paused',
                                 style: TextStyle(
                                   fontSize: circleSize * 0.06,
                                   color: Colors.grey[600],
@@ -273,6 +280,7 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
                   fontWeight: FontWeight.w500,
                 ),
               ),
+              const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
@@ -362,6 +370,7 @@ class _ModernTimerWidgetState extends State<ModernTimerWidget>
     required String label,
   }) {
     return Column(
+      spacing: 10,
       children: [
         Tooltip(
           message: tooltip,

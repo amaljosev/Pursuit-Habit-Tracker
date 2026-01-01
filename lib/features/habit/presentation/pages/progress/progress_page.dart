@@ -1172,151 +1172,136 @@ class ProgressPageState extends State<ProgressPage>
     final completedDates = _getCompletedDates();
     final habitColor = HelperFunctions.getColorById(id: widget.habit.color);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
+    return TableCalendar(
+      firstDay: DateTime.utc(2020, 1, 1),
+      lastDay: DateTime.utc(2030, 12, 31),
+      focusedDay: _focusedDay,
+      calendarFormat: _calendarFormat,
+      availableGestures: AvailableGestures.horizontalSwipe,
+      // onFormatChanged: (format) {
+      //   setState(() => _calendarFormat = format);
+      // },
+      
+      onPageChanged: (focusedDay) {
+        setState(() => _focusedDay = focusedDay);
+      },
+
+      // Header styling
+      headerStyle: HeaderStyle(
+        formatButtonVisible: false,
+        titleCentered: true,
+        titleTextStyle: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey[800],
+        ),
+        leftChevronIcon: Icon(Icons.chevron_left, color: habitColor, size: 24),
+        rightChevronIcon: Icon(
+          Icons.chevron_right,
+          color: habitColor,
+          size: 24,
+        ),
+        headerPadding: EdgeInsets.symmetric(vertical: 16),
       ),
-      child: TableCalendar(
-        firstDay: DateTime.utc(2020, 1, 1),
-        lastDay: DateTime.utc(2030, 12, 31),
-        focusedDay: _focusedDay,
-        calendarFormat: _calendarFormat,
-        // onFormatChanged: (format) {
-        //   setState(() => _calendarFormat = format);
-        // },
-        onPageChanged: (focusedDay) {
-          setState(() => _focusedDay = focusedDay);
-        },
 
-        // Header styling
-        headerStyle: HeaderStyle(
-          formatButtonVisible: false,
-          titleCentered: true,
-          titleTextStyle: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey[800],
-          ),
-          leftChevronIcon: Icon(
-            Icons.chevron_left,
-            color: habitColor,
-            size: 24,
-          ),
-          rightChevronIcon: Icon(
-            Icons.chevron_right,
-            color: habitColor,
-            size: 24,
-          ),
-          headerPadding: EdgeInsets.symmetric(vertical: 16),
+      // Days of week styling
+      daysOfWeekStyle: DaysOfWeekStyle(
+        weekdayStyle: TextStyle(
+          color: Colors.grey[600],
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+        weekendStyle: TextStyle(
+          color: Colors.grey[600],
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+      ),
+
+      // Calendar styling
+      calendarStyle: CalendarStyle(
+        // Default day style
+        defaultTextStyle: TextStyle(
+          color: Colors.grey[800],
+          fontWeight: FontWeight.w500,
+        ),
+        weekendTextStyle: TextStyle(
+          color: Colors.grey[800],
+          fontWeight: FontWeight.w500,
         ),
 
-        // Days of week styling
-        daysOfWeekStyle: DaysOfWeekStyle(
-          weekdayStyle: TextStyle(
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-          weekendStyle: TextStyle(
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
+        // Today styling
+        todayDecoration: BoxDecoration(
+          color: habitColor.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: habitColor, width: 2),
+        ),
+        todayTextStyle: TextStyle(
+          color: habitColor,
+          fontWeight: FontWeight.bold,
         ),
 
-        // Calendar styling
-        calendarStyle: CalendarStyle(
-          // Default day style
-          defaultTextStyle: TextStyle(
-            color: Colors.grey[800],
-            fontWeight: FontWeight.w500,
-          ),
-          weekendTextStyle: TextStyle(
-            color: Colors.grey[800],
-            fontWeight: FontWeight.w500,
-          ),
-
-          // Today styling
-          todayDecoration: BoxDecoration(
-            color: habitColor.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-            border: Border.all(color: habitColor, width: 2),
-          ),
-          todayTextStyle: TextStyle(
-            color: habitColor,
-            fontWeight: FontWeight.bold,
-          ),
-
-          // Selected day styling (for completed days)
-          selectedDecoration: BoxDecoration(
-            color: habitColor,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: habitColor.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          selectedTextStyle: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-
-          // Outside days
-          outsideTextStyle: TextStyle(
-            color: Colors.grey[400],
-            fontWeight: FontWeight.normal,
-          ),
-
-          // Cell padding
-          cellPadding: EdgeInsets.all(4),
+        // Selected day styling (for completed days)
+        selectedDecoration: BoxDecoration(
+          color: habitColor,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: habitColor.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        selectedTextStyle: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
         ),
 
-        // Builders for custom day rendering
-        calendarBuilders: CalendarBuilders(
-          markerBuilder: (context, date, events) {
-            if (completedDates.any(
-              (completedDate) =>
-                  completedDate.year == date.year &&
-                  completedDate.month == date.month &&
-                  completedDate.day == date.day,
-            )) {
-              return Positioned(
-                bottom: 1,
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: habitColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              );
-            }
-            return SizedBox.shrink();
-          },
+        // Outside days
+        outsideTextStyle: TextStyle(
+          color: Colors.grey[400],
+          fontWeight: FontWeight.normal,
         ),
 
-        // Selected day predicate
-        selectedDayPredicate: (day) {
-          return completedDates.any(
+        // Cell padding
+        cellPadding: EdgeInsets.all(4),
+      ),
+
+      // Builders for custom day rendering
+      calendarBuilders: CalendarBuilders(
+        markerBuilder: (context, date, events) {
+          if (completedDates.any(
             (completedDate) =>
-                completedDate.year == day.year &&
-                completedDate.month == day.month &&
-                completedDate.day == day.day,
-          );
+                completedDate.year == date.year &&
+                completedDate.month == date.month &&
+                completedDate.day == date.day,
+          )) {
+            return Positioned(
+              bottom: 1,
+              child: Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: habitColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            );
+          }
+          return SizedBox.shrink();
         },
       ),
+
+      // Selected day predicate
+      selectedDayPredicate: (day) {
+        return completedDates.any(
+          (completedDate) =>
+              completedDate.year == day.year &&
+              completedDate.month == day.month &&
+              completedDate.day == day.day,
+        );
+      },
     );
   }
 

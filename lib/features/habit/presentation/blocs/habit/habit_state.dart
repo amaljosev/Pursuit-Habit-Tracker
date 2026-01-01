@@ -112,10 +112,19 @@ class HabitError extends HabitState {
 
 class HabitDetailLoaded extends HabitState {
   final Habit habit;
-  const HabitDetailLoaded(this.habit);
+  final int goalCompletedCount;
 
+  const HabitDetailLoaded({
+    required this.habit,
+    required this.goalCompletedCount,
+  });
+  HabitDetailLoaded copyWith({Habit? habit, int? goalCompletedCount}) =>
+      HabitDetailLoaded(
+        habit: habit ?? this.habit,
+        goalCompletedCount: goalCompletedCount ?? this.goalCompletedCount,
+      );
   @override
-  List<Object> get props => [habit];
+  List<Object> get props => [habit, goalCompletedCount];
 }
 
 class HabitCountUpdateSuccess extends HabitState {
@@ -126,7 +135,7 @@ class HabitCountUpdateSuccess extends HabitState {
     required this.habit,
   });
   @override
-  List<Object> get props => [updatedCount,habit];
+  List<Object> get props => [updatedCount, habit];
 }
 
 class HabitDailyResetCompleted extends HabitState {}

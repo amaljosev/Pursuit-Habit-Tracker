@@ -39,7 +39,6 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
   void initState() {
     super.initState();
     assert(widget.totalGoal > 0, 'totalGoal must be > 0');
-
     _currentProgress = (widget.completedCount / widget.totalGoal).clamp(
       0.0,
       1.0,
