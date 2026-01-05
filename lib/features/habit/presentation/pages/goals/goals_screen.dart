@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/components/error_widget.dart';
+import 'package:pursuit/core/components/loading_widget.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_complete_func.dart';
 import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
@@ -39,20 +40,20 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 if (state is HabitOperationSuccess) {
                   context.read<HabitBloc>().add(GetAllHabitsEvent());
                 }
-                if (state is HabitCountUpdateSuccess) {
-                  if (state.updatedCount >= state.habit.goalCount &&
-                      !state.habit.isCompleteToday) {
-                    final updatedHabit = updateHabitOnCompletion(state.habit);
-                    context.read<HabitBloc>().add(UpdateHabitEvent(updatedHabit));
-                  }
-                  context.read<HabitBloc>().add(GetAllHabitsEvent());
-                }
+                // if (state is HabitCountUpdateSuccess) {
+                //   if (state.updatedCount >= state.habit.goalCount &&
+                //       !state.habit.isCompleteToday) {
+                //     final updatedHabit = updateHabitOnCompletion(state.habit);
+                //     context.read<HabitBloc>().add(UpdateHabitEvent(updatedHabit));
+                //   }
+                //   context.read<HabitBloc>().add(GetAllHabitsEvent());
+                // }
+                
               },
               builder: (context, state) {
                 if (state is HabitLoading ||
-                    state is AddHabitInitial ||
-                    state is HabitDetailLoaded) {
-                  return const Center(child: CircularProgressIndicator());
+                    state is AddHabitInitial ) {
+                  return const AppLoading();
                 } else if (state is HabitLoaded) {
                   final habits = state.habits;
       

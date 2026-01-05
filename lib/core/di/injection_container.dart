@@ -9,6 +9,7 @@ import 'package:pursuit/features/habit/domain/usecases/insert_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_all_habits.dart';
 import 'package:pursuit/features/habit/domain/usecases/update_goal_count.dart';
 import 'package:pursuit/features/habit/domain/usecases/update_habit.dart';
+import 'package:pursuit/features/habit/presentation/blocs/bloc/detail_bloc.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 
 final sl = GetIt.instance; // sl = service locator
@@ -43,6 +44,14 @@ Future<void> init() async {
       getHabitByIdUseCase: sl(),
       updateGoalCountUseCase: sl(),
       checkDailyResetUseCase: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => DetailBloc(
+      updateHabitUseCase: sl(),
+      deleteHabitUseCase: sl(),
+      getHabitByIdUseCase: sl(),
+      updateGoalCountUseCase: sl(),
     ),
   );
 }

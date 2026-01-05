@@ -58,7 +58,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     on<GetAllHabitsEvent>(_onGetAllHabits);
     on<UpdateHabitEvent>(_onUpdateHabit);
     on<DeleteHabitEvent>(_onDeleteHabit);
-    on<GetHabitByIdEvent>(_onGetHabitById);
+    // on<GetHabitByIdEvent>(_onGetHabitById);
 
     //Operations
     on<GoalCountUpdateEvent>(_onCountIncrement);
@@ -268,28 +268,28 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     );
   }
 
-  // 🔍 GET HABIT BY ID
-  Future<void> _onGetHabitById(
-    GetHabitByIdEvent event,
-    Emitter<HabitState> emit,
-  ) async {
-    emit(HabitLoading());
-    // await Future.delayed(Duration(seconds: 1));
-    final result = await getHabitByIdUseCase(event.id);
+  // // 🔍 GET HABIT BY ID
+  // Future<void> _onGetHabitById(
+  //   GetHabitByIdEvent event,
+  //   Emitter<HabitState> emit,
+  // ) async {
+  //   emit(HabitLoading());
+  //   // await Future.delayed(Duration(seconds: 1));
+  //   final result = await getHabitByIdUseCase(event.id);
 
-    result.match((failure) => emit(HabitError(failure.message)), (habit) {
-      if (habit == null) {
-        emit(const HabitError("Habit not found"));
-      } else {
-        emit(
-          HabitDetailLoaded(
-            habit: habit,
-            goalCompletedCount: habit.goalCompletedCount,
-          ),
-        );
-      }
-    });
-  }
+  //   result.match((failure) => emit(HabitError(failure.message)), (habit) {
+  //     if (habit == null) {
+  //       emit(const HabitError("Habit not found"));
+  //     } else {
+  //       emit(
+  //         HabitDetailLoaded(
+  //           habit: habit,
+  //           goalCompletedCount: habit.goalCompletedCount,
+  //         ),
+  //       );
+  //     }
+  //   });
+  // }
 
   FutureOr<void> _onCountIncrement(
     GoalCountUpdateEvent event,
@@ -301,12 +301,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
 
     result.match(
       (failure) => emit(HabitError(failure.message)),
-      (_) => emit(
-        (state as HabitDetailLoaded).copyWith(
-          habit: event.habit,
-          goalCompletedCount: event.value,
-        ),
-      ),
+      (_) => emit(HabitOperationSuccess('message')),
     );
   }
 
