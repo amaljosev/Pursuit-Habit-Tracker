@@ -40,14 +40,16 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 if (state is HabitOperationSuccess) {
                   context.read<HabitBloc>().add(GetAllHabitsEvent());
                 }
-                // if (state is HabitCountUpdateSuccess) {
-                //   if (state.updatedCount >= state.habit.goalCount &&
-                //       !state.habit.isCompleteToday) {
-                //     final updatedHabit = updateHabitOnCompletion(state.habit);
-                //     context.read<HabitBloc>().add(UpdateHabitEvent(updatedHabit));
-                //   }
-                //   context.read<HabitBloc>().add(GetAllHabitsEvent());
-                // }
+                if (state is HabitCountUpdateSuccess) {
+                  if (state.updatedCount >= state.habit.goalCount &&
+                      !state.habit.isCompleteToday) {
+                    final updatedHabit = updateHabitOnCompletion(state.habit);
+                    context.read<HabitBloc>().add(UpdateHabitEvent(updatedHabit));
+                   
+                  }
+                
+                  context.read<HabitBloc>().add(GetAllHabitsEvent());
+                }
                 
               },
               builder: (context, state) {

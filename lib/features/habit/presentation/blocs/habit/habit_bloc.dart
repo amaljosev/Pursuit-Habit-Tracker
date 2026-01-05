@@ -301,7 +301,9 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
 
     result.match(
       (failure) => emit(HabitError(failure.message)),
-      (_) => emit(HabitOperationSuccess('message')),
+      (_) => emit(
+        HabitCountUpdateSuccess(updatedCount: event.value, habit: event.habit),
+      ),
     );
   }
 

@@ -88,20 +88,12 @@ class HabitLoading extends HabitState {}
 
 class HabitLoaded extends HabitState {
   final List<Habit> habits;
+
   const HabitLoaded(this.habits);
 
   @override
   List<Object> get props => [habits];
 }
-
-class HabitOperationSuccess extends HabitState {
-  final String message;
-  const HabitOperationSuccess(this.message);
-
-  @override
-  List<Object> get props => [message];
-}
-
 class HabitError extends HabitState {
   final String message;
   const HabitError(this.message);
@@ -112,7 +104,7 @@ class HabitError extends HabitState {
 
 class HabitCountUpdateSuccess extends HabitState {
   final Habit habit;
-  final double updatedCount;
+  final int updatedCount;
   const HabitCountUpdateSuccess({
     required this.updatedCount,
     required this.habit,
@@ -120,6 +112,15 @@ class HabitCountUpdateSuccess extends HabitState {
   @override
   List<Object> get props => [updatedCount, habit];
 }
+
+class HabitOperationSuccess extends HabitState {
+  final String message;
+  const HabitOperationSuccess(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
 
 class HabitDailyResetCompleted extends HabitState {}
 
