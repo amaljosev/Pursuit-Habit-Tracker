@@ -6,15 +6,21 @@ import 'package:pursuit/features/habit/constants/habit_timings.dart';
 import 'package:pursuit/features/habit/constants/habit_types.dart';
 
 class HelperFunctions {
+  static Map<int, String>? _emojiCache;
+  
   static String getEmojiById(int id) {
-    try {
-      return HabitIcons.emojis.firstWhere(
-            (emoji) => emoji['id'] == id,
-          )['emoji'] ??
-          '❓';
-    } catch (e) {
-      return '❓';
+    // Initialize cache if null
+    if (_emojiCache == null) {
+      _emojiCache = {};
+      for (final emoji in HabitIcons.emojis) {
+        final emojiId = emoji['id'] as int;
+        final emojiChar = emoji['emoji'] as String;
+        _emojiCache![emojiId] = emojiChar;
+      }
     }
+    
+    // Return from cache or default
+    return _emojiCache![id] ?? '❓';
   }
 
   static Color getColorById({required int id, bool? isDark}) {

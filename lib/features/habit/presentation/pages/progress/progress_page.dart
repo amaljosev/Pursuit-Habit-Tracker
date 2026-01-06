@@ -732,15 +732,17 @@ class ProgressPageState extends State<ProgressPage>
               startThisMonth.month,
               dayNum,
             );
-            if (cDate.month == startThisMonth.month)
+            if (cDate.month == startThisMonth.month) {
               cSum += getCountForDate(cDate);
+            }
             final pDate = DateTime(
               startLastMonth.year,
               startLastMonth.month,
               dayNum,
             );
-            if (pDate.month == startLastMonth.month)
+            if (pDate.month == startLastMonth.month) {
               pSum += getCountForDate(pDate);
+            }
           } catch (_) {}
         }
         currentValues.add(cSum);
@@ -755,10 +757,11 @@ class ProgressPageState extends State<ProgressPage>
       Map<int, int> lastY = {};
       for (var entry in widget.habit.completedDays) {
         final d = DateTime.parse(entry['date']);
-        if (d.year == today.year)
+        if (d.year == today.year) {
           thisY[d.month] = (thisY[d.month] ?? 0) + (entry['count'] as int);
-        else if (d.year == today.year - 1)
+        } else if (d.year == today.year - 1) {
           lastY[d.month] = (lastY[d.month] ?? 0) + (entry['count'] as int);
+        }
       }
       for (int i = 1; i <= 12; i++) {
         currentValues.add((thisY[i] ?? 0).toDouble());
@@ -1178,10 +1181,10 @@ class ProgressPageState extends State<ProgressPage>
       focusedDay: _focusedDay,
       calendarFormat: _calendarFormat,
       availableGestures: AvailableGestures.horizontalSwipe,
+
       // onFormatChanged: (format) {
       //   setState(() => _calendarFormat = format);
       // },
-      
       onPageChanged: (focusedDay) {
         setState(() => _focusedDay = focusedDay);
       },

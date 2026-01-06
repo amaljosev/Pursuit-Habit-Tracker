@@ -10,7 +10,7 @@ import 'package:pursuit/core/extensions/context_extensions.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/functions/math_functions.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
-import 'package:pursuit/features/habit/presentation/blocs/bloc/detail_bloc.dart';
+import 'package:pursuit/features/habit/presentation/blocs/detail/detail_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_complete_func.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/progress_circle_widget.dart';
@@ -54,7 +54,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
         child: BlocConsumer<DetailBloc, DetailState>(
           buildWhen: (previous, current) {
             if (previous is HabitDetailLoaded && current is HabitDetailLoaded) {
-              return previous.habit != current.habit;
+              return previous.habit.id != current.habit.id;
             }
             return true;
           },
@@ -82,13 +82,27 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             }
             if (state is HabitDetailLoaded) {
               final Habit habit = state.habit;
-
+              final Color goalColor = HelperFunctions.getColorById(
+                id: habit.color,
+                isDark: true,
+              );
+              final String goalType = HelperFunctions.getMeasureTypeById(
+                habit.goalValue,
+              );
+              final String goalVal = HelperFunctions.getMeasureById(
+                habit.goalValue,
+              );
+              final String goalIcon = HelperFunctions.getEmojiById(habit.icon);
               return Stack(
                 children: [
                   GoalDetailContent(
                     habit: habit,
                     formKey: _formKey,
                     valueCtrl: _valueCtrl,
+                    goalColor: goalColor,
+                    goalIcon: goalIcon,
+                    goalType: goalType,
+                    goalVal: goalVal,
                   ),
 
                   if (isCompleteToday)
@@ -122,17 +136,21 @@ class GoalDetailContent extends StatelessWidget {
     required this.habit,
     required this.formKey,
     required this.valueCtrl,
+    required this.goalColor,
+    required this.goalType,
+    required this.goalVal,
+    required this.goalIcon,
   });
   final Habit habit;
   final GlobalKey<FormState> formKey;
   final TextEditingController valueCtrl;
+  final Color goalColor;
+  final String goalType;
+  final String goalVal;
+  final String goalIcon;
 
   @override
   Widget build(BuildContext context) {
-    final color = HelperFunctions.getColorById(id: habit.color, isDark: true);
-    final goalType = HelperFunctions.getMeasureTypeById(habit.goalValue);
-    final goalVal = HelperFunctions.getMeasureById(habit.goalValue);
-
     return SingleChildScrollView(
       child: Container(
         height: context.screenHeight,
@@ -193,9 +211,13 @@ class GoalDetailContent extends StatelessWidget {
                             actions: [OptionsWidget(habit: habit)],
                           ),
                         ),
-                        Text(
-                          HelperFunctions.getEmojiById(habit.icon),
-                          style: Theme.of(context).textTheme.displayLarge,
+                        Hero(
+                          tag: habit.id,
+                          transitionOnUserGestures: true,
+                          child: Text(
+                            goalIcon,
+                            style: Theme.of(context).textTheme.displayLarge,
+                          ),
                         ),
                       ],
                     ),
@@ -207,9 +229,9 @@ class GoalDetailContent extends StatelessWidget {
                             ),
                             totalGoal: habit.goalCount.toDouble(),
                             completedCount: goalCount,
-                            iconEmoji: HelperFunctions.getEmojiById(habit.icon),
-                            primaryColor: color,
-                            secondaryColor: color.withValues(alpha: 0.5),
+                            iconEmoji: goalIcon,
+                            primaryColor: goalColor,
+                            secondaryColor: goalColor.withValues(alpha: 0.5),
                             onDecrease: goalCountInt <= 0
                                 ? () {}
                                 : () => context.read<DetailBloc>().add(
@@ -257,11 +279,11 @@ class GoalDetailContent extends StatelessWidget {
                                   ),
                               totalGoalCount: habit.goalCount,
                               size: 300,
-                              primaryColor: color,
-                              progressColor: color,
+                              primaryColor: goalColor,
+                              progressColor: goalColor,
                             ),
                           )
-                        : ProgressSection(habit: habit, color: color),
+                        : ProgressSection(habit: habit, color: goalColor),
 
                     goalType != 'time'
                         ? SafeArea(
@@ -279,15 +301,18 @@ class GoalDetailContent extends StatelessWidget {
                                       ),
                                     ),
                                     child: CircleAvatar(
-                                      backgroundColor: color.withValues(
+                                      backgroundColor: goalColor.withValues(
                                         alpha: 0.2,
                                       ),
-                                      child: Icon(Icons.refresh, color: color),
+                                      child: Icon(
+                                        Icons.refresh,
+                                        color: goalColor,
+                                      ),
                                     ),
                                   ),
                                   AppButton(
                                     title: 'Add',
-                                    backgroundColor: color,
+                                    backgroundColor: goalColor,
                                     onPressed: goalCountInt >= habit.goalCount
                                         ? null
                                         : () async {
@@ -330,7 +355,7 @@ class GoalDetailContent extends StatelessWidget {
                                   AppButton(
                                     title: 'Progress',
                                     icon: CupertinoIcons.chart_bar,
-                                    backgroundColor: color,
+                                    backgroundColor: goalColor,
                                     onPressed: () => Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (context) =>
@@ -349,12 +374,12 @@ class GoalDetailContent extends StatelessWidget {
                                             ),
                                           ),
                                     child: CircleAvatar(
-                                      backgroundColor: color.withValues(
+                                      backgroundColor: goalColor.withValues(
                                         alpha: 0.2,
                                       ),
                                       child: Icon(
                                         CupertinoIcons.check_mark,
-                                        color: color,
+                                        color: goalColor,
                                       ),
                                     ),
                                   ),
@@ -370,7 +395,7 @@ class GoalDetailContent extends StatelessWidget {
                                   child: AppButton(
                                     title: 'Progress',
                                     icon: CupertinoIcons.chart_bar,
-                                    backgroundColor: color,
+                                    backgroundColor: goalColor,
                                     onPressed: () => Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (context) =>
@@ -520,7 +545,7 @@ class OptionsWidget extends StatelessWidget {
             ),
           );
         } else if (value == 'delete') {
-          onDeleteHabit(context: context, id: habit.id);
+          onDeleteHabit(context: context, id: habit.id, fromHome: false);
         }
       },
     );

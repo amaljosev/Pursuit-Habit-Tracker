@@ -2,12 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/components/app_button.dart';
-import 'package:pursuit/features/habit/presentation/blocs/bloc/detail_bloc.dart';
+import 'package:pursuit/features/habit/presentation/blocs/detail/detail_bloc.dart';
+import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 
 void onDeleteHabit({
   required BuildContext context,
   required String id,
-  bool? fromHome,
+  required bool? fromHome,
 }) {
   showAdaptiveDialog(
     context: context,
@@ -43,10 +44,13 @@ void onDeleteHabit({
           title: 'Delete',
           backgroundColor: Colors.red.shade600,
           onPressed: () {
-            context.read<DetailBloc>().add(DeleteHabitDetailEvent(id));
-            if (fromHome == null) {
-              Navigator.pop(context);
+            if (fromHome != null && fromHome) {
+              context.read<HabitBloc>().add(DeleteHabitEvent(id));
+            } else {
+              context.read<DetailBloc>().add(DeleteHabitDetailEvent(id));
             }
+
+            Navigator.pop(context);
           },
         ),
       ],
