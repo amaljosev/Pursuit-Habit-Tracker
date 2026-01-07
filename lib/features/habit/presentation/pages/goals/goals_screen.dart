@@ -44,27 +44,25 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   if (state.updatedCount >= state.habit.goalCount &&
                       !state.habit.isCompleteToday) {
                     final updatedHabit = updateHabitOnCompletion(state.habit);
-                    context.read<HabitBloc>().add(UpdateHabitEvent(updatedHabit));
-                   
+                    context.read<HabitBloc>().add(
+                      UpdateHabitEvent(updatedHabit),
+                    );
                   }
-                
                   context.read<HabitBloc>().add(GetAllHabitsEvent());
                 }
-                
               },
               builder: (context, state) {
-                if (state is HabitLoading ||
-                    state is AddHabitInitial ) {
+                if (state is HabitLoading || state is AddHabitInitial) {
                   return const AppLoading();
                 } else if (state is HabitLoaded) {
                   final habits = state.habits;
-      
+
                   if (habits.isEmpty) {
                     return const GoalsEmptyWidget();
                   }
                   return CustomScrollView(
                     slivers: [
-                      buildHeader( context),
+                      buildHeader(context),
                       buildBody(
                         habits: habits,
                         formKey: _formKey,
@@ -84,8 +82,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
             ),
             FloatingActionButton(
               onPressed: () {
-              //  showDatabaseDump(context);
-               Navigator.of(context).pushNamed('/add');
+                //  showDatabaseDump(context);
+                Navigator.of(context).pushNamed('/add');
               },
               child: const Icon(Icons.add),
             ),
@@ -95,9 +93,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 }
+
 Future<void> showDatabaseDump(BuildContext context) async {
   final db = await openDatabase('habits.db');
-  final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
+  final tables = await db.rawQuery(
+    "SELECT name FROM sqlite_master WHERE type='table'",
+  );
 
   final result = <String, dynamic>{};
 
@@ -106,12 +107,12 @@ Future<void> showDatabaseDump(BuildContext context) async {
     final rows = await db.query(tableName as String);
     result[tableName] = rows;
   }
-   log(result.toString());
+  log(result.toString());
 
   // showDialog(
   //   context: context,
   //   builder: (_) {
-     
+
   //     return AlertDialog(
   //     title: Text("Database Dump"),
   //     content: SingleChildScrollView(

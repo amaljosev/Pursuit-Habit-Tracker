@@ -164,8 +164,8 @@ class _HabitTileState extends State<HabitTile> {
                 width: 45,
                 child: Center(
                   child: Hero(
+                    key: ValueKey('icon${habit.id}'),
                     tag: habit.id,
-
                     child: Text(
                       HelperFunctions.getEmojiById(habit.icon),
                       style: Theme.of(context).textTheme.displaySmall,
@@ -232,7 +232,7 @@ class _HabitTileState extends State<HabitTile> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => GoalDetailScreen(habitId: habit.id),
+                    builder: (context) => GoalDetailScreen(habitId: habit.id,habitIcon: HelperFunctions.getEmojiById(habit.icon),),
                   ),
                 );
               },

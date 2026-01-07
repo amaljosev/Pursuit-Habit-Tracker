@@ -67,7 +67,7 @@ class DetailBloc extends Bloc<DetailEvent, DetailState> {
     Emitter<DetailState> emit,
   ) async {
     emit(HabitDetailLoading());
-    // await Future.delayed(Duration(seconds: 1));
+    //  await Future.delayed(Duration(milliseconds: 100));
     final result = await getHabitByIdUseCase(event.id);
 
     result.match((failure) => emit(HabitDetailError(failure.message)), (habit) {
