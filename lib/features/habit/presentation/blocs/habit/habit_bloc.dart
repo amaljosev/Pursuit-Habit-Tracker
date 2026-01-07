@@ -41,6 +41,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     // UI update events - only handle when state is AddHabitInitial
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
     on<UpdateHabitInitialEvent>(_onUpdateHabitInitialEvent);
+    on<RenewalHabitInitialEvent>(_onRenewalHabitInitialEvent);
     on<HabitColorEvent>(_onHabitColorEvent);
     on<HabitNameEvent>(_onHabitNameEvent);
     on<HabitIconEvent>(_onHabitIconEvent);
@@ -106,6 +107,28 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
         endDate: event.habit.endDate != null
             ? HelperFunctions.formatDate(event.habit.endDate!)
             : '',
+        isExpanded: event.habit.endDate != null,
+        hasRemainder:
+            event.habit.reminder != null && event.habit.reminder!.isNotEmpty,
+        remainderTime: event.habit.reminder ?? '',
+      ),
+    );
+  }
+  void _onRenewalHabitInitialEvent(
+    RenewalHabitInitialEvent event,
+    Emitter<HabitState> emit,
+  ) {
+    emit(
+      AddHabitInitial(
+        color: event.habit.color,
+        icon: event.habit.icon,
+        name: event.habit.name,
+        habitType: event.habit.type,
+        goalCount: event.habit.goalCount,
+        goalValue: event.habit.goalValue,
+        goalTime: event.habit.time,
+        startDate: event.habit.startDate.toString(),
+        endDate: '',
         isExpanded: event.habit.endDate != null,
         hasRemainder:
             event.habit.reminder != null && event.habit.reminder!.isNotEmpty,

@@ -20,6 +20,13 @@ final class UpdateHabitInitialEvent extends HabitEvent {
   List<Object> get props => [habit];
 }
 
+final class RenewalHabitInitialEvent extends HabitEvent {
+  final Habit habit;
+  const RenewalHabitInitialEvent({required this.habit});
+  @override
+  List<Object> get props => [habit];
+}
+
 final class HabitIconEvent extends HabitEvent {
   final int icon;
 

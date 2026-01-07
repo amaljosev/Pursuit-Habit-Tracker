@@ -2,6 +2,7 @@ import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 
 Habit updateHabitOnCompletion(Habit habit) {
+  
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
 

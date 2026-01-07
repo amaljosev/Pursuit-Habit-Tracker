@@ -22,6 +22,7 @@ class DetailBloc extends Bloc<DetailEvent, DetailState> {
     required this.getHabitByIdUseCase,
     required this.updateGoalCountUseCase,
   }) : super(HabitDetailInitial()) {
+    on<ResetHabitScreenEvent>((event, emit) => emit(HabitDetailInitial()));
     on<UpdateHabitDetailEvent>(_onUpdateHabit);
     on<DeleteHabitDetailEvent>(_onDeleteHabit);
     on<GetHabitDetailByIdEvent>(_onGetHabitById);

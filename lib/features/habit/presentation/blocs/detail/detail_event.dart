@@ -7,6 +7,7 @@ sealed class DetailEvent extends Equatable {
   List<Object> get props => [];
 }
 
+final class ResetHabitScreenEvent extends DetailEvent {}
 
 /// 🔍 Get specific habit by ID
 final class GetHabitDetailByIdEvent extends DetailEvent {

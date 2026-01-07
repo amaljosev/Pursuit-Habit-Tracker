@@ -1,9 +1,12 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pursuit/app/pages/home_page.dart';
 import 'package:pursuit/core/components/app_button.dart';
+import 'package:pursuit/core/components/empty_widget.dart';
 import 'package:pursuit/core/components/error_widget.dart';
 import 'package:pursuit/core/components/loading_widget.dart';
 import 'package:pursuit/core/extensions/context_extensions.dart';
@@ -13,13 +16,16 @@ import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/detail/detail_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_complete_func.dart';
+import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_renew_functions.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/progress_circle_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/glass_animation_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/timer_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/walking_animation.dart';
 import 'package:pursuit/features/habit/presentation/pages/progress/progress_page.dart';
+import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
 import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
+import 'package:pursuit/features/habit/presentation/widgets/renew_habit.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
 
 class GoalDetailScreen extends StatefulWidget {
@@ -42,16 +48,25 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
   }
 
   @override
+  void dispose() {
+    _valueCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: PopScope(
         canPop: false,
-        onPopInvokedWithResult: (didPop, result) =>
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => HomePage()),
-              (Route<dynamic> route) => false,
-            ),
+        onPopInvokedWithResult: (didPop, result) {
+          //context.read<DetailBloc>().add(ResetHabitScreenEvent());
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+            (Route<dynamic> route) => false,
+          );
+        },
+
         child: BlocConsumer<DetailBloc, DetailState>(
           listener: (context, state) {
             if (state is HabitDetailOperationSuccess) {
@@ -69,6 +84,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             }
           },
           builder: (context, state) {
+            // log(state.toString());
             if (state is HabitDetailError) {
               return const ErrorScreenWidget();
             }
@@ -77,6 +93,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             }
             if (state is HabitDetailLoaded) {
               final Habit habit = state.habit;
+
               final Color goalColor = HelperFunctions.getColorById(
                 id: habit.color,
                 isDark: true,
@@ -90,42 +107,55 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
               final String goalIcon = HelperFunctions.getEmojiById(habit.icon);
               return Stack(
                 children: [
-                  SingleChildScrollView(
-                    child: Container(
-                      height: context.screenHeight,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            HelperFunctions.getColorById(id: habit.color),
-                            Colors.white,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                  Container(
+                    height: context.screenHeight,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          HelperFunctions.getColorById(id: habit.color),
+                          Colors.white,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: BlocSelector<DetailBloc, DetailState, double>(
-                            selector: (state) {
-                              if (state is HabitDetailLoaded) {
-                                if (state.goalCompletedCount >=
-                                        state.habit.goalCount &&
-                                    !habit.isCompleteToday) {
-                                  final updatedHabit = updateHabitOnCompletion(
-                                    state.habit,
-                                  );
+                    ),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: BlocSelector<DetailBloc, DetailState, double>(
+                          selector: (state) {
+                            if (state is HabitDetailLoaded) {
+                              if (state.goalCompletedCount >=
+                                      state.habit.goalCount &&
+                                  !habit.isCompleteToday) {
+                                final updatedHabit = updateHabitOnCompletion(
+                                  state.habit,
+                                );
+                                final isRenewalDay = isHabitEndingToday(habit);
+                                if (isRenewalDay) {
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    renewHabitAlert(
+                                      context: context,
+                                      habit: habit,
+                                      fromHome: false,
+                                    );
+                                  });
+                                } else {
                                   context.read<DetailBloc>().add(
                                     UpdateHabitDetailEvent(updatedHabit),
                                   );
                                 }
-                                return state.goalCompletedCount.toDouble();
                               }
-                              return habit.goalCompletedCount.toDouble();
-                            },
-                            builder: (context, goalCount) {
-                              final goalCountInt = goalCount.toInt();
-                              return Column(
+                              return state.goalCompletedCount.toDouble();
+                            }
+                            return habit.goalCompletedCount.toDouble();
+                          },
+                          builder: (context, goalCount) {
+                            final goalCountInt = goalCount.toInt();
+                            return SingleChildScrollView(
+                              child: Column(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 spacing: 20,
@@ -138,15 +168,19 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                           foregroundColor: Colors.black,
                                           surfaceTintColor: Colors.transparent,
                                           leading: BackButton(
-                                            onPressed: () =>
-                                                Navigator.pushAndRemoveUntil(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        const HomePage(),
-                                                  ),
-                                                  (route) => false,
+                                            onPressed: () {
+                                              // context.read<DetailBloc>().add(
+                                              //   ResetHabitScreenEvent(),
+                                              // );
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      HomePage(),
                                                 ),
+                                                (Route<dynamic> route) => false,
+                                              );
+                                            },
                                           ),
                                           title: Text(
                                             habit.name,
@@ -160,9 +194,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                           ],
                                         ),
                                       ),
+
                                       Hero(
                                         tag: habit.id,
-                                       
                                         child: Text(
                                           widget.habitIcon ?? goalIcon,
                                           style: Theme.of(
@@ -180,7 +214,8 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                           ),
                                           totalGoal: habit.goalCount.toDouble(),
                                           completedCount: goalCount,
-                                          iconEmoji: widget.habitIcon ?? goalIcon,
+                                          iconEmoji:
+                                              widget.habitIcon ?? goalIcon,
                                           primaryColor: goalColor,
                                           secondaryColor: goalColor.withValues(
                                             alpha: 0.5,
@@ -409,9 +444,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                           ),
                                         ),
                                 ],
-                              );
-                            },
-                          ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -433,7 +468,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                 ],
               );
             } else {
-              return const SizedBox.shrink();
+              return const EmptyWidget();
             }
           },
         ),

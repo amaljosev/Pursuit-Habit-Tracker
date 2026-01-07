@@ -10,6 +10,7 @@ import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart'
 import 'package:pursuit/features/habit/presentation/pages/detail/goal_detail_screen.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
 import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
+String heroTagForHabit(String habitId) => 'habit-hero-$habitId';
 
 SliverList buildBody({
   required List<Habit> habits,
@@ -164,7 +165,6 @@ class _HabitTileState extends State<HabitTile> {
                 width: 45,
                 child: Center(
                   child: Hero(
-                    key: ValueKey('icon${habit.id}'),
                     tag: habit.id,
                     child: Text(
                       HelperFunctions.getEmojiById(habit.icon),
@@ -232,7 +232,10 @@ class _HabitTileState extends State<HabitTile> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => GoalDetailScreen(habitId: habit.id,habitIcon: HelperFunctions.getEmojiById(habit.icon),),
+                    builder: (context) => GoalDetailScreen(
+                      habitId: habit.id,
+                      habitIcon: HelperFunctions.getEmojiById(habit.icon),
+                    ),
                   ),
                 );
               },
