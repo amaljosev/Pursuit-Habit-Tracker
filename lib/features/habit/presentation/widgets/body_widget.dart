@@ -1,6 +1,4 @@
-import 'dart:developer';
 import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,9 +6,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
-import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_renew_functions.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/goal_detail_screen.dart';
-import 'package:pursuit/features/habit/presentation/pages/renewal/goal_renewal_screen.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
 import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
 

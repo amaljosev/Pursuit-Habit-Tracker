@@ -77,7 +77,7 @@ Future<dynamic> numberInputField({
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return null;
+                    return 'Please enter a count';
                   }
                   final numberRegex = RegExp(r'^\d*\.?\d+$');
                   if (!numberRegex.hasMatch(value.trim())) {
@@ -91,6 +91,7 @@ Future<dynamic> numberInputField({
                   if (value.length > 5) {
                     return 'Number is too long';
                   }
+                  
 
                   return null;
                 },

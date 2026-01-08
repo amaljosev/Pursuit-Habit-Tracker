@@ -6,7 +6,6 @@ import 'package:pursuit/core/components/error_widget.dart';
 import 'package:pursuit/core/components/loading_widget.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_complete_func.dart';
-import 'package:pursuit/features/habit/presentation/pages/renewal/goal_renewal_screen.dart';
 import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/goals_empty_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/header_widget.dart';
