@@ -22,7 +22,6 @@ import 'package:pursuit/features/habit/presentation/pages/detail/widgets/glass_a
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/timer_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/widgets/walking_animation.dart';
 import 'package:pursuit/features/habit/presentation/pages/progress/progress_page.dart';
-import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/delete_habit.dart';
 import 'package:pursuit/features/habit/presentation/widgets/number_input_field.dart';
 import 'package:pursuit/features/habit/presentation/widgets/renew_habit.dart';
@@ -131,15 +130,18 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                 final updatedHabit = updateHabitOnCompletion(
                                   state.habit,
                                 );
+
                                 final isRenewalDay = isHabitEndingToday(habit);
+
                                 if (isRenewalDay) {
                                   WidgetsBinding.instance.addPostFrameCallback((
                                     _,
                                   ) {
                                     renewHabitAlert(
                                       context: context,
-                                      habit: habit,
+                                      habit: updatedHabit,
                                       fromHome: false,
+                                      fromRenewScreen: false,
                                     );
                                   });
                                 } else {
@@ -154,95 +156,86 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                           },
                           builder: (context, goalCount) {
                             final goalCountInt = goalCount.toInt();
-                            return SingleChildScrollView(
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                spacing: 20,
-                                children: [
-                                  Column(
-                                    children: [
-                                      SafeArea(
-                                        child: AppBar(
-                                          backgroundColor: Colors.transparent,
-                                          foregroundColor: Colors.black,
-                                          surfaceTintColor: Colors.transparent,
-                                          leading: BackButton(
-                                            onPressed: () {
-                                              // context.read<DetailBloc>().add(
-                                              //   ResetHabitScreenEvent(),
-                                              // );
-                                              Navigator.pushAndRemoveUntil(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      HomePage(),
-                                                ),
-                                                (Route<dynamic> route) => false,
-                                              );
-                                            },
+                            return ListView(
+                              children: [
+                                SafeArea(
+                                  child: AppBar(
+                                    backgroundColor: Colors.transparent,
+                                    foregroundColor: Colors.black,
+                                    surfaceTintColor: Colors.transparent,
+                                    leading: BackButton(
+                                      onPressed: () {
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => HomePage(),
                                           ),
-                                          title: Text(
-                                            habit.name,
-                                            style: const TextStyle(
-                                              color: Colors.black,
-                                            ),
-                                            maxLines: 2,
-                                          ),
-                                          actions: [
-                                            OptionsWidget(habit: habit),
-                                          ],
-                                        ),
+                                          (Route<dynamic> route) => false,
+                                        );
+                                      },
+                                    ),
+                                    title: Text(
+                                      habit.name,
+                                      style: const TextStyle(
+                                        color: Colors.black,
                                       ),
-
-                                      Hero(
-                                        tag: habit.id,
-                                        child: Text(
-                                          widget.habitIcon ?? goalIcon,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.displayLarge,
-                                        ),
-                                      ),
-                                    ],
+                                      maxLines: 2,
+                                    ),
+                                    actions: [OptionsWidget(habit: habit)],
                                   ),
+                                ),
+                                Column(
+                                  spacing: context.screenHeight < 630
+                                      ? context.screenHeight * 0.02
+                                      : context.screenHeight * 0.05,
+                                  children: [
+                                    Hero(
+                                      tag: habit.id,
+                                      child: Text(
+                                        widget.habitIcon ?? goalIcon,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.displayLarge,
+                                      ),
+                                    ),
 
-                                  goalType == 'distance'
-                                      ? WalkingProgressIndicator(
-                                          unit: HelperFunctions.getMeasureById(
-                                            habit.goalValue,
-                                          ),
-                                          totalGoal: habit.goalCount.toDouble(),
-                                          completedCount: goalCount,
-                                          iconEmoji:
-                                              widget.habitIcon ?? goalIcon,
-                                          primaryColor: goalColor,
-                                          secondaryColor: goalColor.withValues(
-                                            alpha: 0.5,
-                                          ),
-                                          onDecrease: goalCountInt <= 0
-                                              ? () {}
-                                              : () => context
-                                                    .read<DetailBloc>()
-                                                    .add(
-                                                      GoalCountUpdateDetailEvent(
-                                                        id: habit.id,
-                                                        value: goalCountInt - 1,
-                                                        habit: habit,
-                                                      ),
-                                                    ),
-                                          onIncrease: () =>
-                                              context.read<DetailBloc>().add(
-                                                GoalCountUpdateDetailEvent(
-                                                  id: habit.id,
-                                                  value: goalCountInt + 1,
-                                                  habit: habit,
+                                    goalType == 'distance'
+                                        ? WalkingProgressIndicator(
+                                            unit:
+                                                HelperFunctions.getMeasureById(
+                                                  habit.goalValue,
                                                 ),
-                                              ),
-                                        )
-                                      : goalType == 'time'
-                                      ? Expanded(
-                                          child: ModernTimerWidget(
+                                            totalGoal: habit.goalCount
+                                                .toDouble(),
+                                            completedCount: goalCount,
+                                            iconEmoji:
+                                                widget.habitIcon ?? goalIcon,
+                                            primaryColor: goalColor,
+                                            secondaryColor: goalColor
+                                                .withValues(alpha: 0.5),
+                                            onDecrease: goalCountInt <= 0
+                                                ? () {}
+                                                : () => context
+                                                      .read<DetailBloc>()
+                                                      .add(
+                                                        GoalCountUpdateDetailEvent(
+                                                          id: habit.id,
+                                                          value:
+                                                              goalCountInt - 1,
+                                                          habit: habit,
+                                                        ),
+                                                      ),
+                                            onIncrease: () =>
+                                                context.read<DetailBloc>().add(
+                                                  GoalCountUpdateDetailEvent(
+                                                    id: habit.id,
+                                                    value: goalCountInt + 1,
+                                                    habit: habit,
+                                                  ),
+                                                ),
+                                          )
+                                        : goalType == 'time'
+                                        ? ModernTimerWidget(
                                             completedGoalCount: goalCountInt,
                                             goalValue: goalVal,
                                             saveTime: () =>
@@ -273,178 +266,185 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                             size: 300,
                                             primaryColor: goalColor,
                                             progressColor: goalColor,
+                                          )
+                                        : ProgressSection(
+                                            habit: habit,
+                                            color: goalColor,
                                           ),
-                                        )
-                                      : ProgressSection(
-                                          habit: habit,
-                                          color: goalColor,
-                                        ),
 
-                                  goalType != 'time'
-                                      ? SafeArea(
-                                          child: Form(
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceEvenly,
-                                              children: [
-                                                GestureDetector(
-                                                  onTap: () => context
-                                                      .read<DetailBloc>()
-                                                      .add(
-                                                        GoalCountUpdateDetailEvent(
-                                                          id: habit.id,
-                                                          value: 0,
-                                                          habit: habit,
+                                    goalType != 'time'
+                                        ? SafeArea(
+                                            child: Form(
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceEvenly,
+                                                children: [
+                                                  GestureDetector(
+                                                    onTap: () => context
+                                                        .read<DetailBloc>()
+                                                        .add(
+                                                          GoalCountUpdateDetailEvent(
+                                                            id: habit.id,
+                                                            value: 0,
+                                                            habit: habit,
+                                                          ),
                                                         ),
+                                                    child: CircleAvatar(
+                                                      backgroundColor: goalColor
+                                                          .withValues(
+                                                            alpha: 0.2,
+                                                          ),
+                                                      child: Icon(
+                                                        Icons.refresh,
+                                                        color: goalColor,
                                                       ),
-                                                  child: CircleAvatar(
-                                                    backgroundColor: goalColor
-                                                        .withValues(alpha: 0.2),
-                                                    child: Icon(
-                                                      Icons.refresh,
-                                                      color: goalColor,
                                                     ),
                                                   ),
-                                                ),
-                                                AppButton(
-                                                  title: 'Add',
-                                                  backgroundColor: goalColor,
-                                                  onPressed:
-                                                      goalCountInt >=
-                                                          habit.goalCount
-                                                      ? null
-                                                      : () async {
-                                                          final randomNum =
-                                                              getRandomInt(
-                                                                habit.goalCount -
-                                                                    goalCountInt,
-                                                              );
-                                                          final input =
-                                                              randomNum <= 0
-                                                              ? 1
-                                                              : randomNum;
-                                                          _valueCtrl.text =
-                                                              input.toString();
-                                                          final result =
-                                                              await numberInputField(
-                                                                context:
-                                                                    context,
-                                                                formKey:
-                                                                    _formKey,
-                                                                controller:
-                                                                    _valueCtrl,
-                                                                goalCount: habit
-                                                                    .goalCount,
+                                                  AppButton(
+                                                    title: 'Add',
+                                                    backgroundColor: goalColor,
+                                                    onPressed:
+                                                        goalCountInt >=
+                                                            habit.goalCount
+                                                        ? null
+                                                        : () async {
+                                                            final randomNum =
+                                                                getRandomInt(
+                                                                  habit.goalCount -
+                                                                      goalCountInt,
+                                                                );
+                                                            final input =
+                                                                randomNum <= 0
+                                                                ? 1
+                                                                : randomNum;
+                                                            _valueCtrl.text =
+                                                                input
+                                                                    .toString();
+                                                            final result = await numberInputField(
+                                                              context: context,
+                                                              formKey: _formKey,
+                                                              controller:
+                                                                  _valueCtrl,
+                                                              goalCount: habit
+                                                                  .goalCount,
 
-                                                                backgroundColor:
-                                                                    HelperFunctions.getColorById(
-                                                                      id: habit
-                                                                          .color,
-                                                                      isDark:
-                                                                          true,
-                                                                    ),
-                                                              );
-                                                          if (result != null &&
-                                                              result
-                                                                  .isNotEmpty) {
-                                                            if (context
-                                                                .mounted) {
-                                                              final int val =
-                                                                  int.parse(
-                                                                    result,
-                                                                  );
-                                                              context
-                                                                  .read<
-                                                                    DetailBloc
-                                                                  >()
-                                                                  .add(
-                                                                    GoalCountUpdateDetailEvent(
-                                                                      id: habit
-                                                                          .id,
-                                                                      value:
-                                                                          goalCountInt +
-                                                                          val,
-                                                                      habit:
-                                                                          habit,
-                                                                    ),
-                                                                  );
+                                                              backgroundColor:
+                                                                  HelperFunctions.getColorById(
+                                                                    id: habit
+                                                                        .color,
+                                                                    isDark:
+                                                                        true,
+                                                                  ),
+                                                            );
+                                                            if (result !=
+                                                                    null &&
+                                                                result
+                                                                    .isNotEmpty) {
+                                                              if (context
+                                                                  .mounted) {
+                                                                final int val =
+                                                                    int.parse(
+                                                                      result,
+                                                                    );
+                                                                context
+                                                                    .read<
+                                                                      DetailBloc
+                                                                    >()
+                                                                    .add(
+                                                                      GoalCountUpdateDetailEvent(
+                                                                        id: habit
+                                                                            .id,
+                                                                        value:
+                                                                            goalCountInt +
+                                                                            val,
+                                                                        habit:
+                                                                            habit,
+                                                                      ),
+                                                                    );
+                                                              }
                                                             }
-                                                          }
-                                                        },
-                                                ),
-                                                AppButton(
-                                                  title: 'Progress',
-                                                  icon:
-                                                      CupertinoIcons.chart_bar,
-                                                  backgroundColor: goalColor,
-                                                  onPressed: () =>
-                                                      Navigator.of(
-                                                        context,
-                                                      ).push(
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              ProgressPage(
-                                                                habit: habit,
-                                                              ),
+                                                          },
+                                                  ),
+                                                  AppButton(
+                                                    title: 'Progress',
+                                                    icon: CupertinoIcons
+                                                        .chart_bar,
+                                                    backgroundColor: goalColor,
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).push(
+                                                          MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                ProgressPage(
+                                                                  habit: habit,
+                                                                ),
+                                                          ),
                                                         ),
-                                                      ),
-                                                ),
-                                                GestureDetector(
-                                                  onTap:
-                                                      goalCountInt >=
-                                                          habit.goalCount
-                                                      ? null
-                                                      : () => context
-                                                            .read<DetailBloc>()
-                                                            .add(
-                                                              GoalCountUpdateDetailEvent(
-                                                                id: habit.id,
-                                                                value: habit
-                                                                    .goalCount,
-                                                                habit: habit,
+                                                  ),
+                                                  GestureDetector(
+                                                    onTap:
+                                                        goalCountInt >=
+                                                            habit.goalCount
+                                                        ? null
+                                                        : () => context
+                                                              .read<
+                                                                DetailBloc
+                                                              >()
+                                                              .add(
+                                                                GoalCountUpdateDetailEvent(
+                                                                  id: habit.id,
+                                                                  value: habit
+                                                                      .goalCount,
+                                                                  habit: habit,
+                                                                ),
                                                               ),
-                                                            ),
-                                                  child: CircleAvatar(
-                                                    backgroundColor: goalColor
-                                                        .withValues(alpha: 0.2),
-                                                    child: Icon(
-                                                      CupertinoIcons.check_mark,
-                                                      color: goalColor,
+                                                    child: CircleAvatar(
+                                                      backgroundColor: goalColor
+                                                          .withValues(
+                                                            alpha: 0.2,
+                                                          ),
+                                                      child: Icon(
+                                                        CupertinoIcons
+                                                            .check_mark,
+                                                        color: goalColor,
+                                                      ),
                                                     ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          )
+                                        : SafeArea(
+                                            top: false,
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: AppButton(
+                                                    title: 'Progress',
+                                                    icon: CupertinoIcons
+                                                        .chart_bar,
+                                                    backgroundColor: goalColor,
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).push(
+                                                          MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                ProgressPage(
+                                                                  habit: habit,
+                                                                ),
+                                                          ),
+                                                        ),
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                        )
-                                      : SafeArea(
-                                          top: false,
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: AppButton(
-                                                  title: 'Progress',
-                                                  icon:
-                                                      CupertinoIcons.chart_bar,
-                                                  backgroundColor: goalColor,
-                                                  onPressed: () =>
-                                                      Navigator.of(
-                                                        context,
-                                                      ).push(
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              ProgressPage(
-                                                                habit: habit,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                ],
-                              ),
+                                  ],
+                                ),
+                              ],
                             );
                           },
                         ),
@@ -455,12 +455,12 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                   if (isCompleteToday)
                     IgnorePointer(
                       ignoring: true,
-                      child: Container(
+                      child: SizedBox(
                         height: context.screenHeight,
-                        color: Colors.transparent,
+                        width: context.screenWidth,
                         child: Lottie.asset(
                           'assets/lottie/party_pop.json',
-                          fit: BoxFit.fill,
+                          fit: BoxFit.fitWidth,
                           repeat: false,
                         ),
                       ),
