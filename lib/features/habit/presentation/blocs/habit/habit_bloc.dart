@@ -14,6 +14,7 @@ import 'package:pursuit/features/habit/domain/usecases/delete_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_all_habits.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_habit_by_id.dart';
 import 'package:pursuit/features/habit/domain/usecases/insert_habit.dart';
+import 'package:pursuit/features/habit/domain/usecases/schedule_habit_notification_usecase.dart';
 import 'package:pursuit/features/habit/domain/usecases/update_goal_count.dart';
 import 'package:pursuit/features/habit/domain/usecases/update_habit.dart';
 
@@ -28,6 +29,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   final GetHabitByIdUseCase getHabitByIdUseCase;
   final UpdateGoalCountUseCase updateGoalCountUseCase;
   final CheckDailyResetUseCase checkDailyResetUseCase;
+  final ScheduleHabitNotificationUseCase scheduleHabitNotificationUseCase;
 
   HabitBloc({
     required this.insertHabitUseCase,
@@ -37,6 +39,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     required this.getHabitByIdUseCase,
     required this.updateGoalCountUseCase,
     required this.checkDailyResetUseCase,
+    required this.scheduleHabitNotificationUseCase,
   }) : super(HabitInitial()) {
     // UI update events - only handle when state is AddHabitInitial
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
@@ -114,6 +117,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       ),
     );
   }
+
   void _onRenewalHabitInitialEvent(
     RenewalHabitInitialEvent event,
     Emitter<HabitState> emit,
@@ -228,26 +232,48 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
 
   // 🟢 INSERT HABIT
   Future<void> _onInsertHabit(
-    AddHabitEvent event,
-    Emitter<HabitState> emit,
-  ) async {
-    try {
-      emit(HabitLoading());
-      final result = await insertHabitUseCase(event.habit);
+  AddHabitEvent event,
+  Emitter<HabitState> emit,
+) async {
+  try {
+    emit(HabitLoading());
 
-      result.match(
-        (failure) {
-          emit(HabitError(failure.message));
-        },
-        (_) {
-          emit(HabitOperationSuccess("Habit inserted successfully"));
-        },
-      );
-    } catch (e, s) {
-      log('InsertHabit error: $e\n$s');
-      emit(HabitError(e.toString()));
-    }
+    final result = await insertHabitUseCase(event.habit);
+
+    await result.match(
+      (failure) async {
+        emit(HabitError(failure.message));
+        log(failure.toString());
+      },
+      (_) async {
+        // ✅ Schedule notification ONLY after success
+        if (event.habit.reminder != null &&
+            event.habit.reminder!.isNotEmpty) {
+
+          final time =
+              HelperFunctions.parse12HourTime(event.habit.reminder!);
+              log(time.toString());
+
+          if (time != null && time.isAfter(DateTime.now())) {
+            await scheduleHabitNotificationUseCase(
+              habitId: event.habit.id.hashCode, 
+              habitName: event.habit.name,
+              reminderTime: time,
+            );
+          }
+        }
+
+        emit(
+          HabitOperationSuccess("Habit inserted successfully"),
+        );
+      },
+    );
+  } catch (e, s) {
+    log('InsertHabit error: $e\n$s');
+    emit(HabitError(e.toString()));
   }
+}
+
 
   // 🔵 GET ALL HABITS
   Future<void> _onGetAllHabits(
@@ -341,6 +367,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       result.fold(
         (failure) {
           emit(HabitError(failure.message));
+          log(failure.toString());
           log('❌ Daily reset failed: ${failure.message}');
         },
         (_) {

@@ -7,7 +7,7 @@ import 'package:pursuit/features/habit/constants/habit_types.dart';
 
 class HelperFunctions {
   static Map<int, String>? _emojiCache;
-  
+
   static String getEmojiById(int id) {
     // Initialize cache if null
     if (_emojiCache == null) {
@@ -18,7 +18,7 @@ class HelperFunctions {
         _emojiCache![emojiId] = emojiChar;
       }
     }
-    
+
     // Return from cache or default
     return _emojiCache![id] ?? '❓';
   }
@@ -114,5 +114,40 @@ class HelperFunctions {
     return date.year == yesterday.year &&
         date.month == yesterday.month &&
         date.day == yesterday.day;
+  }
+
+  static DateTime? parse12HourTime(String timeString) {
+    try {
+      final now = DateTime.now();
+
+      final parts = timeString.trim().split(' ');
+      if (parts.length != 2) return null;
+
+      final timePart = parts[0]; // 2:40
+      final period = parts[1].toUpperCase(); // AM / PM
+
+      final timeParts = timePart.split(':');
+      if (timeParts.length != 2) return null;
+
+      int hour = int.parse(timeParts[0]);
+      final int minute = int.parse(timeParts[1]);
+
+      if (period == 'PM' && hour != 12) {
+        hour += 12;
+      } else if (period == 'AM' && hour == 12) {
+        hour = 0;
+      }
+
+      DateTime scheduled = DateTime(now.year, now.month, now.day, hour, minute);
+
+      // ⛔ If time already passed today → schedule for tomorrow
+      if (scheduled.isBefore(now)) {
+        scheduled = scheduled.add(const Duration(days: 1));
+      }
+
+      return scheduled;
+    } catch (_) {
+      return null;
+    }
   }
 }

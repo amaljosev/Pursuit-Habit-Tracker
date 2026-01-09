@@ -52,6 +52,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isTablet = MediaQuery.of(context).size.shortestSide >= 600;
     return Scaffold(
       body: PopScope(
         canPop: false,
@@ -453,14 +454,12 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                   if (isCompleteToday)
                     IgnorePointer(
                       ignoring: true,
-                      child: SizedBox(
+                      child: Lottie.asset(
+                        'assets/lottie/party_pop.json',
+                        fit: isTablet ? BoxFit.contain : BoxFit.fitHeight,
                         height: context.screenHeight,
-                        width: context.screenWidth,
-                        child: Lottie.asset(
-                          'assets/lottie/party_pop.json',
-                          fit: BoxFit.fitWidth,
-                          repeat: false,
-                        ),
+                        width: isTablet ? context.screenWidth : null,
+                        repeat: false,
                       ),
                     ),
                 ],
