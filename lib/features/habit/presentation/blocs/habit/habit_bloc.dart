@@ -247,9 +247,9 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       },
       (_) async {
         // ✅ Schedule notification ONLY after success
+       
         if (event.habit.reminder != null &&
             event.habit.reminder!.isNotEmpty) {
-
           final time =
               HelperFunctions.parse12HourTime(event.habit.reminder!);
               log(time.toString());

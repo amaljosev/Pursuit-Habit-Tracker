@@ -42,11 +42,13 @@ class LocalNotificationRepositoryImpl implements NotificationRepository {
         android: AndroidNotificationDetails(
           'habit_channel',
           'Habit Reminders',
-          importance: Importance.high,
+          importance: Importance.max,
+          priority: Priority.high
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      
     );
   }
 
