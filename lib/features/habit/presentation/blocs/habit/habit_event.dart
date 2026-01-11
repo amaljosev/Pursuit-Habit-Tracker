@@ -13,6 +13,15 @@ final class AddHabitInitialEvent extends HabitEvent {
   List<Object> get props => [];
 }
 
+final class CustomHabitInitialEvent extends HabitEvent {
+  final int icon;
+
+  CustomHabitInitialEvent({required this.icon});
+
+  @override
+  List<Object> get props => [ icon];
+}
+
 final class UpdateHabitInitialEvent extends HabitEvent {
   final Habit habit;
   const UpdateHabitInitialEvent({required this.habit});
@@ -165,7 +174,7 @@ class GoalCountUpdateEvent extends HabitEvent {
   });
 
   @override
-  List<Object> get props => [id, value,habit];
+  List<Object> get props => [id, value, habit];
 }
 
 class CheckDailyResetEvent extends HabitEvent {}

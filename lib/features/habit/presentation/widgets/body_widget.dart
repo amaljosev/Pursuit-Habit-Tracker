@@ -66,12 +66,16 @@ class _HabitTileState extends State<HabitTile> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final habit = widget.habit;
     final double progress = (habit.goalCount > 0)
         ? (habit.goalCompletedCount / habit.goalCount).clamp(0.0, 1.0)
         : 0.0;
 
-    final baseColor = HelperFunctions.getColorById(id: habit.color);
+    final baseColor = HelperFunctions.getColorById(
+      id: habit.color,
+      isDarkMode: isDarkMode,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -175,15 +179,22 @@ class _HabitTileState extends State<HabitTile> {
               ),
               title: Text(
                 habit.name,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: habit.color == 12 && progress > 0.2
+                      ? Colors.black
+                      : null,
+                ),
               ),
               subtitle: Text(
                 habit.goalCompletedCount >= habit.goalCount
                     ? 'Today’s goal achieved'
                     : "${habit.goalCompletedCount} of ${habit.goalCount} completed",
-                style: Theme.of(context).textTheme.titleSmall,
+                style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                  color: habit.color == 12 && progress > 0.2
+                      ? Colors.black
+                      : null,
+                ),
               ),
               trailing: habit.goalCompletedCount >= habit.goalCount
                   ? Image.asset(
@@ -238,7 +249,6 @@ class _HabitTileState extends State<HabitTile> {
                     ),
                   ),
                 );
-               
               },
             ),
           ),

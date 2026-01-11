@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/app/pages/home_page.dart';
@@ -18,11 +20,14 @@ import 'package:pursuit/features/habit/presentation/pages/create/widgets/habit_t
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/habit_type_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/icon_picker_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/goal_detail_screen.dart';
+import 'package:pursuit/features/habit/presentation/pages/goals/goals_library_screen.dart';
 import 'package:pursuit/features/widgets/my_card_widget.dart';
 
 class AddHabitScreen extends StatefulWidget {
-  const AddHabitScreen({super.key, this.habit});
+  const AddHabitScreen({super.key, this.habit, this.customHabit});
   final Habit? habit;
+  final LibraryModel? customHabit;
+
   @override
   State<AddHabitScreen> createState() => _AddHabitScreenState();
 }
@@ -33,7 +38,12 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.habit != null) {
+    if (widget.customHabit != null && widget.habit == null) {
+      nameController.text = widget.customHabit!.title;
+      context.read<HabitBloc>().add(
+        CustomHabitInitialEvent(icon: widget.customHabit!.icon),
+      );
+    } else if (widget.habit != null && widget.customHabit == null) {
       context.read<HabitBloc>().add(
         UpdateHabitInitialEvent(habit: widget.habit!),
       );
@@ -46,20 +56,24 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) => Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => widget.habit != null
-              ? GoalDetailScreen(habitId: widget.habit!.id)
-              : HomePage(),
-        ),
-        (Route<dynamic> route) => false,
-      ),
+      canPop: widget.habit == null,
+
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GoalDetailScreen(habitId: widget.habit!.id),
+            ),
+            (Route<dynamic> route) => false,
+          );
+        }
+      },
       child: _HabitView(
         nameController: nameController,
         formKey: formKey,
         habit: widget.habit,
+        customHabit: widget.customHabit,
       ),
     );
   }
@@ -69,10 +83,12 @@ class _HabitView extends StatelessWidget {
   final TextEditingController nameController;
   final GlobalKey<FormState> formKey;
   final Habit? habit;
+  final LibraryModel? customHabit;
   const _HabitView({
     required this.nameController,
     required this.formKey,
     required this.habit,
+    required this.customHabit,
   });
 
   @override
@@ -140,15 +156,21 @@ class _HabitView extends StatelessWidget {
                         foregroundColor: Colors.black,
                         surfaceTintColor: Colors.transparent,
                         leading: BackButton(
-                          onPressed: () => Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => habit != null
-                                  ? GoalDetailScreen(habitId: habit!.id)
-                                  : HomePage(),
-                            ),
-                            (Route<dynamic> route) => false,
-                          ),
+                          onPressed: () {
+                            if (habit != null) {
+                               Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      GoalDetailScreen(habitId: habit!.id),
+                                ),
+                                (Route<dynamic> route) => false,
+                              );
+                            } else {
+                              Navigator.pop(context);
+                             
+                            }
+                          },
                         ),
                         actions: [
                           MyCard(

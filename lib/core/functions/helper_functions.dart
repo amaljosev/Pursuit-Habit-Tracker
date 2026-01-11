@@ -23,8 +23,13 @@ class HelperFunctions {
     return _emojiCache![id] ?? '❓';
   }
 
-  static Color getColorById({required int id, bool? isDark}) {
-    final match = isDark != null
+  static Color getColorById({required int id, bool? isDark, bool? isDarkMode}) {
+    final match = isDarkMode != null && isDarkMode
+        ? AppColors.lightColors.firstWhere(
+            (item) => item["id"] == id,
+            orElse: () => {"color": Colors.grey[100]!},
+          )
+        : isDark != null
         ? AppColors.darkColors.firstWhere(
             (item) => item["id"] == id,
             orElse: () => {"color": Colors.grey[300]!},

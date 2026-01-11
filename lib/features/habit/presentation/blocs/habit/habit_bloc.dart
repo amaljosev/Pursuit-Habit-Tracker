@@ -45,6 +45,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   }) : super(HabitInitial()) {
     // UI update events - only handle when state is AddHabitInitial
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
+    on<CustomHabitInitialEvent>(_onCustomHabitInitialEvent);
     on<UpdateHabitInitialEvent>(_onUpdateHabitInitialEvent);
     on<RenewalHabitInitialEvent>(_onRenewalHabitInitialEvent);
     on<HabitColorEvent>(_onHabitColorEvent);
@@ -81,6 +82,28 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       AddHabitInitial(
         color: getRandomInt(AppColors.lightColors.length - 1),
         icon: getRandomInt(HabitIcons.emojis.length - 1),
+        name: '',
+        habitType: 0,
+        goalCount: 5,
+        goalValue: 0,
+        goalTime: 0,
+        startDate: DateTime.now().toIso8601String(),
+        endDate: '',
+        isExpanded: false,
+        hasRemainder: false,
+        remainderTime: '',
+      ),
+    );
+  }
+
+  void _onCustomHabitInitialEvent(
+    CustomHabitInitialEvent event,
+    Emitter<HabitState> emit,
+  ) {
+    emit(
+      AddHabitInitial(
+        color: getRandomInt(AppColors.lightColors.length - 1),
+        icon: event.icon,
         name: '',
         habitType: 0,
         goalCount: 5,
