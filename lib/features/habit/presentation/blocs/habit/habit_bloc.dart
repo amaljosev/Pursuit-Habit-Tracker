@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/functions/helper_functions.dart';
@@ -9,6 +8,7 @@ import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/core/usecases/usecase.dart';
 import 'package:pursuit/features/habit/constants/habit_icons.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
+import 'package:pursuit/features/habit/domain/usecases/cancel_habit_notification_usecase.dart';
 import 'package:pursuit/features/habit/domain/usecases/check_daily_reset.dart';
 import 'package:pursuit/features/habit/domain/usecases/delete_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_all_habits.dart';
@@ -30,6 +30,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   final UpdateGoalCountUseCase updateGoalCountUseCase;
   final CheckDailyResetUseCase checkDailyResetUseCase;
   final ScheduleHabitNotificationUseCase scheduleHabitNotificationUseCase;
+  final CancelHabitNotificationUseCase cancelHabitNotificationUseCase;
 
   HabitBloc({
     required this.insertHabitUseCase,
@@ -40,6 +41,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     required this.updateGoalCountUseCase,
     required this.checkDailyResetUseCase,
     required this.scheduleHabitNotificationUseCase,
+    required this.cancelHabitNotificationUseCase,
   }) : super(HabitInitial()) {
     // UI update events - only handle when state is AddHabitInitial
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
@@ -232,48 +234,42 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
 
   // 🟢 INSERT HABIT
   Future<void> _onInsertHabit(
-  AddHabitEvent event,
-  Emitter<HabitState> emit,
-) async {
-  try {
-    emit(HabitLoading());
+    AddHabitEvent event,
+    Emitter<HabitState> emit,
+  ) async {
+    try {
+      emit(HabitLoading());
 
-    final result = await insertHabitUseCase(event.habit);
+      final result = await insertHabitUseCase(event.habit);
 
-    await result.match(
-      (failure) async {
-        emit(HabitError(failure.message));
-        log(failure.toString());
-      },
-      (_) async {
-        // ✅ Schedule notification ONLY after success
-       
-        if (event.habit.reminder != null &&
-            event.habit.reminder!.isNotEmpty) {
-          final time =
-              HelperFunctions.parse12HourTime(event.habit.reminder!);
-              log(time.toString());
-
-          if (time != null && time.isAfter(DateTime.now())) {
-            await scheduleHabitNotificationUseCase(
-              habitId: event.habit.id.hashCode, 
-              habitName: event.habit.name,
-              reminderTime: time,
-            );
+      await result.match(
+        (failure) async {
+          emit(HabitError(failure.message));
+          log(failure.toString());
+        },
+        (_) async {
+          // ✅ Schedule notification ONLY after success
+          if (event.habit.reminder != null &&
+              event.habit.reminder!.isNotEmpty) {
+            final time = HelperFunctions.parse12HourTime(event.habit.reminder!);
+            // log(time.toString());
+            if (time != null && time.isAfter(DateTime.now())) {
+              await scheduleHabitNotificationUseCase(
+                habitId: event.habit.id.hashCode,
+                habitName: event.habit.name,
+                reminderTime: time,
+              );
+            }
           }
-        }
 
-        emit(
-          HabitOperationSuccess("Habit inserted successfully"),
-        );
-      },
-    );
-  } catch (e, s) {
-    log('InsertHabit error: $e\n$s');
-    emit(HabitError(e.toString()));
+          emit(HabitOperationSuccess("Habit inserted successfully"));
+        },
+      );
+    } catch (e, s) {
+      log('InsertHabit error: $e\n$s');
+      emit(HabitError(e.toString()));
+    }
   }
-}
-
 
   // 🔵 GET ALL HABITS
   Future<void> _onGetAllHabits(
@@ -294,13 +290,43 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     UpdateHabitEvent event,
     Emitter<HabitState> emit,
   ) async {
-    emit(HabitLoading());
-    // await Future.delayed(Duration(seconds: 2));
-    final result = await updateHabitUseCase(event.habit);
-    result.match(
-      (failure) => emit(HabitError(failure.message)),
-      (_) => emit(HabitUpdateSuccessState("Habit updated successfully")),
-    );
+    try {
+      emit(HabitLoading());
+
+      final result = await updateHabitUseCase(event.habit);
+
+      await result.match(
+        (failure) async {
+          emit(HabitError(failure.message));
+          log(failure.toString());
+        },
+        (_) async {
+          final int notificationId = event.habit.id.hashCode;
+
+          // 🛑 Cancel previous notification first (ALWAYS SAFE)
+          await cancelHabitNotificationUseCase(notificationId);
+
+          // ✅ Re-schedule only if reminder exists
+          if (event.habit.reminder != null &&
+              event.habit.reminder!.isNotEmpty) {
+            final time = HelperFunctions.parse12HourTime(event.habit.reminder!);
+
+            if (time != null) {
+              await scheduleHabitNotificationUseCase(
+                habitId: notificationId,
+                habitName: event.habit.name,
+                reminderTime: time,
+              );
+            }
+          }
+
+          emit(HabitUpdateSuccessState("Habit updated successfully"));
+        },
+      );
+    } catch (e, s) {
+      log('UpdateHabit error: $e\n$s');
+      emit(HabitError(e.toString()));
+    }
   }
 
   // 🔴 DELETE HABIT

@@ -5,6 +5,7 @@ import 'package:pursuit/features/habit/data/repositories/habit_repository_implem
 import 'package:pursuit/features/habit/data/repositories/local_notification_repository_impl.dart';
 import 'package:pursuit/features/habit/domain/repositories/habit_repository.dart';
 import 'package:pursuit/features/habit/domain/repositories/notification_repository.dart';
+import 'package:pursuit/features/habit/domain/usecases/cancel_habit_notification_usecase.dart';
 import 'package:pursuit/features/habit/domain/usecases/check_daily_reset.dart';
 import 'package:pursuit/features/habit/domain/usecases/delete_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_habit_by_id.dart';
@@ -33,6 +34,7 @@ Future<void> init() async {
   sl.registerLazySingleton<HabitLocalDataSource>(
     () => HabitLocalDataSourceImpl(),
   );
+  sl.registerLazySingleton(() => CancelHabitNotificationUseCase(sl()));
 
   // 🔹 Repository
   sl.registerLazySingleton<HabitRepository>(
@@ -59,6 +61,8 @@ Future<void> init() async {
       updateGoalCountUseCase: sl(),
       checkDailyResetUseCase: sl(),
       scheduleHabitNotificationUseCase: sl(),
+      cancelHabitNotificationUseCase:sl(),
+
     ),
   );
   sl.registerFactory(

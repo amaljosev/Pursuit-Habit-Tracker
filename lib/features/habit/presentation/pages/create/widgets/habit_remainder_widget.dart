@@ -16,6 +16,7 @@ class HabitRemainderWidget extends StatefulWidget {
 
 class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
   String _permissionStatusLabel = 'Unknown';
+  bool _hasExactAlarmPermission = false;
 
   @override
   void initState() {
@@ -24,10 +25,31 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
   }
 
   Future<void> _loadPermissionStatus() async {
-    final status = await Permission.notification.status;
+    final notificationStatus = await Permission.notification.status;
+    String notificationLabel = _mapStatusToLabel(notificationStatus);
+    
+    // Check exact alarm permission for Android
+    bool hasExactAlarm = true; // Default for iOS and older Android
+    if (Theme.of(context).platform == TargetPlatform.android) {
+      try {
+        final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
+        hasExactAlarm = exactAlarmStatus.isGranted;
+        
+        if (notificationLabel == 'Notifications allowed') {
+          // Add exact alarm status info
+          if (!hasExactAlarm) {
+            notificationLabel = 'Notifications allowed (may be delayed)';
+          }
+        }
+      } catch (e) {
+        hasExactAlarm = true; // Older Android versions don't need this
+      }
+    }
+    
     if (!mounted) return;
     setState(() {
-      _permissionStatusLabel = _mapStatusToLabel(status);
+      _permissionStatusLabel = notificationLabel;
+      _hasExactAlarmPermission = hasExactAlarm;
     });
   }
 
@@ -38,6 +60,26 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
     if (status.isRestricted) return 'Notifications restricted';
     if (status.isLimited) return 'Notifications limited';
     return 'Unknown';
+  }
+
+  Future<bool> _ensureExactAlarmPermission() async {
+    // Check if we're on Android (iOS doesn't have this permission)
+    if (Theme.of(context).platform != TargetPlatform.android) {
+      return true;
+    }
+
+    // Check the current status of the exact alarm permission
+    final status = await Permission.scheduleExactAlarm.status;
+
+    if (status.isGranted) {
+      return true; // Permission already granted
+    }
+
+    // Request the permission from the user
+    final result = await Permission.scheduleExactAlarm.request();
+
+    // Return true only if the user grants permission
+    return result.isGranted;
   }
 
   Future<bool> _ensureNotificationPermission() async {
@@ -73,9 +115,7 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
+            onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Cancel'),
           ),
           TextButton(
@@ -90,6 +130,79 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<bool?> _showExactAlarmPermissionDialog() async {
+  if (!mounted) return null;
+  
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Precise Reminders'),
+      content: const Text(
+        'For notifications to appear at the exact time you set, '
+        'we need "Schedule Exact Alarms" permission.\n\n'
+        'Without it, Android may delay notifications to save battery.\n\n'
+        'Would you like to continue with possibly delayed notifications, '
+        'or open Settings to enable exact alarms?',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Continue Anyway'),
+        ),
+        TextButton(
+          onPressed: () {
+            // First close the dialog with 'true' to indicate user wants to open settings
+            Navigator.of(ctx).pop(true);
+            // Then open settings separately
+            openAppSettings();
+          },
+          child: const Text('Open Settings'),
+        ),
+      ],
+    ),
+  );
+  
+  return result;
+}
+
+  Widget _buildPermissionStatus() {
+    return Row(
+      children: [
+        Icon(
+          _permissionStatusLabel == 'Notifications allowed' && _hasExactAlarmPermission
+              ? Icons.check_circle_outline
+              : Icons.info_outline,
+          size: 16,
+          color: _permissionStatusLabel == 'Notifications allowed' && _hasExactAlarmPermission
+              ? Colors.green
+              : Colors.orange,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            _permissionStatusLabel,
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(fontStyle: FontStyle.italic),
+          ),
+        ),
+        if (_permissionStatusLabel != 'Notifications allowed')
+          TextButton(
+            onPressed: () async {
+              await openAppSettings();
+              await _loadPermissionStatus();
+              final post = await Permission.notification.status;
+              if (post.isGranted) {
+                context.read<HabitBloc>().add(
+                  HabitRemainderToggleEvent(hasRemainder: true),
+                );
+              }
+            },
+            child: const Text('Open Settings'),
+          ),
+      ],
     );
   }
 
@@ -122,6 +235,15 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
                     'Remainder',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
+                  subtitle: _permissionStatusLabel == 'Notifications allowed' &&
+                          !_hasExactAlarmPermission &&
+                          Theme.of(context).platform == TargetPlatform.android
+                      ? Text(
+                          'Tap to enable exact notifications',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.orange),
+                        )
+                      : null,
                   trailing: Switch.adaptive(
                     value: isExpanded,
                     activeThumbColor: widget.backgroundColor,
@@ -141,40 +263,45 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
                         return;
                       }
 
-                      // value == true: check / request notification permission
-                      final granted = await _ensureNotificationPermission();
-
-                      // Update local permission label (request may have changed it)
-                      await _loadPermissionStatus();
-
-                      if (granted) {
-                        // permission available — enable remainder
-                        if (!mounted) return;
-                        context.read<HabitBloc>().add(
-                          HabitRemainderToggleEvent(hasRemainder: true),
-                        );
-                      } else {
-                        // permission not granted — show dialog to direct user to settings
+                      // Step 1: First check notification permission
+                      final notificationGranted = await _ensureNotificationPermission();
+                      
+                      if (!notificationGranted) {
+                        // Notification permission not granted - show dialog
                         await _showPermissionDialog();
-
-                        // After dialog (and possible settings visit) reload status
                         await _loadPermissionStatus();
-
-                        // If after settings user granted, enable remainder; otherwise keep it off.
+                        
                         final postStatus = await Permission.notification.status;
-                        if (postStatus.isGranted) {
-                          if (!mounted) return;
-                          context.read<HabitBloc>().add(
-                            HabitRemainderToggleEvent(hasRemainder: true),
-                          );
-                        } else {
-                          // ensure the toggle remains off in the bloc/state
+                        if (!postStatus.isGranted) {
                           if (!mounted) return;
                           context.read<HabitBloc>().add(
                             HabitRemainderToggleEvent(hasRemainder: false),
                           );
+                          return; // Stop here if notification permission is not granted
                         }
                       }
+
+                      // Step 2: Notification permission is granted, now check exact alarm permission
+                      final exactAlarmGranted = await _ensureExactAlarmPermission();
+                      
+                      // Step 3: Handle exact alarm permission result
+                      if (!exactAlarmGranted && Theme.of(context).platform == TargetPlatform.android) {
+                        // Show exact alarm permission dialog
+                        final openSettings = await _showExactAlarmPermissionDialog();
+                        
+                        if (openSettings == true) {
+                          // User chose to open settings, don't enable remainder yet
+                          await _loadPermissionStatus();
+                          return;
+                        }
+                        // User chose to continue anyway with possibly delayed notifications
+                      }
+
+                      // Step 4: All permissions handled - enable remainder
+                      if (!mounted) return;
+                      context.read<HabitBloc>().add(
+                        HabitRemainderToggleEvent(hasRemainder: true),
+                      );
                     },
                   ),
                 ),
@@ -227,42 +354,7 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
                         ),
                         const SizedBox(height: 8),
                         // Permission status row
-                        Row(
-                          children: [
-                            Icon(
-                              _permissionStatusLabel == 'Notifications allowed'
-                                  ? Icons.check_circle_outline
-                                  : Icons.info_outline,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _permissionStatusLabel,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(fontStyle: FontStyle.italic),
-                              ),
-                            ),
-                            if (_permissionStatusLabel !=
-                                'Notifications allowed')
-                              TextButton(
-                                onPressed: () async {
-                                  await openAppSettings();
-                                  await _loadPermissionStatus();
-                                  final post =
-                                      await Permission.notification.status;
-                                  if (post.isGranted) {
-                                    context.read<HabitBloc>().add(
-                                      HabitRemainderToggleEvent(
-                                        hasRemainder: true,
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: const Text('Open Settings'),
-                              ),
-                          ],
-                        ),
+                        _buildPermissionStatus(),
                       ],
                     ),
                   ),
