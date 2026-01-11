@@ -143,7 +143,9 @@ class _HabitView extends StatelessWidget {
                           onPressed: () => Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const HomePage(),
+                              builder: (context) => habit != null
+                                  ? GoalDetailScreen(habitId: habit!.id)
+                                  : HomePage(),
                             ),
                             (Route<dynamic> route) => false,
                           ),

@@ -2,8 +2,10 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pursuit/core/components/error_widget.dart';
 import 'package:pursuit/core/components/loading_widget.dart';
+import 'package:pursuit/core/extensions/context_extensions.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_complete_func.dart';
 import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
@@ -19,6 +21,7 @@ class GoalsScreen extends StatefulWidget {
 }
 
 class _GoalsScreenState extends State<GoalsScreen> {
+  bool isCompleteToday = false;
   final _formKey = GlobalKey<FormState>();
   final _valueCtrl = TextEditingController();
   @override
@@ -29,6 +32,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isTablet = MediaQuery.of(context).size.shortestSide >= 600;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(10),
@@ -43,11 +47,15 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 if (state is HabitCountUpdateSuccess) {
                   if (state.updatedCount >= state.habit.goalCount &&
                       !state.habit.isCompleteToday) {
+                    isCompleteToday = true;
                     final updatedHabit = updateHabitOnCompletion(state.habit);
                     context.read<HabitBloc>().add(
                       UpdateHabitEvent(updatedHabit),
                     );
                   }
+                  context.read<HabitBloc>().add(GetAllHabitsEvent());
+                }
+                if (state is HabitUpdateSuccessState) {
                   context.read<HabitBloc>().add(GetAllHabitsEvent());
                 }
               },
@@ -56,18 +64,32 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   return const AppLoading();
                 } else if (state is HabitLoaded) {
                   final habits = state.habits;
-
                   if (habits.isEmpty) {
                     return const GoalsEmptyWidget();
                   }
-                  return CustomScrollView(
-                    slivers: [
-                      buildHeader(context),
-                      buildBody(
-                        habits: habits,
-                        formKey: _formKey,
-                        valueCtrl: _valueCtrl,
+                  return Stack(
+                    children: [
+                      CustomScrollView(
+                        slivers: [
+                          buildHeader(context),
+                          buildBody(
+                            habits: habits,
+                            formKey: _formKey,
+                            valueCtrl: _valueCtrl,
+                          ),
+                        ],
                       ),
+                      if (isCompleteToday)
+                        IgnorePointer(
+                          ignoring: true,
+                          child: Lottie.asset(
+                            'assets/lottie/party_pop.json',
+                            fit: isTablet ? BoxFit.contain : BoxFit.fitHeight,
+                            height: context.screenHeight,
+                            width: isTablet ? context.screenWidth : null,
+                            repeat: false,
+                          ),
+                        ),
                     ],
                   );
                 } else if (state is HabitError) {
@@ -84,7 +106,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
               onPressed: () {
                 //  showDatabaseDump(context);
                 Navigator.of(context).pushNamed('/add');
-               
               },
               child: const Icon(Icons.add),
             ),
