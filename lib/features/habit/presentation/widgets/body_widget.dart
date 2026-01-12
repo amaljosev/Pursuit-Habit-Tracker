@@ -74,7 +74,7 @@ class _HabitTileState extends State<HabitTile> {
 
     final baseColor = HelperFunctions.getColorById(
       id: habit.color,
-      isDarkMode: isDarkMode,
+      isDark: isDarkMode,
     );
 
     return Container(
@@ -215,6 +215,7 @@ class _HabitTileState extends State<HabitTile> {
                             id: habit.color,
                             isDark: true,
                           ),
+                          isDarkMode: isDarkMode,
                           goalCount: habit.goalCount,
                         );
                         if (result != null && result.isNotEmpty) {

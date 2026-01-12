@@ -25,11 +25,11 @@ class HelperFunctions {
 
   static Color getColorById({required int id, bool? isDark, bool? isDarkMode}) {
     final match = isDarkMode != null && isDarkMode
-        ? AppColors.lightColors.firstWhere(
+        ? AppColors.extraLightColors.firstWhere(
             (item) => item["id"] == id,
             orElse: () => {"color": Colors.grey[100]!},
           )
-        : isDark != null
+        : isDark != null&&isDark
         ? AppColors.darkColors.firstWhere(
             (item) => item["id"] == id,
             orElse: () => {"color": Colors.grey[300]!},

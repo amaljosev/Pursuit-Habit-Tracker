@@ -7,6 +7,7 @@ Future<dynamic> numberInputField({
   required GlobalKey<FormState> formKey,
   required TextEditingController controller,
   required Color backgroundColor,
+  required bool isDarkMode,
   int? goalCount,
 }) {
   return showModalBottomSheet(
@@ -65,7 +66,7 @@ Future<dynamic> numberInputField({
                 decoration: InputDecoration(
                   hintText: "eg: 20",
                   filled: true,
-                  fillColor: backgroundColor.withValues(alpha: 0.5),
+                  fillColor:isDarkMode? backgroundColor.withValues(alpha: 0.1): backgroundColor.withValues(alpha: 0.5),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,

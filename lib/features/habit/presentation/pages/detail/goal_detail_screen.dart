@@ -369,6 +369,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                                                       .color,
                                                                   isDark: true,
                                                                 ),
+                                                                isDarkMode: isDark
                                                           );
 
                                                       if (result != null &&

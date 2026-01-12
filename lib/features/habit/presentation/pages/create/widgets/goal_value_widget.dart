@@ -10,12 +10,13 @@ class GoalValueWidget extends StatelessWidget {
     super.key,
     required this.backgroundColor,
     required this.formKey,
-    required this.valueCtrl,
+    required this.valueCtrl, required this.isDark,
   });
 
   final Color backgroundColor;
   final GlobalKey<FormState> formKey;
   final TextEditingController valueCtrl;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +49,7 @@ class GoalValueWidget extends StatelessWidget {
                       formKey: formKey,
                       backgroundColor: backgroundColor,
                       controller: valueCtrl,
+                      isDarkMode: isDark
                     );
                     if (result != null && result.isNotEmpty) {
                       if (context.mounted) {

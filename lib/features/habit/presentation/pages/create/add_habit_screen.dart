@@ -33,6 +33,7 @@ class AddHabitScreen extends StatefulWidget {
 class _AddHabitScreenState extends State<AddHabitScreen> {
   final nameController = TextEditingController();
   final formKey = GlobalKey<FormState>();
+  
   @override
   void initState() {
     super.initState();
@@ -53,6 +54,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return PopScope(
       canPop: widget.habit == null,
 
@@ -72,6 +74,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         formKey: formKey,
         habit: widget.habit,
         customHabit: widget.customHabit,
+        isDark: isDark,
       ),
     );
   }
@@ -82,11 +85,13 @@ class _HabitView extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final Habit? habit;
   final LibraryModel? customHabit;
+  final bool isDark;
   const _HabitView({
     required this.nameController,
     required this.formKey,
     required this.habit,
-    required this.customHabit,
+    required this.customHabit, required this.isDark,
+
   });
 
   @override
@@ -207,7 +212,7 @@ class _HabitView extends StatelessWidget {
                               ),
                               const ColorPickerWidget(),
                               HabitTypeWidget(bgColor: state.color),
-                              GoalWidget(backgroundColor: backgroundColorDark),
+                              GoalWidget(backgroundColor: backgroundColorDark,isDark:isDark,),
                               HabitRemainderWidget(
                                 backgroundColor: backgroundColorDark,
                               ),
@@ -315,9 +320,10 @@ class _HabitView extends StatelessWidget {
 }
 
 class GoalWidget extends StatelessWidget {
-  const GoalWidget({super.key, required this.backgroundColor});
+  const GoalWidget({super.key, required this.backgroundColor, required this.isDark});
 
   final Color backgroundColor;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -333,6 +339,7 @@ class GoalWidget extends StatelessWidget {
               backgroundColor: backgroundColor,
               formKey: formKey,
               valueCtrl: valueCtrl,
+              isDark: isDark,
             ),
 
             const Divider(color: Colors.black12, height: 0),

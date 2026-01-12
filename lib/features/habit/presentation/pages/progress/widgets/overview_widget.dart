@@ -7,6 +7,7 @@ SliverToBoxAdapter buildStatsOverview(
   BuildContext context,
   Animation<double> fadeAnimation,
   ProgressPage widget,
+  bool isDark,
 ) {
   return SliverToBoxAdapter(
     child: FadeTransition(
@@ -15,7 +16,12 @@ SliverToBoxAdapter buildStatsOverview(
         margin: EdgeInsets.all(16),
         padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark
+              ? HelperFunctions.getColorById(
+                  id: widget.habit.color,
+                  isDarkMode: true,
+                )
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -71,7 +77,7 @@ SliverToBoxAdapter buildStatsOverview(
                   ),
                 ),
                 SizedBox(
-                  height: 150,
+                  height: 200,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.all(10),
@@ -84,6 +90,7 @@ SliverToBoxAdapter buildStatsOverview(
                         widget.habit.countLastWeek,
                         widget,
                         context,
+                        isDark,
                       ),
                       SizedBox(width: 12),
                       _buildComparisonCard(
@@ -93,6 +100,7 @@ SliverToBoxAdapter buildStatsOverview(
                         widget.habit.countLastMonth,
                         widget,
                         context,
+                        isDark,
                       ),
                       SizedBox(width: 12),
                       _buildComparisonCard(
@@ -102,6 +110,7 @@ SliverToBoxAdapter buildStatsOverview(
                         widget.habit.countLastYear,
                         widget,
                         context,
+                        isDark,
                       ),
                     ],
                   ),
@@ -122,6 +131,7 @@ Widget _buildComparisonCard(
   int previousValue,
   ProgressPage widget,
   BuildContext context,
+  bool isDark,
 ) {
   final bool isIncrease = currentValue >= previousValue;
   final habitColor = HelperFunctions.getColorById(id: widget.habit.color);
@@ -132,56 +142,54 @@ Widget _buildComparisonCard(
         : context.screenWidth * 0.5,
     padding: EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.grey[200]!),
+      color: isDark ? Colors.black12 : Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: isDark ? null : Border.all(color: Colors.grey[200]!),
       boxShadow: [
         BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
       ],
     ),
     child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          currentLabel,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          '$currentValue',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: habitColor,
-          ),
-        ),
-        SizedBox(height: 8),
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              isIncrease ? Icons.arrow_upward : Icons.arrow_downward,
-              size: 14,
-              color: isIncrease ? Colors.green : Colors.red,
-            ),
-            SizedBox(width: 4),
+            Text(currentLabel, style: Theme.of(context).textTheme.titleSmall),
+
             Text(
-              previousLabel,
-              style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+              '$currentValue',
+              style: Theme.of(
+                context,
+              ).textTheme.displaySmall!.copyWith(color: habitColor),
             ),
           ],
         ),
-        Text(
-          '$previousValue',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[700],
-            fontWeight: FontWeight.w500,
-          ),
+
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              spacing: 10,
+              children: [
+                Icon(
+                  isIncrease ? Icons.arrow_upward : Icons.arrow_downward,
+                  size: 14,
+                  color: isIncrease ? Colors.green : Colors.red,
+                ),
+
+                Text(
+                  previousLabel,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+            Text(
+              '$previousValue',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ],
         ),
       ],
     ),
@@ -204,7 +212,7 @@ Widget _buildStatItem(
       ),
       SizedBox(height: 8),
       Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-      SizedBox(height: 4),
+
       Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
     ],
   );

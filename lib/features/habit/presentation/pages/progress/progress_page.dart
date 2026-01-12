@@ -46,33 +46,40 @@ class ProgressPageState extends State<ProgressPage>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       body: CustomScrollView(
         slivers: [
-          buildAppBar(widget),
-          buildStatsOverview(context, _fadeAnimation, widget),
-          _buildChartsSection(),
-          _buildActivityCalendar(),
+          buildAppBar(widget, isDark, context),
+          buildStatsOverview(context, _fadeAnimation, widget, isDark),
+          _buildChartsSection(isDark),
+          _buildActivityCalendar(isDark),
           SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
   }
 
-  SliverToBoxAdapter _buildChartsSection() {
+  SliverToBoxAdapter _buildChartsSection(bool isDark) {
     return SliverToBoxAdapter(
-      child: Column(children: [_buildChartSelector(), _buildCurrentChart()]),
+      child: Column(
+        children: [_buildChartSelector(isDark), _buildCurrentChart(isDark)],
+      ),
     );
   }
 
-  Widget _buildChartSelector() {
+  Widget _buildChartSelector(bool isDark) {
     return Container(
       width: context.screenWidth,
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark
+            ? HelperFunctions.getColorById(
+                id: widget.habit.color,
+                isDarkMode: true,
+              )
+            : Colors.white,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, 2)),
@@ -84,16 +91,16 @@ class ProgressPageState extends State<ProgressPage>
           scrollDirection: Axis.horizontal,
 
           children: [
-            _buildChartTypeButton('Active Days', 0),
-            _buildChartTypeButton('Streak Trend', 1),
-            _buildChartTypeButton('Monthly Progress', 2),
+            _buildChartTypeButton('Active Days', 0, isDark),
+            _buildChartTypeButton('Streak Trend', 1, isDark),
+            _buildChartTypeButton('Monthly Progress', 2, isDark),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildChartTypeButton(String label, int index) {
+  Widget _buildChartTypeButton(String label, int index, bool isDark) {
     final isSelected = _currentChartIndex == index;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -112,21 +119,28 @@ class ProgressPageState extends State<ProgressPage>
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected
+            color: isDark
+                ? isSelected
+                      ? HelperFunctions.getColorById(
+                          id: widget.habit.color,
+                          isDark: true,
+                        )
+                      : Colors.grey[400]
+                : isSelected
                 ? HelperFunctions.getColorById(
                     id: widget.habit.color,
                     isDark: true,
                   )
                 : Colors.grey[600],
             fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.w900 : FontWeight.normal,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCurrentChart() {
+  Widget _buildCurrentChart(bool isDark) {
     return AnimatedSwitcher(
       duration: Duration(milliseconds: 500),
       child: Container(
@@ -134,7 +148,12 @@ class ProgressPageState extends State<ProgressPage>
         margin: EdgeInsets.all(16),
         padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark
+              ? HelperFunctions.getColorById(
+                  id: widget.habit.color,
+                  isDarkMode: true,
+                )
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -144,19 +163,19 @@ class ProgressPageState extends State<ProgressPage>
             ),
           ],
         ),
-        child: _getChartForIndex(_currentChartIndex),
+        child: _getChartForIndex(_currentChartIndex, isDark),
       ),
     );
   }
 
-  Widget _getChartForIndex(int index) {
+  Widget _getChartForIndex(int index, bool isDark) {
     switch (index) {
       case 0:
         return _buildMostActiveDaysChart();
       case 1:
-        return _buildStreakTrendChart();
+        return _buildStreakTrendChart(isDark);
       case 2:
-        return _buildComparisonChart();
+        return _buildComparisonChart(isDark);
       default:
         return _buildMostActiveDaysChart();
     }
@@ -240,7 +259,7 @@ class ProgressPageState extends State<ProgressPage>
     );
   }
 
-  Widget _buildStreakTrendChart() {
+  Widget _buildStreakTrendChart(bool isDark) {
     final streakData = _generateStreakTrendData();
     final habitColor = HelperFunctions.getColorById(id: widget.habit.color);
     final currentStreak = widget.habit.streakCount;
@@ -293,7 +312,12 @@ class ProgressPageState extends State<ProgressPage>
           height: 200,
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: isDark
+                ? HelperFunctions.getColorById(
+                    id: widget.habit.color,
+                    isDarkMode: true,
+                  )
+                : Colors.grey[50],
             borderRadius: BorderRadius.circular(12),
           ),
           child: LineChart(
@@ -304,6 +328,7 @@ class ProgressPageState extends State<ProgressPage>
                 enabled: true,
                 touchTooltipData: LineTouchTooltipData(
                   tooltipBorder: BorderSide(color: habitColor),
+
                   getTooltipItems: (touchedSpots) {
                     return touchedSpots.map((spot) {
                       return LineTooltipItem(
@@ -370,7 +395,7 @@ class ProgressPageState extends State<ProgressPage>
                 ),
               ),
               gridData: FlGridData(
-                show: true,
+                show: false,
                 drawVerticalLine: true,
                 drawHorizontalLine: true,
                 horizontalInterval: 5,
@@ -387,7 +412,7 @@ class ProgressPageState extends State<ProgressPage>
                 },
               ),
               borderData: FlBorderData(
-                show: true,
+                show: false,
                 border: Border.all(color: Colors.grey[300]!, width: 1),
               ),
               lineBarsData: [
@@ -670,7 +695,7 @@ class ProgressPageState extends State<ProgressPage>
     return streak;
   }
 
-  Widget _buildComparisonChart() {
+  Widget _buildComparisonChart(bool isDark) {
     final habitColor = HelperFunctions.getColorById(id: widget.habit.color);
     final previousColor = Colors.grey.withValues(alpha: 0.3);
 
@@ -814,16 +839,21 @@ class ProgressPageState extends State<ProgressPage>
             ),
             Container(
               height: 32,
-              padding: EdgeInsets.all(2),
+              padding: EdgeInsets.all(5),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: isDark
+                    ? HelperFunctions.getColorById(
+                        id: widget.habit.color,
+                        isDarkMode: true,
+                      )
+                    : Colors.grey[100],
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  _buildPeriodBtn('Week', 0, habitColor),
-                  _buildPeriodBtn('Month', 1, habitColor),
-                  _buildPeriodBtn('Year', 2, habitColor),
+                  _buildPeriodBtn('Week', 0, habitColor, isDark),
+                  _buildPeriodBtn('Month', 1, habitColor, isDark),
+                  _buildPeriodBtn('Year', 2, habitColor, isDark),
                 ],
               ),
             ),
@@ -846,13 +876,17 @@ class ProgressPageState extends State<ProgressPage>
           child: BarChart(
             BarChartData(
               maxY: maxY,
+
               gridData: FlGridData(
-                show: true,
+                show: false,
                 drawVerticalLine: false,
                 getDrawingHorizontalLine: (v) =>
                     FlLine(color: Colors.grey[100]!, strokeWidth: 1),
               ),
-              borderData: FlBorderData(show: false),
+              borderData: FlBorderData(
+                show: isDark,
+                border: Border.all(color: Colors.white),
+              ),
               titlesData: FlTitlesData(
                 topTitles: AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
@@ -897,14 +931,21 @@ class ProgressPageState extends State<ProgressPage>
 
   // --- SUPPORTING UI METHODS ---
 
-  Widget _buildPeriodBtn(String label, int index, Color color) {
+  Widget _buildPeriodBtn(String label, int index, Color color, bool isDark) {
     final isSelected = _currentComparisonPeriod == index;
     return GestureDetector(
       onTap: () => setState(() => _currentComparisonPeriod = index),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected
+              ? isDark
+                    ? HelperFunctions.getColorById(
+                        id: widget.habit.color,
+                        isDark: true,
+                      )
+                    : Colors.white
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
           boxShadow: isSelected
               ? [BoxShadow(color: Colors.black12, blurRadius: 2)]
@@ -913,10 +954,12 @@ class ProgressPageState extends State<ProgressPage>
         child: Center(
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? color : Colors.grey,
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+              color: isSelected
+                  ? isDark
+                        ? Colors.white
+                        : Colors.black
+                  : Colors.grey,
             ),
           ),
         ),
@@ -1089,7 +1132,7 @@ class ProgressPageState extends State<ProgressPage>
     );
   }
 
-  SliverToBoxAdapter _buildActivityCalendar() {
+  SliverToBoxAdapter _buildActivityCalendar(bool isDark) {
     return SliverToBoxAdapter(
       child: FadeTransition(
         opacity: _fadeAnimation,
@@ -1097,7 +1140,12 @@ class ProgressPageState extends State<ProgressPage>
           margin: EdgeInsets.all(16),
           padding: EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark
+                ? HelperFunctions.getColorById(
+                    id: widget.habit.color,
+                    isDarkMode: true,
+                  )
+                : Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -1119,11 +1167,11 @@ class ProgressPageState extends State<ProgressPage>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  _buildCalendarFormatToggle(),
+                  _buildCalendarFormatToggle(isDark),
                 ],
               ),
               SizedBox(height: 16),
-              _buildModernCalendar(),
+              _buildModernCalendar(isDark),
             ],
           ),
         ),
@@ -1131,23 +1179,29 @@ class ProgressPageState extends State<ProgressPage>
     );
   }
 
-  Widget _buildCalendarFormatToggle() {
+  Widget _buildCalendarFormatToggle(bool isDark) {
     return Container(
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: isDark
+            ? HelperFunctions.getColorById(
+                id: widget.habit.color,
+                isDarkMode: true,
+              )
+            : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildFormatButton('Week', CalendarFormat.week),
-          _buildFormatButton('Month', CalendarFormat.month),
+          _buildFormatButton('Week', CalendarFormat.week, isDark),
+          _buildFormatButton('Month', CalendarFormat.month, isDark),
         ],
       ),
     );
   }
 
-  Widget _buildFormatButton(String label, CalendarFormat format) {
+  Widget _buildFormatButton(String label, CalendarFormat format, bool isDark) {
     final isSelected = _calendarFormat == format;
     return GestureDetector(
       onTap: () => setState(() => _calendarFormat = format),
@@ -1155,23 +1209,30 @@ class ProgressPageState extends State<ProgressPage>
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? HelperFunctions.getColorById(id: widget.habit.color)
+              ? isDark
+                    ? HelperFunctions.getColorById(
+                        id: widget.habit.color,
+                        isDark: true,
+                      )
+                    : Colors.white
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[600],
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+          style: Theme.of(context).textTheme.bodySmall!.copyWith(
+            color: isSelected
+                ? isDark
+                      ? Colors.white
+                      : Colors.black
+                : Colors.grey,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildModernCalendar() {
+  Widget _buildModernCalendar(bool isDark) {
     final completedDates = _getCompletedDates();
     final habitColor = HelperFunctions.getColorById(id: widget.habit.color);
 
@@ -1193,11 +1254,7 @@ class ProgressPageState extends State<ProgressPage>
       headerStyle: HeaderStyle(
         formatButtonVisible: false,
         titleCentered: true,
-        titleTextStyle: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          color: Colors.grey[800],
-        ),
+        titleTextStyle: Theme.of(context).textTheme.titleMedium!,
         leftChevronIcon: Icon(Icons.chevron_left, color: habitColor, size: 24),
         rightChevronIcon: Icon(
           Icons.chevron_right,
@@ -1209,15 +1266,11 @@ class ProgressPageState extends State<ProgressPage>
 
       // Days of week styling
       daysOfWeekStyle: DaysOfWeekStyle(
-        weekdayStyle: TextStyle(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
+        weekdayStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
+          color: !isDark ? Colors.grey[600] : null,
         ),
-        weekendStyle: TextStyle(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
+        weekendStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
+          color: !isDark ? Colors.grey[600] : null,
         ),
       ),
 
@@ -1225,11 +1278,11 @@ class ProgressPageState extends State<ProgressPage>
       calendarStyle: CalendarStyle(
         // Default day style
         defaultTextStyle: TextStyle(
-          color: Colors.grey[800],
+          color: isDark ? Colors.white : Colors.grey[800],
           fontWeight: FontWeight.w500,
         ),
         weekendTextStyle: TextStyle(
-          color: Colors.grey[800],
+          color: isDark ? Colors.white : Colors.grey[800],
           fontWeight: FontWeight.w500,
         ),
 
@@ -1237,7 +1290,13 @@ class ProgressPageState extends State<ProgressPage>
         todayDecoration: BoxDecoration(
           color: habitColor.withValues(alpha: 0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: habitColor, width: 2),
+          border: Border.all(
+            color: HelperFunctions.getColorById(
+              id: widget.habit.color,
+              isDark: true,
+            ),
+            width: 2,
+          ),
         ),
         todayTextStyle: TextStyle(
           color: habitColor,
@@ -1256,14 +1315,14 @@ class ProgressPageState extends State<ProgressPage>
             ),
           ],
         ),
-        selectedTextStyle: TextStyle(
-          color: Colors.white,
+        selectedTextStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
           fontWeight: FontWeight.bold,
+          color: widget.habit.color == 12 ? Colors.black : Colors.white,
         ),
 
         // Outside days
         outsideTextStyle: TextStyle(
-          color: Colors.grey[400],
+          color: Colors.grey[600],
           fontWeight: FontWeight.normal,
         ),
 
