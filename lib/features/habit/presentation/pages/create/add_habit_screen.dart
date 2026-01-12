@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/app/pages/home_page.dart';
@@ -158,7 +156,7 @@ class _HabitView extends StatelessWidget {
                         leading: BackButton(
                           onPressed: () {
                             if (habit != null) {
-                               Navigator.pushAndRemoveUntil(
+                              Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) =>
@@ -168,7 +166,6 @@ class _HabitView extends StatelessWidget {
                               );
                             } else {
                               Navigator.pop(context);
-                             
                             }
                           },
                         ),

@@ -125,7 +125,7 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
         final progress = (widget.totalValue > 0)
             ? (_fillAnimation.value / widget.totalValue).clamp(0.0, 1.0)
             : 0.0;
-
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Stack(
           alignment: Alignment.center,
           children: [
@@ -133,8 +133,10 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
               painter: _GlassPainter(
                 progress: progress,
                 wavePhase: _waveController.value * 2 * pi,
-                color: widget.color,
-                backgroundColor: widget.backgroundColor,
+                color: Colors.blue,
+                backgroundColor: isDark
+                    ? Colors.transparent
+                    : widget.backgroundColor,
               ),
               size: Size(widget.width, widget.height),
             ),
@@ -150,7 +152,7 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
                       TextStyle(
                         fontSize: min(widget.width, widget.height) * 0.1,
                         fontWeight: FontWeight.bold,
-                        color: _getTextColor(progress),
+                        color: isDark ? Colors.white : _getTextColor(progress),
                         shadows: [
                           Shadow(
                             blurRadius: 2.0,
@@ -159,7 +161,7 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
                           ),
                         ],
                       ),
-                      textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
                 ),
               ),
           ],

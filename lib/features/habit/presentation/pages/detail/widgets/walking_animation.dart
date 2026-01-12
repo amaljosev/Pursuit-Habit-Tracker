@@ -95,6 +95,7 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
   Widget build(BuildContext context) {
     final bool isComplete = _currentProgress >= 1.0;
     final int percent = (_currentProgress * 100).clamp(0, 100).toInt();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.all(15),
@@ -106,7 +107,7 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
             '${widget.completedCount.toInt()} / ${widget.totalGoal.toInt()} ${widget.unit}',
             style: Theme.of(context).textTheme.headlineSmall!.copyWith(
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
           Container(
@@ -130,7 +131,6 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
                 height: 120,
                 child: Stack(
                   children: [
-                    
                     // Track line background
                     Positioned(
                       bottom: 20,
@@ -141,9 +141,7 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
                         decoration: BoxDecoration(
                           color: Colors.grey[200],
                           borderRadius: BorderRadius.circular(20),
-                          
                         ),
-
                       ),
                     ),
 
@@ -239,8 +237,8 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
                 backgroundColor: Colors.grey[100]!,
                 iconColor: widget.primaryColor,
                 size: 80,
-                label: "-1 ${widget.unit}"
-
+                isDark: isDark,
+                label: "-1 ${widget.unit}",
               ),
               _buildCircleButton(
                 icon: Icons.add_rounded,
@@ -248,7 +246,8 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
                 backgroundColor: widget.secondaryColor,
                 iconColor: Colors.white,
                 size: 80,
-                label: "+1 ${widget.unit}"
+                isDark: isDark,
+                label: "+1 ${widget.unit}",
               ),
             ],
           ),
@@ -263,7 +262,8 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
     required Color backgroundColor,
     required Color iconColor,
     double size = 50,
-    required String label
+    required String label,
+    required bool isDark
   }) {
     return Column(
       spacing: 5,
@@ -274,7 +274,7 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
           decoration: BoxDecoration(
             color: backgroundColor,
             shape: BoxShape.circle,
-            boxShadow: [
+            boxShadow:isDark?null: [
               BoxShadow(
                 color: iconColor.withValues(alpha: 0.3),
                 blurRadius: 8,
@@ -287,7 +287,7 @@ class WalkingProgressIndicatorState extends State<WalkingProgressIndicator>
             icon: Icon(icon, color: iconColor, size: size * 0.45),
           ),
         ),
-        Text(label)
+        Text(label),
       ],
     );
   }

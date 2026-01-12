@@ -6,7 +6,6 @@ import 'package:pursuit/core/components/error_widget.dart';
 import 'package:pursuit/core/components/loading_widget.dart';
 import 'package:pursuit/core/extensions/context_extensions.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
-import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
 import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_complete_func.dart';
 import 'package:pursuit/features/habit/presentation/pages/goals/goals_library_screen.dart';
 import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
@@ -108,11 +107,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => GoalsLibraryScreen()),
                 );
-                // Navigator.of(context).push(
-                //   MaterialPageRoute(builder: (context) => AddHabitScreen()),
-                // );
-                //  showDatabaseDump(context);
-                //  Navigator.of(context).pushNamed('/add');
+               
               },
               child: const Icon(Icons.add),
             ),

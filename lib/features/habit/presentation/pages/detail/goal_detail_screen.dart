@@ -82,6 +82,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             }
           },
           builder: (context, state) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
             // log(state.toString());
             if (state is HabitDetailError) {
               return const ErrorScreenWidget();
@@ -108,14 +109,16 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                   Container(
                     height: context.screenHeight,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          HelperFunctions.getColorById(id: habit.color),
-                          Colors.white,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: isDark
+                          ? null
+                          : LinearGradient(
+                              colors: [
+                                HelperFunctions.getColorById(id: habit.color),
+                                Colors.white,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                     ),
                     child: Center(
                       child: Padding(
@@ -160,7 +163,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                 // ───────────────────────── TOP APP BAR ─────────────────────────
                                 AppBar(
                                   backgroundColor: Colors.transparent,
-                                  foregroundColor: Colors.black,
+                                  foregroundColor: isDark
+                                      ? Colors.white
+                                      : Colors.black,
                                   surfaceTintColor: Colors.transparent,
                                   elevation: 0,
                                   leading: BackButton(
@@ -177,9 +182,18 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                   title: Text(
                                     habit.name,
                                     maxLines: 2,
-                                    style: const TextStyle(color: Colors.black),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium!
+                                        .copyWith(
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black,
+                                        ),
                                   ),
-                                  actions: [OptionsWidget(habit: habit)],
+                                  actions: [
+                                    OptionsWidget(habit: habit, isDark: isDark),
+                                  ],
                                 ),
 
                                 // ───────────────────────── CENTER CONTENT ─────────────────────────
@@ -189,6 +203,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                       physics: const BouncingScrollPhysics(),
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
+                                        spacing: 20,
                                         children: [
                                           // Hero Icon
                                           Hero(
@@ -556,9 +571,10 @@ class ProgressSection extends StatelessWidget {
 }
 
 class OptionsWidget extends StatelessWidget {
-  const OptionsWidget({super.key, required this.habit});
+  const OptionsWidget({super.key, required this.habit, required this.isDark});
 
   final Habit habit;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -575,10 +591,13 @@ class OptionsWidget extends StatelessWidget {
             Theme.of(context).textTheme.titleSmall,
           ),
           value: 'edit',
-          child: const Row(
+          child: Row(
             children: [
-              Expanded(child: Text('Edit')),
-              Icon(Icons.mode_edit_outline_outlined),
+              const Expanded(child: Text('Edit')),
+              Icon(
+                Icons.mode_edit_outline_outlined,
+                color: isDark ? Colors.white : Colors.black,
+              ),
             ],
           ),
         ),
