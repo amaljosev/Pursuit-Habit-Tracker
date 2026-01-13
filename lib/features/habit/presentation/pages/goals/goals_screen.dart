@@ -40,6 +40,17 @@ class _GoalsScreenState extends State<GoalsScreen> {
           alignment: AlignmentDirectional.bottomEnd,
           children: [
             BlocConsumer<HabitBloc, HabitState>(
+              buildWhen: (previous, current) {
+                if (previous is HabitCountUpdateSuccess &&
+                    current is HabitCountUpdateSuccess) {
+                  return previous.updatedCount != current.updatedCount;
+                } else if (current is HabitLoaded) {
+                  return true;
+                } else if (current is HabitOperationSuccess) {
+                  return true;
+                }
+                return false;
+              },
               listener: (context, state) {
                 if (state is HabitOperationSuccess) {
                   context.read<HabitBloc>().add(GetAllHabitsEvent());
@@ -107,7 +118,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => GoalsLibraryScreen()),
                 );
-               
               },
               child: const Icon(Icons.add),
             ),

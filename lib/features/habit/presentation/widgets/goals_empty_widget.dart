@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pursuit/core/components/app_button.dart';
-import 'package:pursuit/features/habit/presentation/pages/create/add_habit_screen.dart';
+import 'package:pursuit/features/habit/presentation/pages/goals/goals_library_screen.dart';
 
 class GoalsEmptyWidget extends StatelessWidget {
   const GoalsEmptyWidget({super.key});
@@ -41,9 +41,9 @@ class GoalsEmptyWidget extends StatelessWidget {
           AppButton(
             title: 'New Goal',
             icon: Icons.add,
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (context) => AddHabitScreen())),
+            onPressed: () =>  Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => GoalsLibraryScreen()),
+                ),
           ),
         ],
       ),

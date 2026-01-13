@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pursuit/features/habit/presentation/pages/info/info_screen.dart';
 
 SliverAppBar buildHeader(BuildContext context) {
   return SliverAppBar.large(
@@ -43,7 +44,20 @@ SliverAppBar buildHeader(BuildContext context) {
     centerTitle: true,
     automaticallyImplyLeading: false,
     elevation: 0,
-   
     pinned: true,
+    actionsPadding: const EdgeInsets.only(right: 10),
+    actions: [
+      GestureDetector(
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => InfoScreen())),
+        child: CircleAvatar(
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white24
+              : Theme.of(context).primaryColor.withValues(alpha: 0.5),
+          child: Icon(Icons.person),
+        ),
+      ),
+    ],
   );
 }
