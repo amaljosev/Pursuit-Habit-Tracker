@@ -89,16 +89,23 @@ class AnimatedRoundedProgressState extends State<AnimatedRoundedProgress>
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 5,
                 children: [
                   Text(
                     "${(percent * 100).toStringAsFixed(0)}%",
-                    style:Theme.of(context).textTheme.displayMedium!.copyWith(
-                    fontWeight: FontWeight.bold,color: widget.color
+                    style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
+                  Text(
+                    'Completed',
+                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400]
+                          : Colors.grey[200],
+                    ),
                   ),
-                  Text('Completed',style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                    fontWeight: FontWeight.bold,color: widget.color
-                  ),)
                 ],
               ),
             ),

@@ -84,7 +84,7 @@ Future<dynamic> numberInputField({
                   if (!numberRegex.hasMatch(value.trim())) {
                     return 'Enter a valid number';
                   }
-                  final number = int.parse(value);
+                  final number = double.parse(value);
                   if (number < 1) {
                     return 'Minimum 1 is required';
                   }

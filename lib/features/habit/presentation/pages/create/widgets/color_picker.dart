@@ -16,6 +16,7 @@ class ColorPickerWidget extends StatelessWidget {
         return previous.color != current.color;
       },
       builder: (context, state) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         if (state is! AddHabitInitial) return const SizedBox.shrink();
         final int colorIndex = state.color;
         return Wrap(
@@ -23,7 +24,9 @@ class ColorPickerWidget extends StatelessWidget {
           spacing: 10,
           runSpacing: 10,
           children: List.generate(AppColors.lightColors.length, (index) {
-            final color = AppColors.lightColors[index]['color'];
+            final color = isDark
+                ? AppColors.darkColors[index]['color']
+                : AppColors.lightColors[index]['color'];
             final int id = AppColors.lightColors[colorIndex]['id'];
 
             return GestureDetector(
@@ -38,7 +41,7 @@ class ColorPickerWidget extends StatelessWidget {
                   backgroundColor: color,
                   child: Icon(
                     id == index ? Icons.check : null,
-                    color: Colors.black,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
               ),

@@ -100,10 +100,10 @@ for (final day in updatedCompletedDays) {
 
 
   /// ---------- GOAL RECORD ----------
-  final newGoalRecordCount =
-      habit.goalCompletedCount > habit.goalRecordCount
-          ? habit.goalCompletedCount
-          : habit.goalRecordCount;
+  // final newGoalRecordCount =
+  //     habit.goalCompletedCount > habit.goalRecordCount
+  //         ? habit.goalCompletedCount
+  //         : habit.goalRecordCount;
 
   return habit.copyWith(
     goalCompletedCount: habit.goalCount,
@@ -118,6 +118,5 @@ for (final day in updatedCompletedDays) {
     countThisYear: countThisYear,
     countLastYear: countLastYear,
     completedDays: updatedCompletedDays,
-    goalRecordCount: newGoalRecordCount,
   );
 }

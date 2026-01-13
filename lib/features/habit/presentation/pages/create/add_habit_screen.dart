@@ -33,7 +33,7 @@ class AddHabitScreen extends StatefulWidget {
 class _AddHabitScreenState extends State<AddHabitScreen> {
   final nameController = TextEditingController();
   final formKey = GlobalKey<FormState>();
-  
+
   @override
   void initState() {
     super.initState();
@@ -90,8 +90,8 @@ class _HabitView extends StatelessWidget {
     required this.nameController,
     required this.formKey,
     required this.habit,
-    required this.customHabit, required this.isDark,
-
+    required this.customHabit,
+    required this.isDark,
   });
 
   @override
@@ -204,7 +204,7 @@ class _HabitView extends StatelessWidget {
                           child: Column(
                             spacing: 10,
                             children: [
-                              IconPickerWidget(),
+                              const IconPickerWidget(),
                               InputFieldWidget(
                                 controller: nameController,
                                 color: backgroundColorDark,
@@ -212,7 +212,10 @@ class _HabitView extends StatelessWidget {
                               ),
                               const ColorPickerWidget(),
                               HabitTypeWidget(bgColor: state.color),
-                              GoalWidget(backgroundColor: backgroundColorDark,isDark:isDark,),
+                              GoalWidget(
+                                backgroundColor: backgroundColorDark,
+                                isDark: isDark,
+                              ),
                               HabitRemainderWidget(
                                 backgroundColor: backgroundColorDark,
                               ),
@@ -320,7 +323,11 @@ class _HabitView extends StatelessWidget {
 }
 
 class GoalWidget extends StatelessWidget {
-  const GoalWidget({super.key, required this.backgroundColor, required this.isDark});
+  const GoalWidget({
+    super.key,
+    required this.backgroundColor,
+    required this.isDark,
+  });
 
   final Color backgroundColor;
   final bool isDark;

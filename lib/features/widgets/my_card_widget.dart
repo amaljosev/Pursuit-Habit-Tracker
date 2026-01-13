@@ -7,12 +7,14 @@ class MyCard extends StatelessWidget {
     required this.value,
     this.onTap,
     this.textStyle,
+    this.padding,
   });
 
   final Color backgroundColor;
   final String value;
   final void Function()? onTap;
   final TextStyle? textStyle;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +26,9 @@ class MyCard extends StatelessWidget {
           borderRadius: BorderRadius.all(Radius.circular(20)),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          padding:
+              padding ??
+              const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
           child: Text(
             value,
             style:
@@ -38,4 +42,3 @@ class MyCard extends StatelessWidget {
     );
   }
 }
-
