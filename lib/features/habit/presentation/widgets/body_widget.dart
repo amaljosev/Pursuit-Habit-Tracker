@@ -111,7 +111,6 @@ class _HabitTileState extends State<HabitTile> {
           Slidable(
             key: ValueKey(habit.id),
             closeOnScroll: true,
-
             endActionPane: ActionPane(
               extentRatio: progress == 1.0 ? 0.2 : 0.4,
               motion: const DrawerMotion(),

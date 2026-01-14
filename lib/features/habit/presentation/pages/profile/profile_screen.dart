@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pursuit/features/habit/presentation/pages/profile/help_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -44,41 +45,12 @@ class ProfileScreen extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => HelpScreen()),
                     ),
                   ),
-
-                  // ListTile(
-                  //   leading: const Icon(Icons.favorite_border),
-                  //   title: Text('Rate us'),
-                  //   trailing: const CupertinoListTileChevron(),
-                  // ),
-                ],
-              ),
-              CupertinoListSection.insetGrouped(
-                children: [
                   ListTile(
                     leading: const Icon(Icons.privacy_tip_outlined),
                     title: Text('Privacy Policy'),
                     trailing: const CupertinoListTileChevron(),
+                    onTap: () async => await _launchUrl(context),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.book_outlined),
-                    title: Text('Terms and Conditions'),
-                    trailing: const CupertinoListTileChevron(),
-                  ),
-                ],
-              ),
-              CupertinoListSection.insetGrouped(
-                children: [
-                  // ListTile(
-                  //   leading: const Icon(Icons.notifications_none),
-                  //   title: Text('Notification'),
-                  //   trailing: Switch.adaptive(
-                  //     value: isActive,
-                  //     onChanged: (value) => context.read<HabitBloc>().add(
-                  //       CancelAllHabitNotificationsEvent(!isActive),
-                  //     ),
-
-                  //   ),
-                  // ),
                   Theme(
                     data: Theme.of(context).copyWith(
                       splashFactory: NoSplash.splashFactory,
@@ -222,17 +194,51 @@ class ProfileScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+
                   // ListTile(
-                  //   leading: const Icon(Icons.share_outlined),
-                  //   title: Text('Share this app'),
+                  //   leading: const Icon(Icons.favorite_border),
+                  //   title: Text('Rate us'),
                   //   trailing: const CupertinoListTileChevron(),
                   // ),
                 ],
               ),
+
+              // CupertinoListSection.insetGrouped(
+              //   children: [
+              //     ListTile(
+              //       leading: const Icon(Icons.notifications_none),
+              //       title: Text('Notification'),
+              //       trailing: Switch.adaptive(
+              //         value: isActive,
+              //         onChanged: (value) => context.read<HabitBloc>().add(
+              //           CancelAllHabitNotificationsEvent(!isActive),
+              //         ),
+
+              //       ),
+              //     ),
+
+              //     ListTile(
+              //       leading: const Icon(Icons.share_outlined),
+              //       title: Text('Share this app'),
+              //       trailing: const CupertinoListTileChevron(),
+              //     ),
+              //   ],
+              // ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _launchUrl(BuildContext context) async {
+    final Uri _url = Uri.parse(
+      'https://amaljosev.github.io/Pursuit-Privacy-Policy/',
+    );
+    if (!await launchUrl(_url, mode: LaunchMode.inAppBrowserView)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Sorry we are facing an issue')));
+    }
   }
 }
