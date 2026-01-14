@@ -41,6 +41,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
           children: [
             BlocConsumer<HabitBloc, HabitState>(
               buildWhen: (previous, current) {
+                if (current is HabitLoading) {
+                  return true;
+                }
                 if (previous is HabitCountUpdateSuccess &&
                     current is HabitCountUpdateSuccess) {
                   return previous.updatedCount != current.updatedCount;

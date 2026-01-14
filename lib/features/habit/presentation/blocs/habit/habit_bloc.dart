@@ -266,7 +266,6 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   ) async {
     try {
       emit(HabitLoading());
-
       final result = await insertHabitUseCase(event.habit);
 
       await result.match(

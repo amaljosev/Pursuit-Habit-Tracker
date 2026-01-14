@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/app/pages/home_page.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
-
+import 'package:pursuit/features/onboarding/onboarding_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,23 +19,31 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     // Trigger daily reset check when screen loads
-   context.read<HabitBloc>().add( CheckDailyResetEvent());
+    context.read<HabitBloc>().add(CheckDailyResetEvent());
   }
 
-  void _navigateToHome() {
+  Future<void> _navigateToHome() async {
     if (!_hasNavigated && mounted) {
+      final prefs = await SharedPreferences.getInstance();
+      final showOnboarding = await prefs.getBool('showOnboarding');
       _hasNavigated = true;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
+      if (showOnboarding != null && showOnboarding) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue.shade500,
       body: BlocListener<HabitBloc, HabitState>(
         listener: (context, state) {
           // Navigate to home when reset completes or if there's an error
@@ -42,42 +51,31 @@ class _SplashScreenState extends State<SplashScreen> {
             // Small delay to show completion state
             Future.delayed(const Duration(milliseconds: 500), _navigateToHome);
           }
-
         },
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // App icon/logo
-              const Icon(
-                Icons.check_circle_outline,
-                size: 80,
-                color: Colors.white,
+              Image.asset(
+                'assets/icon/pursuit_icon.png',
+                height: 80,
+                width: 80,
               ),
-              const SizedBox(height: 20),
-              
-              // App name
-              const Text(
-                'Habit Tracker',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+              Text(
+                'Pursuit',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w900),
               ),
-              const SizedBox(height: 20),
-              
-              // Loading indicator
-              const CircularProgressIndicator(
-                color: Colors.white,
-              ),
+
               const SizedBox(height: 16),
-              
+
               // Dynamic loading text based on state
               BlocBuilder<HabitBloc, HabitState>(
                 builder: (context, state) {
                   String loadingText = 'Getting things ready...';
-                  
+
                   if (state is HabitLoading) {
                     loadingText = 'Checking daily progress...';
                   } else if (state is HabitDailyResetCompleted) {
@@ -85,13 +83,10 @@ class _SplashScreenState extends State<SplashScreen> {
                   } else if (state is HabitError) {
                     loadingText = 'Loading app...';
                   }
-                  
+
                   return Text(
                     loadingText,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                   );
                 },
               ),
