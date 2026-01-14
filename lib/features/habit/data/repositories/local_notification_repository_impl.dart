@@ -66,6 +66,8 @@ Future<void> scheduleHabitNotification({
     return _plugin.cancel(id);
   }
 
+  
+
   tz.TZDateTime _nextInstanceOfTime(DateTime dateTime) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
 
@@ -76,5 +78,10 @@ Future<void> scheduleHabitNotification({
     }
 
     return scheduled;
+  }
+  
+  @override
+  Future<void> cancelAll() async{
+    await _plugin.cancelAll();
   }
 }

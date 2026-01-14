@@ -178,3 +178,10 @@ class GoalCountUpdateEvent extends HabitEvent {
 }
 
 class CheckDailyResetEvent extends HabitEvent {}
+class CancelAllHabitNotificationsEvent extends HabitEvent {
+  final bool isActive;
+  const CancelAllHabitNotificationsEvent(this.isActive);
+
+  @override
+  List<Object> get props => [isActive];
+}

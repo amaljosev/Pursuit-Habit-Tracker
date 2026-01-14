@@ -8,4 +8,5 @@ abstract class NotificationRepository {
   });
 
   Future<void> cancelHabitNotification(int id);
+  Future<void> cancelAll();
 }

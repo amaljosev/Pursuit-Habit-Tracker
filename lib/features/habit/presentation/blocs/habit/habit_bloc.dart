@@ -8,6 +8,7 @@ import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/core/usecases/usecase.dart';
 import 'package:pursuit/features/habit/constants/habit_icons.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
+import 'package:pursuit/features/habit/domain/usecases/cancel_all_habit_notifications_usecase.dart';
 import 'package:pursuit/features/habit/domain/usecases/cancel_habit_notification_usecase.dart';
 import 'package:pursuit/features/habit/domain/usecases/check_daily_reset.dart';
 import 'package:pursuit/features/habit/domain/usecases/delete_habit.dart';
@@ -31,6 +32,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   final CheckDailyResetUseCase checkDailyResetUseCase;
   final ScheduleHabitNotificationUseCase scheduleHabitNotificationUseCase;
   final CancelHabitNotificationUseCase cancelHabitNotificationUseCase;
+  final CancelAllHabitNotificationsUseCase cancelAllHabitNotificationsUseCase;
 
   HabitBloc({
     required this.insertHabitUseCase,
@@ -42,6 +44,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     required this.checkDailyResetUseCase,
     required this.scheduleHabitNotificationUseCase,
     required this.cancelHabitNotificationUseCase,
+    required this.cancelAllHabitNotificationsUseCase,
   }) : super(HabitInitial()) {
     // UI update events - only handle when state is AddHabitInitial
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
@@ -72,6 +75,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
 
     // Add daily reset event handler
     on<CheckDailyResetEvent>(_onCheckDailyReset);
+    on<CancelAllHabitNotificationsEvent>(_onCancelAllNotifications);
   }
 
   void _onAddHabitInitialEvent(
@@ -357,13 +361,28 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     DeleteHabitEvent event,
     Emitter<HabitState> emit,
   ) async {
-    emit(HabitLoading());
+    try {
+      emit(HabitLoading());
 
-    final result = await deleteHabitUseCase(event.id);
-    result.match(
-      (failure) => emit(HabitError(failure.message)),
-      (_) => emit(HabitOperationSuccess("Habit deleted successfully")),
-    );
+      final int notificationId = event.id.hashCode;
+
+      // 🛑 Cancel notification BEFORE deleting habit
+      await cancelHabitNotificationUseCase(notificationId);
+
+      final result = await deleteHabitUseCase(event.id);
+
+      result.match(
+        (failure) {
+          emit(HabitError(failure.message));
+        },
+        (_) {
+          emit(HabitOperationSuccess("Habit deleted successfully"));
+        },
+      );
+    } catch (e, s) {
+      log('DeleteHabit error: $e\n$s');
+      emit(HabitError(e.toString()));
+    }
   }
 
   // // 🔍 GET HABIT BY ID
@@ -427,6 +446,22 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     } catch (e, s) {
       log('CheckDailyReset error: $e\n$s');
       emit(HabitError('Daily reset failed: $e'));
+    }
+  }
+
+  Future<void> _onCancelAllNotifications(
+    CancelAllHabitNotificationsEvent event,
+    Emitter<HabitState> emit,
+  ) async {
+    try {
+      emit(HabitLoading());
+
+      await cancelAllHabitNotificationsUseCase();
+
+      emit(CancelAllNotifications(event.isActive));
+    } catch (e, s) {
+      log('CancelAllNotifications error: $e\n$s');
+      emit(HabitError(e.toString()));
     }
   }
 }

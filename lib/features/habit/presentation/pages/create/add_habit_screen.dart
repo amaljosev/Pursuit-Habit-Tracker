@@ -281,13 +281,14 @@ class _HabitView extends StatelessWidget {
     required BuildContext context,
     required bool isUpdate,
     required Habit? updateHabit,
-  }) {
+  }) async {
     final formState = formKey.currentState;
     if (formState == null || !formState.validate()) return;
     final bloc = context.read<HabitBloc>();
     final state = bloc.state;
     if (state is AddHabitInitial) {
-      final habit = Habit(
+      Habit? habit;
+      habit = Habit(
         id: updateHabit?.id ?? DateTime.now().toString(),
         name: nameController.text,
         icon: state.icon,
@@ -315,10 +316,95 @@ class _HabitView extends StatelessWidget {
         completedDays: updateHabit?.completedDays ?? [],
         achievements: updateHabit?.achievements ?? {},
       );
-      isUpdate
-          ? bloc.add(UpdateHabitEvent(habit))
-          : bloc.add(AddHabitEvent(habit));
+
+      if (habit.goalCount < habit.goalCompletedCount) {
+        final reset = await _onResetHabit(context: context);
+        if (reset) {
+          habit = Habit(
+            id: updateHabit?.id ?? DateTime.now().toString(),
+            name: nameController.text,
+            icon: state.icon,
+            color: state.color,
+            type: state.habitType,
+            goalValue: state.goalValue,
+            goalCount: state.goalCount,
+            time: state.goalTime,
+            endDate: state.isExpanded
+                ? HelperFunctions.parseDate(state.endDate)
+                : null,
+            reminder: state.hasRemainder ? state.remainderTime : null,
+            startDate: DateTime.now(),
+            goalCompletedCount: 0,
+            goalRecordCount: updateHabit?.goalRecordCount ?? 0,
+            isCompleteToday: updateHabit?.isCompleteToday ?? false,
+            streakCount: updateHabit?.streakCount ?? 0,
+            bestStreak: updateHabit?.bestStreak ?? 0,
+            countThisMonth: updateHabit?.countThisMonth ?? 0,
+            countLastMonth: updateHabit?.countLastMonth ?? 0,
+            countThisWeek: updateHabit?.countThisWeek ?? 0,
+            countLastWeek: updateHabit?.countLastWeek ?? 0,
+            countThisYear: updateHabit?.countThisYear ?? 0,
+            countLastYear: updateHabit?.countLastYear ?? 0,
+            completedDays: updateHabit?.completedDays ?? [],
+            achievements: updateHabit?.achievements ?? {},
+          );
+
+          isUpdate
+              ? bloc.add(UpdateHabitEvent(habit))
+              : bloc.add(AddHabitEvent(habit));
+        }
+      } else {
+        isUpdate
+            ? bloc.add(UpdateHabitEvent(habit))
+            : bloc.add(AddHabitEvent(habit));
+      }
     }
+  }
+
+  Future<bool> _onResetHabit({required BuildContext context}) async {
+    bool reset = false;
+    await showAdaptiveDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: CircleAvatar(
+          backgroundColor: Colors.indigo.shade50,
+          child: Icon(Icons.refresh, color: Colors.indigo.shade500),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 20,
+          children: [
+            Text('Reset Goal', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              "You have already made progress on this habit.Reducing the goal value will reset your current progress and start the habit again from zero.Do you want to continue?",
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          AppButton(
+            title: 'Change',
+            backgroundColor: Colors.indigo.shade50,
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge!.copyWith(color: Colors.indigo.shade500),
+            onPressed: () => Navigator.pop(context),
+            elevation: WidgetStatePropertyAll(0),
+          ),
+          AppButton(
+            title: 'Reset',
+            backgroundColor: Colors.red.shade600,
+            onPressed: () {
+              Navigator.pop(context);
+              reset = true;
+            },
+          ),
+        ],
+      ),
+    );
+    return reset;
   }
 }
 

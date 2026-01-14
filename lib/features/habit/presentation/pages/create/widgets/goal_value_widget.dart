@@ -10,7 +10,8 @@ class GoalValueWidget extends StatelessWidget {
     super.key,
     required this.backgroundColor,
     required this.formKey,
-    required this.valueCtrl, required this.isDark,
+    required this.valueCtrl,
+    required this.isDark,
   });
 
   final Color backgroundColor;
@@ -49,7 +50,7 @@ class GoalValueWidget extends StatelessWidget {
                       formKey: formKey,
                       backgroundColor: backgroundColor,
                       controller: valueCtrl,
-                      isDarkMode: isDark
+                      isDarkMode: isDark,
                     );
                     if (result != null && result.isNotEmpty) {
                       if (context.mounted) {
@@ -134,4 +135,6 @@ class GoalValueWidget extends StatelessWidget {
       titleTextStyle: Theme.of(context).textTheme.bodyMedium,
     );
   }
+
+  
 }

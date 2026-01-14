@@ -131,3 +131,11 @@ class HabitUpdateSuccessState extends HabitState {
   @override
   List<Object> get props => [message];
 }
+
+class CancelAllNotifications extends HabitState {
+  final bool isActive;
+  const CancelAllNotifications(this.isActive);
+
+  @override
+  List<Object> get props => [isActive];
+}

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pursuit/features/habit/presentation/pages/info/info_screen.dart';
+import 'package:pursuit/features/habit/presentation/pages/profile/profile_screen.dart';
 
 SliverAppBar buildHeader(BuildContext context) {
   return SliverAppBar.large(
@@ -50,7 +50,7 @@ SliverAppBar buildHeader(BuildContext context) {
       GestureDetector(
         onTap: () => Navigator.of(
           context,
-        ).push(MaterialPageRoute(builder: (context) => InfoScreen())),
+        ).push(MaterialPageRoute(builder: (context) => ProfileScreen())),
         child: CircleAvatar(
           backgroundColor: Theme.of(context).brightness == Brightness.dark
               ? Colors.white24

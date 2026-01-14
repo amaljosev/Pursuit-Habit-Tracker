@@ -168,43 +168,43 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
   return result;
 }
 
-  Widget _buildPermissionStatus() {
-    return Row(
-      children: [
-        Icon(
-          _permissionStatusLabel == 'Notifications allowed' && _hasExactAlarmPermission
-              ? Icons.check_circle_outline
-              : Icons.info_outline,
-          size: 16,
-          color: _permissionStatusLabel == 'Notifications allowed' && _hasExactAlarmPermission
-              ? Colors.green
-              : Colors.orange,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            _permissionStatusLabel,
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(fontStyle: FontStyle.italic),
-          ),
-        ),
-        if (_permissionStatusLabel != 'Notifications allowed')
-          TextButton(
-            onPressed: () async {
-              await openAppSettings();
-              await _loadPermissionStatus();
-              final post = await Permission.notification.status;
-              if (post.isGranted) {
-                context.read<HabitBloc>().add(
-                  HabitRemainderToggleEvent(hasRemainder: true),
-                );
-              }
-            },
-            child: const Text('Open Settings'),
-          ),
-      ],
-    );
-  }
+  // Widget _buildPermissionStatus() {
+  //   return Row(
+  //     children: [
+  //       Icon(
+  //         _permissionStatusLabel == 'Notifications allowed' && _hasExactAlarmPermission
+  //             ? Icons.check_circle_outline
+  //             : Icons.info_outline,
+  //         size: 16,
+  //         color: _permissionStatusLabel == 'Notifications allowed' && _hasExactAlarmPermission
+  //             ? Colors.green
+  //             : Colors.orange,
+  //       ),
+  //       const SizedBox(width: 8),
+  //       Expanded(
+  //         child: Text(
+  //           _permissionStatusLabel,
+  //           style: Theme.of(context).textTheme.bodySmall
+  //               ?.copyWith(fontStyle: FontStyle.italic),
+  //         ),
+  //       ),
+  //       if (_permissionStatusLabel != 'Notifications allowed')
+  //         TextButton(
+  //           onPressed: () async {
+  //             await openAppSettings();
+  //             await _loadPermissionStatus();
+  //             final post = await Permission.notification.status;
+  //             if (post.isGranted) {
+  //               context.read<HabitBloc>().add(
+  //                 HabitRemainderToggleEvent(hasRemainder: true),
+  //               );
+  //             }
+  //           },
+  //           child: const Text('Open Settings'),
+  //         ),
+  //     ],
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -352,9 +352,7 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        // Permission status row
-                        _buildPermissionStatus(),
+                       
                       ],
                     ),
                   ),
