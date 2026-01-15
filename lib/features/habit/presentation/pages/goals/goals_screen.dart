@@ -32,7 +32,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    final Size size=MediaQuery.of(context).size;
+    final bool isTablet = size.shortestSide >= 600;
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(10),
@@ -107,14 +109,25 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                     style: Theme.of(context)
                                         .textTheme
                                         .displayMedium
-                                        ?.copyWith(color: Colors.black12),
+                                        ?.copyWith(
+                                          fontSize: size.width*0.09,
+
+                                          color: isDarkMode
+                                              ? Colors.white12
+                                              : Colors.black12,
+                                        ),
                                   ),
                                   Text(
                                     'Track your growth.',
                                     style: Theme.of(context)
                                         .textTheme
                                         .displaySmall
-                                        ?.copyWith(color: Colors.black12),
+                                        ?.copyWith(
+                                          fontSize: size.width*0.08,
+                                          color: isDarkMode
+                                              ? Colors.white12
+                                              : Colors.black12,
+                                        ),
                                   ),
                                 ],
                               ),

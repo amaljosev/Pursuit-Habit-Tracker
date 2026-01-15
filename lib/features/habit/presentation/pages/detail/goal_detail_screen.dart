@@ -52,6 +52,8 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    final Size size = MediaQuery.of(context).size;
+
     return Scaffold(
       body: PopScope(
         canPop: false,
@@ -82,6 +84,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
           },
           builder: (context, state) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
+
             // log(state.toString());
             if (state is HabitDetailError) {
               return const ErrorScreenWidget();
@@ -321,7 +324,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                               ),
                                             ),
                                         child: CircleAvatar(
-                                          radius: 30,
+                                          radius: size.width <= 360
+                                              ? size.width * 0.05
+                                              : size.width * 0.09,
                                           backgroundColor: goalColor.withValues(
                                             alpha: 0.2,
                                           ),
@@ -412,7 +417,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                                     ),
                                                   ),
                                         child: CircleAvatar(
-                                          radius: 30,
+                                          radius: size.width <= 360
+                                              ? size.width * 0.05
+                                              : size.width * 0.09,
                                           backgroundColor: goalColor.withValues(
                                             alpha: 0.2,
                                           ),

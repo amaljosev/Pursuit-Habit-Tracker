@@ -1165,6 +1165,7 @@ class ProgressPageState extends State<ProgressPage>
                     'Activity Calendar',
                     style: Theme.of(context).textTheme.titleMedium!.copyWith(
                       fontWeight: FontWeight.bold,
+                      fontSize: MediaQuery.of(context).size.width*0.04,
                     ),
                   ),
                   _buildCalendarFormatToggle(isDark),

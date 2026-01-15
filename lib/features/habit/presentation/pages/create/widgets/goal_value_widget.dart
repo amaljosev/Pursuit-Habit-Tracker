@@ -129,12 +129,10 @@ class GoalValueWidget extends StatelessWidget {
               }
             },
           ),
-          Text('/ Day'),
+          const Expanded(child: Text('/ Day')),
         ],
       ),
       titleTextStyle: Theme.of(context).textTheme.bodyMedium,
     );
   }
-
-  
 }
