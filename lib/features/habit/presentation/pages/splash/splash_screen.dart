@@ -79,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   if (state is HabitLoading) {
                     loadingText = 'Checking daily progress...';
                   } else if (state is HabitDailyResetCompleted) {
-                    loadingText = 'Ready!';
+                    loadingText = '';
                   } else if (state is HabitError) {
                     loadingText = 'Loading app...';
                   }

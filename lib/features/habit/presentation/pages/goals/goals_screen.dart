@@ -91,6 +91,35 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             formKey: _formKey,
                             valueCtrl: _valueCtrl,
                           ),
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                top: 20,
+                                bottom: 100,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Pursuit your goals',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium
+                                        ?.copyWith(color: Colors.black12),
+                                  ),
+                                  Text(
+                                    'Track your growth.',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displaySmall
+                                        ?.copyWith(color: Colors.black12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                       if (isCompleteToday)

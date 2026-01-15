@@ -19,9 +19,9 @@ SliverAppBar buildAppBar(
       centerTitle: true,
       title: Text(
         'Habit Analytics',
-        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-          color: Colors.white
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium!.copyWith(color: Colors.white),
       ),
       background: Container(
         decoration: BoxDecoration(
@@ -33,7 +33,7 @@ SliverAppBar buildAppBar(
                   colors: [
                     HelperFunctions.getColorById(
                       id: widget.habit.color,
-                    ).withOpacity(0.3),
+                    ).withValues(alpha: 0.3),
                     HelperFunctions.getColorById(id: widget.habit.color),
                   ],
                 ),

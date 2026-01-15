@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:pursuit/features/habit/presentation/pages/splash/splash_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -13,25 +12,28 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  
+
   final List<OnboardingPage> _pages = [
     OnboardingPage(
       title: 'Build Better Habits',
-      description: 'Start small and stay consistent. Build lasting habits with guided daily practice.',
+      description:
+          'Start small and stay consistent. Build lasting habits with guided daily practice.',
       imageAsset: 'assets/images/onboarding1.png',
       color: const Color(0xFF6366F1),
       secondaryColor: const Color(0xFF8B5CF6),
     ),
     OnboardingPage(
       title: 'Track Your Progress',
-      description: 'Visualize your streaks and growth. Celebrate every milestone in your journey.',
+      description:
+          'Visualize your streaks and growth. Celebrate every milestone in your journey.',
       imageAsset: 'assets/images/onboarding2.png',
       color: const Color(0xFF10B981),
       secondaryColor: const Color(0xFF34D399),
     ),
     OnboardingPage(
       title: 'Stay Consistent',
-      description: 'Get gentle reminders and stay on track with your daily habits effortlessly.',
+      description:
+          'Get gentle reminders and stay on track with your daily habits effortlessly.',
       imageAsset: 'assets/images/onboarding3.png',
       color: const Color(0xFFF59E0B),
       secondaryColor: const Color(0xFFFBBF24),
@@ -41,17 +43,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('showOnboarding', true);
-    
+
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => const SplashScreen(),
         transitionsBuilder: (_, animation, __, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
       ),
     );
@@ -60,7 +59,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -81,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
-            
+
             // Page View Content
             Expanded(
               child: PageView.builder(
@@ -102,7 +100,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 },
               ),
             ),
-            
+
             // Navigation Controls
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -118,7 +116,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     totalPages: _pages.length,
                     activeColor: _pages[_currentPage].color,
                   ),
-                  
+
                   // Next/Get Started Button
                   ElevatedButton(
                     onPressed: () {
@@ -145,21 +143,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      spacing: 5,
                       children: [
                         Text(
-                          _currentPage == _pages.length - 1 
-                              ? 'Get Started' 
+                          _currentPage == _pages.length - 1
+                              ? 'Get Started'
                               : 'Next',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            color: Colors.white
                           ),
                         ),
                         Icon(
                           _currentPage == _pages.length - 1
                               ? Icons.arrow_forward
                               : Icons.arrow_forward_ios,
-                          size: 18,
                         ),
                       ],
                     ),
@@ -190,7 +187,6 @@ class OnboardingPage {
   });
 }
 
-
 class OnboardingContent extends StatelessWidget {
   final OnboardingPage page;
   final int currentIndex;
@@ -205,6 +201,7 @@ class OnboardingContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
@@ -223,8 +220,8 @@ class OnboardingContent extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      page.color.withOpacity(0.1),
-                      page.secondaryColor.withOpacity(0.05),
+                      page.color.withValues(alpha: 0.1),
+                      page.secondaryColor.withValues(alpha: 0.05),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -233,7 +230,9 @@ class OnboardingContent extends StatelessWidget {
                   children: [
                     // Pulsing Animation
                     Center(
-                      child: _buildPulsingCircle(page.color.withOpacity(0.2)),
+                      child: _buildPulsingCircle(
+                        page.color.withValues(alpha: 0.2),
+                      ),
                     ),
                     // Icon/Image
                     Center(
@@ -241,11 +240,11 @@ class OnboardingContent extends StatelessWidget {
                         width: 160,
                         height: 160,
                         decoration: BoxDecoration(
-                          color: page.color.withOpacity(0.8),
+                          color: page.color.withValues(alpha: 0.8),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: page.color.withOpacity(0.3),
+                              color: page.color.withValues(alpha: 0.3),
                               blurRadius: 20,
                               spreadRadius: 5,
                             ),
@@ -263,22 +262,22 @@ class OnboardingContent extends StatelessWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 40),
-          
+
           // Title
           Text(
             page.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1F2937),
+              color: isDarkMode ? Colors.white70 : Color(0xFF1F2937),
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Description
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -308,7 +307,7 @@ class OnboardingContent extends StatelessWidget {
           height: 280 * value,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withOpacity(1 - value),
+            color: color.withValues(alpha: 1 - value),
           ),
         );
       },

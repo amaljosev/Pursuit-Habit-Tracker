@@ -114,61 +114,72 @@ class _WaterFillGlassProgressState extends State<WaterFillGlassProgress>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        _waveController,
-        _fillAnimation,
-        _percentageAnimation,
-      ]),
-      builder: (context, child) {
-        final progress = (widget.totalValue > 0)
-            ? (_fillAnimation.value / widget.totalValue).clamp(0.0, 1.0)
-            : 0.0;
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            CustomPaint(
-              painter: _GlassPainter(
-                progress: progress,
-                wavePhase: _waveController.value * 2 * pi,
-                color: Colors.blue,
-                backgroundColor: isDark
-                    ? Colors.transparent
-                    : widget.backgroundColor,
-              ),
-              size: Size(widget.width, widget.height),
+Widget build(BuildContext context) {
+  final isTablet = _isTablet(context);
+
+  final double effectiveWidth =
+      isTablet ? widget.width * 1.4 : widget.width;
+
+  final double effectiveHeight =
+      isTablet ? widget.height * 1.4 : widget.height;
+
+  return AnimatedBuilder(
+    animation: Listenable.merge([
+      _waveController,
+      _fillAnimation,
+      _percentageAnimation,
+    ]),
+    builder: (context, child) {
+      final progress = (widget.totalValue > 0)
+          ? (_fillAnimation.value / widget.totalValue).clamp(0.0, 1.0)
+          : 0.0;
+
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          CustomPaint(
+            painter: _GlassPainter(
+              progress: progress,
+              wavePhase: _waveController.value * 2 * pi,
+              color: widget.color,
+              backgroundColor:
+                  isDark ? Colors.transparent : widget.backgroundColor,
             ),
-            if (widget.showPercentage)
-              Container(
-                width: widget.width,
-                height: widget.height,
-                alignment: Alignment.center,
+            size: Size(effectiveWidth, effectiveHeight),
+          ),
+          if (widget.showPercentage)
+            SizedBox(
+              width: effectiveWidth,
+              height: effectiveHeight,
+              child: Center(
                 child: Text(
                   '${_percentageAnimation.value}%\nCompleted',
-                  style:
-                      widget.textStyle ??
-                      TextStyle(
-                        fontSize: min(widget.width, widget.height) * 0.1,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : _getTextColor(progress),
-                        shadows: [
-                          Shadow(
-                            blurRadius: 2.0,
-                            color: Colors.black.withValues(alpha: 0.3),
-                            offset: const Offset(1.0, 1.0),
-                          ),
-                        ],
-                      ),
                   textAlign: TextAlign.center,
+                  style: widget.textStyle ??
+                      TextStyle(
+                        fontSize:
+                            min(effectiveWidth, effectiveHeight) * 0.1,
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? Colors.white
+                            : _getTextColor(progress),
+                      ),
                 ),
               ),
-          ],
-        );
-      },
-    );
-  }
+            ),
+        ],
+      );
+    },
+  );
+}
+
+  bool _isTablet(BuildContext context) {
+  final shortestSide = MediaQuery.of(context).size.shortestSide;
+  return shortestSide >= 600;
+}
+
 
   Color _getTextColor(double progress) {
     // Change text color based on water level for better visibility
