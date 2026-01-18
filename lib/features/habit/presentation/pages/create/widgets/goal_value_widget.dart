@@ -25,10 +25,10 @@ class GoalValueWidget extends StatelessWidget {
       contentPadding: const EdgeInsets.all(0),
       leading: Text('Goal Value'),
       leadingAndTrailingTextStyle: Theme.of(context).textTheme.titleMedium,
-
-      title: Row(
+      title: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 10,
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
           BlocBuilder<HabitBloc, HabitState>(
             buildWhen: (previous, current) {
@@ -104,7 +104,6 @@ class GoalValueWidget extends StatelessWidget {
                                     return MyCard(
                                       backgroundColor: backgroundColor,
                                       value: measures,
-
                                       onTap: () => Navigator.pop(context, id),
                                     );
                                   },
@@ -129,7 +128,7 @@ class GoalValueWidget extends StatelessWidget {
               }
             },
           ),
-          const Expanded(child: Text('/ Day')),
+          Text('/ Day', style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
       titleTextStyle: Theme.of(context).textTheme.bodyMedium,

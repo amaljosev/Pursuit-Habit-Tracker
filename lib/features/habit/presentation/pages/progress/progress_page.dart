@@ -827,18 +827,22 @@ class ProgressPageState extends State<ProgressPage>
     if (maxY < 5) maxY = 5;
 
     // --- 3. UI RENDERING ---
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          spacing: 10,
           children: [
             Text(
               'Progress',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                fontSize: MediaQuery.of(context).size.width * 0.04,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Container(
-              height: 32,
               padding: EdgeInsets.all(5),
               decoration: BoxDecoration(
                 color: isDark
@@ -960,6 +964,7 @@ class ProgressPageState extends State<ProgressPage>
                         ? Colors.white
                         : Colors.black
                   : Colors.grey,
+              fontSize: MediaQuery.of(context).size.width * 0.035,
             ),
           ),
         ),
@@ -1165,10 +1170,10 @@ class ProgressPageState extends State<ProgressPage>
                     'Activity Calendar',
                     style: Theme.of(context).textTheme.titleMedium!.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: MediaQuery.of(context).size.width*0.04,
+                      fontSize: MediaQuery.of(context).size.width * 0.04,
                     ),
                   ),
-                  _buildCalendarFormatToggle(isDark),
+                  // _buildCalendarFormatToggle(isDark),
                 ],
               ),
               SizedBox(height: 16),
@@ -1180,58 +1185,58 @@ class ProgressPageState extends State<ProgressPage>
     );
   }
 
-  Widget _buildCalendarFormatToggle(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: isDark
-            ? HelperFunctions.getColorById(
-                id: widget.habit.color,
-                isDarkMode: true,
-              )
-            : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildFormatButton('Week', CalendarFormat.week, isDark),
-          _buildFormatButton('Month', CalendarFormat.month, isDark),
-        ],
-      ),
-    );
-  }
+  // Widget _buildCalendarFormatToggle(bool isDark) {
+  //   return Container(
+  //     padding: const EdgeInsets.all(5),
+  //     decoration: BoxDecoration(
+  //       color: isDark
+  //           ? HelperFunctions.getColorById(
+  //               id: widget.habit.color,
+  //               isDarkMode: true,
+  //             )
+  //           : Colors.grey[100],
+  //       borderRadius: BorderRadius.circular(12),
+  //     ),
+  //     child: Row(
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [
+  //         _buildFormatButton('Week', CalendarFormat.week, isDark),
+  //         _buildFormatButton('Month', CalendarFormat.month, isDark),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _buildFormatButton(String label, CalendarFormat format, bool isDark) {
-    final isSelected = _calendarFormat == format;
-    return GestureDetector(
-      onTap: () => setState(() => _calendarFormat = format),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? isDark
-                    ? HelperFunctions.getColorById(
-                        id: widget.habit.color,
-                        isDark: true,
-                      )
-                    : Colors.white
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall!.copyWith(
-            color: isSelected
-                ? isDark
-                      ? Colors.white
-                      : Colors.black
-                : Colors.grey,
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildFormatButton(String label, CalendarFormat format, bool isDark) {
+  //   final isSelected = _calendarFormat == format;
+  //   return GestureDetector(
+  //     onTap: () => setState(() => _calendarFormat = format),
+  //     child: Container(
+  //       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //       decoration: BoxDecoration(
+  //         color: isSelected
+  //             ? isDark
+  //                   ? HelperFunctions.getColorById(
+  //                       id: widget.habit.color,
+  //                       isDark: true,
+  //                     )
+  //                   : Colors.white
+  //             : Colors.transparent,
+  //         borderRadius: BorderRadius.circular(8),
+  //       ),
+  //       child: Text(
+  //         label,
+  //         style: Theme.of(context).textTheme.bodySmall!.copyWith(
+  //           color: isSelected
+  //               ? isDark
+  //                     ? Colors.white
+  //                     : Colors.black
+  //               : Colors.grey,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildModernCalendar(bool isDark) {
     final completedDates = _getCompletedDates();
@@ -1328,7 +1333,7 @@ class ProgressPageState extends State<ProgressPage>
         ),
 
         // Cell padding
-        cellPadding: EdgeInsets.all(4),
+        // cellPadding: EdgeInsets.all(4),
       ),
 
       // Builders for custom day rendering

@@ -13,20 +13,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [BlocProvider<HabitBloc>(create: (_) => sl<HabitBloc>())],
-      child: MaterialApp(
-        title: 'Pursuit: Habit Tracker',
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.system,
-        debugShowCheckedModeBanner: false,
-        routes: {
-          '/': (context) => SplashScreen(),
-          '/add': (context) => AddHabitScreen(),
-          '/onboarding':(context)=>OnboardingScreen()
-        },
-        initialRoute: '/',
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1.0)),
+      child: MultiBlocProvider(
+        providers: [BlocProvider<HabitBloc>(create: (_) => sl<HabitBloc>())],
+        child: MaterialApp(
+          title: 'Pursuit: Habit Tracker',
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ThemeMode.system,
+          debugShowCheckedModeBanner: false,
+          routes: {
+            '/': (context) => SplashScreen(),
+            '/add': (context) => AddHabitScreen(),
+            '/onboarding':(context)=>OnboardingScreen()
+          },
+          initialRoute: '/',
+        ),
       ),
     );
   }

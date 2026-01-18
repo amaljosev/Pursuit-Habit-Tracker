@@ -1,16 +1,9 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:pursuit/features/habit/presentation/pages/profile/profile_screen.dart';
 
 SliverAppBar buildHeader(BuildContext context) {
-  log(MediaQuery.of(context).size.height.toString());
   return SliverAppBar.large(
-    expandedHeight: MediaQuery.of(context).size.width >= 600
-        ? 220
-        : MediaQuery.of(context).size.height <= 520
-        ? MediaQuery.of(context).size.height * 0.3
-        : MediaQuery.of(context).size.height * 0.2,
+    expandedHeight: 200,
 
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     surfaceTintColor: Colors.transparent,

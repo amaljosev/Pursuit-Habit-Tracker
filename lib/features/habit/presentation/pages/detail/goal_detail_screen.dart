@@ -52,8 +52,6 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isTablet = MediaQuery.of(context).size.shortestSide >= 600;
-    final Size size = MediaQuery.of(context).size;
-
     return Scaffold(
       body: PopScope(
         canPop: false,
@@ -324,9 +322,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                               ),
                                             ),
                                         child: CircleAvatar(
-                                          radius: size.width <= 360
-                                              ? size.width * 0.05
-                                              : size.width * 0.09,
+                                        
                                           backgroundColor: goalColor.withValues(
                                             alpha: 0.2,
                                           ),
@@ -417,9 +413,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                                                     ),
                                                   ),
                                         child: CircleAvatar(
-                                          radius: size.width <= 360
-                                              ? size.width * 0.05
-                                              : size.width * 0.09,
+                                          
                                           backgroundColor: goalColor.withValues(
                                             alpha: 0.2,
                                           ),
@@ -505,6 +499,14 @@ class ProgressSection extends StatelessWidget {
                   ),
 
             const SizedBox(height: 20),
+            Text(
+                  "${completedValue.toInt()} / "
+                  "${habit.goalCount} $goalValue",
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall!.copyWith(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               spacing: 20,
@@ -530,13 +532,7 @@ class ProgressSection extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                Text(
-                  "${completedValue.toInt()} / "
-                  "${habit.goalCount} $goalValue",
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall!.copyWith(fontWeight: FontWeight.w900),
-                ),
+                
                 MyCard(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 25,
