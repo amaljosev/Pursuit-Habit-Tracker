@@ -40,7 +40,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     if (widget.customHabit != null && widget.habit == null) {
       nameController.text = widget.customHabit!.title;
       context.read<HabitBloc>().add(
-        CustomHabitInitialEvent(icon: widget.customHabit!.icon),
+        CustomHabitInitialEvent(customHabit: widget.customHabit!),
       );
     } else if (widget.habit != null && widget.customHabit == null) {
       context.read<HabitBloc>().add(

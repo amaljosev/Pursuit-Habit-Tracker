@@ -139,6 +139,7 @@ class _GoalsLibraryScreenState extends State<GoalsLibraryScreen> {
               final customHabit = LibraryModel(
                 title: habit['name'],
                 icon: habit['icon'],
+                cat: habit['category'],
               );
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -190,6 +191,7 @@ class _GoalsLibraryScreenState extends State<GoalsLibraryScreen> {
 class LibraryModel {
   final String title;
   final int icon;
+  final int cat;
 
-  LibraryModel({required this.title, required this.icon});
+  LibraryModel({required this.title, required this.icon, required this.cat});
 }

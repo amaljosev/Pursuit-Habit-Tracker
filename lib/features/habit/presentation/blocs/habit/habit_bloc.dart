@@ -18,6 +18,7 @@ import 'package:pursuit/features/habit/domain/usecases/insert_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/schedule_habit_notification_usecase.dart';
 import 'package:pursuit/features/habit/domain/usecases/update_goal_count.dart';
 import 'package:pursuit/features/habit/domain/usecases/update_habit.dart';
+import 'package:pursuit/features/habit/presentation/pages/goals/goals_library_screen.dart';
 
 part 'habit_event.dart';
 part 'habit_state.dart';
@@ -107,9 +108,9 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     emit(
       AddHabitInitial(
         color: getRandomInt(AppColors.lightColors.length - 1),
-        icon: event.icon,
+        icon: event.customHabit.icon,
         name: '',
-        habitType: 0,
+        habitType:event.customHabit.cat,
         goalCount: 5,
         goalValue: 0,
         goalTime: 0,

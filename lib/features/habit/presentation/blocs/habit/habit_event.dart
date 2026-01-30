@@ -14,12 +14,12 @@ final class AddHabitInitialEvent extends HabitEvent {
 }
 
 final class CustomHabitInitialEvent extends HabitEvent {
-  final int icon;
+  final LibraryModel customHabit;
 
-  CustomHabitInitialEvent({required this.icon});
+  CustomHabitInitialEvent({required this.customHabit});
 
   @override
-  List<Object> get props => [ icon];
+  List<Object> get props => [ customHabit];
 }
 
 final class UpdateHabitInitialEvent extends HabitEvent {

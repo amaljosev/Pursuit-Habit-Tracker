@@ -111,7 +111,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                         .displayMedium
                                         ?.copyWith(
                                           fontSize: size.width*0.09,
-
                                           color: isDarkMode
                                               ? Colors.white12
                                               : Colors.black12,
