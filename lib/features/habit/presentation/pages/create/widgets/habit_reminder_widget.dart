@@ -5,16 +5,16 @@ import 'package:pursuit/features/widgets/my_card_widget.dart';
 import 'package:pursuit/features/widgets/time_picker_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class HabitRemainderWidget extends StatefulWidget {
-  const HabitRemainderWidget({super.key, required this.backgroundColor});
+class HabitReminderWidget extends StatefulWidget {
+  const HabitReminderWidget({super.key, required this.backgroundColor});
 
   final Color backgroundColor;
 
   @override
-  State<HabitRemainderWidget> createState() => _HabitRemainderWidgetState();
+  State<HabitReminderWidget> createState() => _HabitReminderWidgetState();
 }
 
-class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
+class _HabitReminderWidgetState extends State<HabitReminderWidget> {
   String _permissionStatusLabel = 'Unknown';
   bool _hasExactAlarmPermission = false;
 
@@ -232,7 +232,7 @@ class _HabitRemainderWidgetState extends State<HabitRemainderWidget> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
-                    'Remainder',
+                    'Notification',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   subtitle: _permissionStatusLabel == 'Notifications allowed' &&

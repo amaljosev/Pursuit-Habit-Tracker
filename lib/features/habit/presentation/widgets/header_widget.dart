@@ -48,12 +48,11 @@ SliverAppBar buildHeader(BuildContext context) {
       GestureDetector(
         onTap: () => Navigator.of(
           context,
-        ).push(MaterialPageRoute(builder: (context) => ProfileScreen())),
-        child: CircleAvatar(
-          backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white24
-              : Theme.of(context).primaryColor.withValues(alpha: 0.5),
-          child: Icon(Icons.person),
+        ).push(MaterialPageRoute(builder: (context) => const ProfileScreen())),
+        child: Image.asset(
+          'assets/icon/pursuit_icon.png',
+          height: 50,
+          width: 50,
         ),
       ),
     ],

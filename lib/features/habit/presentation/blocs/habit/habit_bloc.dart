@@ -6,6 +6,7 @@ import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/core/functions/math_functions.dart';
 import 'package:pursuit/core/theme/app_colors.dart';
 import 'package:pursuit/core/usecases/usecase.dart';
+import 'package:pursuit/core/utils/shared_prefs_utils.dart';
 import 'package:pursuit/features/habit/constants/habit_icons.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/cancel_all_habit_notifications_usecase.dart';
@@ -110,7 +111,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
         color: getRandomInt(AppColors.lightColors.length - 1),
         icon: event.customHabit.icon,
         name: '',
-        habitType:event.customHabit.cat,
+        habitType: event.customHabit.cat,
         goalCount: 1,
         goalValue: 0,
         goalTime: 0,
@@ -330,20 +331,38 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
         (_) async {
           final int notificationId = event.habit.id.hashCode;
 
-          // 🛑 Cancel previous notification first (ALWAYS SAFE)
-          await cancelHabitNotificationUseCase(notificationId);
+          // Check if habit is completed for today
+          final isCompletedToday =
+              event.habit.isCompleteToday &&
+              event.habit.lastCompleted != null &&
+              HelperFunctions.isToday(event.habit.lastCompleted!);
 
-          // ✅ Re-schedule only if reminder exists
-          if (event.habit.reminder != null &&
+          if (isCompletedToday &&
+              event.habit.reminder != null &&
               event.habit.reminder!.isNotEmpty) {
             final time = HelperFunctions.parse12HourTime(event.habit.reminder!);
-
             if (time != null) {
-              await scheduleHabitNotificationUseCase(
-                habitId: notificationId,
-                habitName: event.habit.name,
-                reminderTime: time,
+              if (isHourMinuteAfterNow(time)) {
+                await SharedPrefsUtils.addSkippedReminder(event.habit.id);
+              }
+            }
+            // 🚫 Cancel notification if habit is completed today
+            await cancelHabitNotificationUseCase(notificationId);
+          } else {
+            // Only reschedule if habit is not completed AND has reminder
+            if (event.habit.reminder != null &&
+                event.habit.reminder!.isNotEmpty) {
+              final time = HelperFunctions.parse12HourTime(
+                event.habit.reminder!,
               );
+
+              if (time != null) {
+                await scheduleHabitNotificationUseCase(
+                  habitId: notificationId,
+                  habitName: event.habit.name,
+                  reminderTime: time,
+                );
+              }
             }
           }
 
@@ -368,6 +387,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
 
       // 🛑 Cancel notification BEFORE deleting habit
       await cancelHabitNotificationUseCase(notificationId);
+     // await SharedPrefsUtils.removeSkippedReminder(event.id);
 
       final result = await deleteHabitUseCase(event.id);
 
@@ -430,17 +450,19 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   ) async {
     try {
       emit(HabitLoading());
+
       final result = await checkDailyResetUseCase();
 
-      result.fold(
-        (failure) {
+      await result.fold(
+        (failure) async {
           emit(HabitError(failure.message));
-          log(failure.toString());
           log('❌ Daily reset failed: ${failure.message}');
         },
-        (_) {
+        (_) async {
+          await _rescheduleSkippedReminders();
+
           emit(HabitDailyResetCompleted());
-          log('✅ Daily reset completed successfully');
+          log('✅ Daily reset & reminder reschedule completed');
         },
       );
     } catch (e, s) {
@@ -463,5 +485,47 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       log('CancelAllNotifications error: $e\n$s');
       emit(HabitError(e.toString()));
     }
+  }
+
+  bool isHourMinuteAfterNow(DateTime input) {
+    final now = DateTime.now();
+
+    if (input.hour > now.hour) return true;
+    if (input.hour < now.hour) return false;
+
+    // hours are equal → compare minutes
+    return input.minute > now.minute;
+  }
+
+  Future<void> _rescheduleSkippedReminders() async {
+    final skippedHabitIds = await SharedPrefsUtils.getSkippedReminders();
+    log(skippedHabitIds.toString());
+    if (skippedHabitIds.isEmpty) return;
+
+    for (final habitId in skippedHabitIds) {
+      final habitResult = await getHabitByIdUseCase(habitId);
+
+      await habitResult.fold(
+        (fail) async {
+          log(fail.toString());
+        },
+        (habit) async {
+          if (habit == null) return;
+          if (habit.reminder == null || habit.reminder!.isEmpty) return;
+
+          final time = HelperFunctions.parse12HourTime(habit.reminder!);
+          if (time == null) return;
+
+          await scheduleHabitNotificationUseCase(
+            habitId: habit.id.hashCode,
+            habitName: habit.name,
+            reminderTime: time,
+          );
+        },
+      );
+    }
+
+    // 🚨 CRITICAL: clear after rescheduling
+    await SharedPrefsUtils.clearSkippedReminders();
   }
 }

@@ -13,7 +13,7 @@ import 'package:pursuit/features/habit/presentation/pages/create/widgets/color_p
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/goal_end_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/goal_time_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/goal_value_widget.dart';
-import 'package:pursuit/features/habit/presentation/pages/create/widgets/habit_remainder_widget.dart';
+import 'package:pursuit/features/habit/presentation/pages/create/widgets/habit_reminder_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/habit_title_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/habit_type_widget.dart';
 import 'package:pursuit/features/habit/presentation/pages/create/widgets/icon_picker_widget.dart';
@@ -216,7 +216,7 @@ class _HabitView extends StatelessWidget {
                                 backgroundColor: backgroundColorDark,
                                 isDark: isDark,
                               ),
-                              HabitRemainderWidget(
+                              HabitReminderWidget(
                                 backgroundColor: backgroundColorDark,
                               ),
                               Row(
