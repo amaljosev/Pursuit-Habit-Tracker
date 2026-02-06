@@ -24,6 +24,8 @@ class ProgressPageState extends State<ProgressPage>
   int _currentComparisonPeriod = 0;
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
+  int _selectedYear = DateTime.now().year;
+  late ScrollController _heatmapScrollController;
 
   @override
   void initState() {
@@ -36,11 +38,32 @@ class ProgressPageState extends State<ProgressPage>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
+
+    _heatmapScrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToCurrentMonth();
+    });
+  }
+
+  void _scrollToCurrentMonth() {
+    final now = DateTime.now();
+    if (_selectedYear != now.year) return;
+
+    final month = now.month;
+    // Scroll to approximate position of current month
+    final scrollPosition = (month - 1) * 53.0 / 12 * 14.0;
+
+    _heatmapScrollController.animateTo(
+      scrollPosition,
+      duration: Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _heatmapScrollController.dispose();
     super.dispose();
   }
 
@@ -51,13 +74,230 @@ class ProgressPageState extends State<ProgressPage>
       body: CustomScrollView(
         slivers: [
           buildAppBar(widget, isDark, context),
+
           buildStatsOverview(context, _fadeAnimation, widget, isDark),
+          _buildYearlyHeatMap(isDark),
           _buildChartsSection(isDark),
           _buildActivityCalendar(isDark),
+
           SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
+  }
+
+  SliverToBoxAdapter _buildYearlyHeatMap(bool isDark) {
+    return SliverToBoxAdapter(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? HelperFunctions.getColorById(
+                  id: widget.habit.color,
+                  isDarkMode: true,
+                )
+              : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title and Year
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Year in Pixels',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: MediaQuery.of(context).size.width * 0.04,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedYear = _selectedYear == DateTime.now().year
+                          ? DateTime.now().year - 1
+                          : DateTime.now().year;
+                    });
+                    // Scroll to current month when switching to current year
+                    if (_selectedYear == DateTime.now().year) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _scrollToCurrentMonth();
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: HelperFunctions.getColorById(
+                        id: widget.habit.color,
+                      ).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          '$_selectedYear',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: HelperFunctions.getColorById(
+                              id: widget.habit.color,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Icon(
+                          Icons.swap_horiz,
+                          size: 16,
+                          color: HelperFunctions.getColorById(
+                            id: widget.habit.color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+
+            // 365 Squares Container
+            Container(
+              height: 140,
+              child: SingleChildScrollView(
+                controller: _heatmapScrollController,
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: _build365Squares(isDark),
+              ),
+            ),
+            SizedBox(height: 8),
+
+            // Stats
+            _buildStats(isDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _build365Squares(bool isDark) {
+    final completedDates = _getYearlyCompletedDates(_selectedYear);
+    final totalDays = 365;
+
+    const double squareSize = 14.0;
+    const double spacing = 2.0;
+
+    final now = DateTime.now();
+    final isCurrentYear = _selectedYear == now.year;
+
+    return Row(
+      children: List.generate(53, (weekIndex) {
+        return Container(
+          margin: EdgeInsets.only(right: spacing),
+          child: Column(
+            children: List.generate(7, (dayIndex) {
+              final dayNumber = weekIndex * 7 + dayIndex + 1;
+              if (dayNumber > totalDays) {
+                return Container(
+                  width: squareSize,
+                  height: squareSize,
+                  margin: EdgeInsets.only(bottom: spacing),
+                );
+              }
+
+              final date = DateTime(_selectedYear, 1, dayNumber);
+              final isCompleted = completedDates.any(
+                (completedDate) =>
+                    completedDate.year == date.year &&
+                    completedDate.month == date.month &&
+                    completedDate.day == date.day,
+              );
+
+              final habitColor = HelperFunctions.getColorById(
+                id: widget.habit.color,
+              );
+              final isToday =
+                  isCurrentYear &&
+                  date.year == now.year &&
+                  date.month == now.month &&
+                  date.day == now.day;
+
+              return Container(
+                width: squareSize,
+                height: squareSize,
+                margin: EdgeInsets.only(bottom: spacing),
+                decoration: BoxDecoration(
+                  color: isCompleted
+                      ? habitColor
+                      : (isDark ? Colors.grey[800] : Colors.grey[100]),
+                  borderRadius: BorderRadius.circular(2),
+                  border: isToday
+                      ? Border.all(color: Colors.white, width: 2)
+                      : null,
+                ),
+              );
+            }),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildStats(bool isDark) {
+    final completedDates = _getYearlyCompletedDates(_selectedYear);
+    final completedCount = completedDates.length;
+    final percentage = (completedCount / 365 * 100).round();
+    final habitColor = HelperFunctions.getColorById(id: widget.habit.color);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '$completedCount/365 days',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: habitColor,
+          ),
+        ),
+        Text(
+          '$percentage%',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: habitColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Set<DateTime> _getYearlyCompletedDates(int year) {
+    final completedDates = <DateTime>{};
+
+    for (final dayMap in widget.habit.completedDays) {
+      try {
+        final dateStr = dayMap['date'] as String;
+        final date = DateTime.parse(dateStr);
+        if (date.year == year) {
+          completedDates.add(date);
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+
+    return completedDates;
   }
 
   SliverToBoxAdapter _buildChartsSection(bool isDark) {
@@ -91,8 +331,8 @@ class ProgressPageState extends State<ProgressPage>
           scrollDirection: Axis.horizontal,
 
           children: [
-            _buildChartTypeButton('Active Days', 0, isDark),
-            _buildChartTypeButton('Streak Trend', 1, isDark),
+            _buildChartTypeButton('Streak Trend', 0, isDark),
+            _buildChartTypeButton('Active Days', 1, isDark),
             _buildChartTypeButton('Monthly Progress', 2, isDark),
           ],
         ),
@@ -171,9 +411,9 @@ class ProgressPageState extends State<ProgressPage>
   Widget _getChartForIndex(int index, bool isDark) {
     switch (index) {
       case 0:
-        return _buildMostActiveDaysChart();
-      case 1:
         return _buildStreakTrendChart(isDark);
+      case 1:
+        return _buildMostActiveDaysChart();
       case 2:
         return _buildComparisonChart(isDark);
       default:
@@ -1173,7 +1413,6 @@ class ProgressPageState extends State<ProgressPage>
                       fontSize: MediaQuery.of(context).size.width * 0.04,
                     ),
                   ),
-                  // _buildCalendarFormatToggle(isDark),
                 ],
               ),
               SizedBox(height: 16),
@@ -1184,59 +1423,6 @@ class ProgressPageState extends State<ProgressPage>
       ),
     );
   }
-
-  // Widget _buildCalendarFormatToggle(bool isDark) {
-  //   return Container(
-  //     padding: const EdgeInsets.all(5),
-  //     decoration: BoxDecoration(
-  //       color: isDark
-  //           ? HelperFunctions.getColorById(
-  //               id: widget.habit.color,
-  //               isDarkMode: true,
-  //             )
-  //           : Colors.grey[100],
-  //       borderRadius: BorderRadius.circular(12),
-  //     ),
-  //     child: Row(
-  //       mainAxisSize: MainAxisSize.min,
-  //       children: [
-  //         _buildFormatButton('Week', CalendarFormat.week, isDark),
-  //         _buildFormatButton('Month', CalendarFormat.month, isDark),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildFormatButton(String label, CalendarFormat format, bool isDark) {
-  //   final isSelected = _calendarFormat == format;
-  //   return GestureDetector(
-  //     onTap: () => setState(() => _calendarFormat = format),
-  //     child: Container(
-  //       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  //       decoration: BoxDecoration(
-  //         color: isSelected
-  //             ? isDark
-  //                   ? HelperFunctions.getColorById(
-  //                       id: widget.habit.color,
-  //                       isDark: true,
-  //                     )
-  //                   : Colors.white
-  //             : Colors.transparent,
-  //         borderRadius: BorderRadius.circular(8),
-  //       ),
-  //       child: Text(
-  //         label,
-  //         style: Theme.of(context).textTheme.bodySmall!.copyWith(
-  //           color: isSelected
-  //               ? isDark
-  //                     ? Colors.white
-  //                     : Colors.black
-  //               : Colors.grey,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildModernCalendar(bool isDark) {
     final completedDates = _getCompletedDates();
@@ -1249,9 +1435,6 @@ class ProgressPageState extends State<ProgressPage>
       calendarFormat: _calendarFormat,
       availableGestures: AvailableGestures.horizontalSwipe,
 
-      // onFormatChanged: (format) {
-      //   setState(() => _calendarFormat = format);
-      // },
       onPageChanged: (focusedDay) {
         setState(() => _focusedDay = focusedDay);
       },
@@ -1331,9 +1514,6 @@ class ProgressPageState extends State<ProgressPage>
           color: Colors.grey[600],
           fontWeight: FontWeight.normal,
         ),
-
-        // Cell padding
-        // cellPadding: EdgeInsets.all(4),
       ),
 
       // Builders for custom day rendering
