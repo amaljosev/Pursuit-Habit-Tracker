@@ -49,13 +49,15 @@ class ProfileScreen extends StatelessWidget {
             /// Main List Section
             SliverList(
               delegate: SliverChildListDelegate([
+                /// APP INFORMATION
                 CupertinoListSection.insetGrouped(
+                  header: const Text('App'),
                   children: [
                     ListTile(
                       leading: const Icon(Icons.support_agent),
                       title: const Text('Help'),
-                      trailing: const CupertinoListTileChevron(),
                       titleTextStyle: Theme.of(context).textTheme.titleSmall,
+                      trailing: const CupertinoListTileChevron(),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (context) => HelpScreen()),
                       ),
@@ -67,7 +69,6 @@ class ProfileScreen extends StatelessWidget {
                       trailing: const CupertinoListTileChevron(),
                       onTap: () async => await _lunchPrivacyPolicy(context),
                     ),
-
                     Theme(
                       data: Theme.of(context).copyWith(
                         splashFactory: NoSplash.splashFactory,
@@ -81,12 +82,18 @@ class ProfileScreen extends StatelessWidget {
                           'About this app',
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
-
                         trailing: const CupertinoListTileChevron(),
                         childrenPadding: const EdgeInsets.all(12),
                         children: [_buildAboutContent(context)],
                       ),
                     ),
+                  ],
+                ),
+
+                /// ENGAGEMENT
+                CupertinoListSection.insetGrouped(
+                  header: const Text('Engagement'),
+                  children: [
                     ListTile(
                       leading: const Icon(Icons.share_outlined),
                       title: const Text('Share'),
@@ -97,18 +104,25 @@ class ProfileScreen extends StatelessWidget {
                       },
                     ),
                     ListTile(
-                      leading: const Icon(CupertinoIcons.mail),
-                      title: const Text('Contact us'),
-                      titleTextStyle: Theme.of(context).textTheme.titleSmall,
-                      trailing: const CupertinoListTileChevron(),
-                      onTap: () async => showModernSupportSheet(context),
-                    ),
-                    ListTile(
                       leading: const Icon(Icons.star_border),
                       title: const Text('Rate app'),
                       titleTextStyle: Theme.of(context).textTheme.titleSmall,
                       trailing: const CupertinoListTileChevron(),
                       onTap: () async => await _rateApp(context),
+                    ),
+                  ],
+                ),
+
+                /// SUPPORT
+                CupertinoListSection.insetGrouped(
+                  header: const Text('Support'),
+                  children: [
+                    ListTile(
+                      leading: const Icon(CupertinoIcons.mail),
+                      title: const Text('Contact us'),
+                      titleTextStyle: Theme.of(context).textTheme.titleSmall,
+                      trailing: const CupertinoListTileChevron(),
+                      onTap: () async => showModernSupportSheet(context),
                     ),
                   ],
                 ),

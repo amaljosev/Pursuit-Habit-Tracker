@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/app/pages/home_page.dart';
+import 'package:pursuit/core/services/app_update_service.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 import 'package:pursuit/features/onboarding/onboarding_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,6 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     // Trigger daily reset check when screen loads
     context.read<HabitBloc>().add(CheckDailyResetEvent());
+     AppUpdateService().checkForBackgroundUpdate();
   }
 
   Future<void> _navigateToHome() async {
