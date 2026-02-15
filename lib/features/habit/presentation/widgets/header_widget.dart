@@ -50,7 +50,12 @@ SliverAppBar buildHeader(BuildContext context) {
         onTap: () => Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (context) => const ProfileScreen())),
-        child: Icon(CupertinoIcons.settings),
+        child: Icon(
+          CupertinoIcons.settings,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white
+              : Colors.black,
+        ),
       ),
     ],
   );

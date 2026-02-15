@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:pursuit/core/constants/app_constants.dart';
 import 'package:pursuit/core/constants/app_version.dart';
 import 'package:pursuit/core/utils/share_utils.dart';
 import 'package:pursuit/features/habit/presentation/pages/profile/contact_us_sheet.dart';
@@ -46,60 +47,72 @@ class ProfileScreen extends StatelessWidget {
             ),
 
             /// Main List Section
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  CupertinoListSection.insetGrouped(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.support_agent),
-                        title: const Text('Help'),
-                        trailing: const CupertinoListTileChevron(),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => HelpScreen()),
-                        ),
+            SliverList(
+              delegate: SliverChildListDelegate([
+                CupertinoListSection.insetGrouped(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.support_agent),
+                      title: const Text('Help'),
+                      trailing: const CupertinoListTileChevron(),
+                      titleTextStyle: Theme.of(context).textTheme.titleSmall,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => HelpScreen()),
                       ),
-                      ListTile(
-                        leading: const Icon(Icons.shield_outlined),
-                        title: const Text('Privacy Policy'),
-                        trailing: const CupertinoListTileChevron(),
-                        onTap: () async => await _lunchPrivacyPolicy(context),
-                      ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.shield_outlined),
+                      title: const Text('Privacy Policy'),
+                      titleTextStyle: Theme.of(context).textTheme.titleSmall,
+                      trailing: const CupertinoListTileChevron(),
+                      onTap: () async => await _lunchPrivacyPolicy(context),
+                    ),
 
-                      Theme(
-                        data: Theme.of(context).copyWith(
-                          splashFactory: NoSplash.splashFactory,
-                          splashColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          dividerColor: Colors.transparent,
+                    Theme(
+                      data: Theme.of(context).copyWith(
+                        splashFactory: NoSplash.splashFactory,
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        dividerColor: Colors.transparent,
+                      ),
+                      child: ExpansionTile(
+                        leading: const Icon(Icons.info_outline),
+                        title: Text(
+                          'About this app',
+                          style: Theme.of(context).textTheme.titleSmall,
                         ),
-                        child: ExpansionTile(
-                          leading: const Icon(Icons.info_outline),
-                          title: const Text('About this app'),
-                          trailing: const CupertinoListTileChevron(),
-                          childrenPadding: const EdgeInsets.all(12),
-                          children: [_buildAboutContent(context)],
-                        ),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.share_outlined),
-                        title: const Text('Share'),
+
                         trailing: const CupertinoListTileChevron(),
-                        onTap: () async {
-                          await ShareUtils.shareApp();
-                        },
+                        childrenPadding: const EdgeInsets.all(12),
+                        children: [_buildAboutContent(context)],
                       ),
-                      ListTile(
-                        leading: const Icon(Icons.privacy_tip_outlined),
-                        title: const Text('Contact us'),
-                        trailing: const CupertinoListTileChevron(),
-                        onTap: () async => showModernSupportSheet(context),
-                      ),
-                    ],
-                  ),
-                ]),
-              ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.share_outlined),
+                      title: const Text('Share'),
+                      titleTextStyle: Theme.of(context).textTheme.titleSmall,
+                      trailing: const CupertinoListTileChevron(),
+                      onTap: () async {
+                        await ShareUtils.shareApp();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(CupertinoIcons.mail),
+                      title: const Text('Contact us'),
+                      titleTextStyle: Theme.of(context).textTheme.titleSmall,
+                      trailing: const CupertinoListTileChevron(),
+                      onTap: () async => showModernSupportSheet(context),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.star_border),
+                      title: const Text('Rate app'),
+                      titleTextStyle: Theme.of(context).textTheme.titleSmall,
+                      trailing: const CupertinoListTileChevron(),
+                      onTap: () async => await _rateApp(context),
+                    ),
+                  ],
+                ),
+              ]),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -148,6 +161,15 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _rateApp(BuildContext context) async {
+    final Uri _url = Uri.parse(AppConstants.playStoreUrl);
+    if (!await launchUrl(_url, mode: LaunchMode.platformDefault)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Sorry we are facing an issue')));
+    }
+  }
+
   void showModernSupportSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -159,4 +181,3 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
-
