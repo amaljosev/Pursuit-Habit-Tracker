@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pursuit/features/habit/presentation/pages/profile/profile_screen.dart';
 
@@ -49,11 +50,7 @@ SliverAppBar buildHeader(BuildContext context) {
         onTap: () => Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (context) => const ProfileScreen())),
-        child: Image.asset(
-          'assets/icon/pursuit_icon.png',
-          height: 50,
-          width: 50,
-        ),
+        child: Icon(CupertinoIcons.settings),
       ),
     ],
   );

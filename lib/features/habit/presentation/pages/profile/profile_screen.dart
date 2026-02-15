@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pursuit/core/constants/app_version.dart';
 import 'package:pursuit/core/utils/share_utils.dart';
+import 'package:pursuit/features/habit/presentation/pages/profile/contact_us_sheet.dart';
 import 'package:pursuit/features/habit/presentation/pages/profile/help_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -60,10 +61,10 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                       ListTile(
-                        leading: const Icon(Icons.privacy_tip_outlined),
+                        leading: const Icon(Icons.shield_outlined),
                         title: const Text('Privacy Policy'),
                         trailing: const CupertinoListTileChevron(),
-                        onTap: () async => await _launchUrl(context),
+                        onTap: () async => await _lunchPrivacyPolicy(context),
                       ),
 
                       Theme(
@@ -89,7 +90,12 @@ class ProfileScreen extends StatelessWidget {
                           await ShareUtils.shareApp();
                         },
                       ),
-                      
+                      ListTile(
+                        leading: const Icon(Icons.privacy_tip_outlined),
+                        title: const Text('Contact us'),
+                        trailing: const CupertinoListTileChevron(),
+                        onTap: () async => showModernSupportSheet(context),
+                      ),
                     ],
                   ),
                 ]),
@@ -131,7 +137,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _launchUrl(BuildContext context) async {
+  Future<void> _lunchPrivacyPolicy(BuildContext context) async {
     final Uri _url = Uri.parse(
       'https://amaljosev.github.io/Pursuit-Privacy-Policy/',
     );
@@ -141,4 +147,16 @@ class ProfileScreen extends StatelessWidget {
       ).showSnackBar(SnackBar(content: Text('Sorry we are facing an issue')));
     }
   }
+
+  void showModernSupportSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return const ContactUsSheet();
+      },
+    );
+  }
 }
+
