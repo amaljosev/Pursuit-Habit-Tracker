@@ -81,12 +81,10 @@ class GoalValueWidget extends StatelessWidget {
                   onTap: () async {
                     final int? result = await showModalBottomSheet(
                       showDragHandle: true,
-                      backgroundColor: Colors.white,
                       context: context,
                       builder: (context) => Padding(
                         padding: const EdgeInsets.all(10),
                         child: Container(
-                          color: Colors.white,
                           width: double.infinity,
                           child: SafeArea(
                             child: SingleChildScrollView(

@@ -36,9 +36,27 @@ class HabitLocalDataSourceImpl implements HabitLocalDataSource {
 
       final db = await openDatabase(
         path,
-        version: 1,
+        version: 3,
         onCreate: (db, version) async {
-          await db.execute('''
+          await _createTable(db);
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 3) {
+            await db.execute('DROP TABLE IF EXISTS $_tableName');
+            await _createTable(db);
+          }
+        },
+      );
+
+      return db;
+    } catch (e, st) {
+      log('Database initialization failed: $e\n$st');
+      rethrow;
+    }
+  }
+
+  Future<void> _createTable(Database db) async {
+    await db.execute('''
           CREATE TABLE $_tableName (
             id TEXT PRIMARY KEY,
             name TEXT,
@@ -67,14 +85,6 @@ class HabitLocalDataSourceImpl implements HabitLocalDataSource {
             achievements TEXT
           )
         ''');
-        },
-      );
-
-      return db;
-    } catch (e, st) {
-      log('Database initialization failed: $e\n$st');
-      rethrow;
-    }
   }
 
   @override

@@ -11,6 +11,7 @@
         android:name="${applicationName}"
         android:label="Pursuit"
         android:icon="@mipmap/launcher_icon">
+        android:allowBackup="false"
 
         <activity
             android:name=".MainActivity"
