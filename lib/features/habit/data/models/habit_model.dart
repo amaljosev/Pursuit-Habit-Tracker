@@ -13,10 +13,7 @@ class HabitModel extends Habit {
     super.reminder,
     required super.startDate,
     super.endDate,
-    required super.goalCompletedCount,
     required super.goalRecordCount,
-    required super.isCompleteToday,
-    super.lastCompleted,
     required super.streakCount,
     required super.bestStreak,
     required super.countThisMonth,
@@ -29,7 +26,8 @@ class HabitModel extends Habit {
     required super.achievements,
   });
 
-  /// ✅ Convert JSON → HabitModel
+  // ─── fromJson ───────────────────────────────────────────────────────────────
+
   factory HabitModel.fromJson(Map<String, dynamic> json) {
     return HabitModel(
       id: json['id'] as String,
@@ -42,13 +40,9 @@ class HabitModel extends Habit {
       time: json['time'] as int,
       reminder: json['reminder'] as String?,
       startDate: DateTime.parse(json['startDate'] as String),
-      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
-      goalCompletedCount: json['goalCompletedCount'] as int,
+      endDate:
+          json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
       goalRecordCount: json['goalRecordCount'] as int,
-      isCompleteToday: json['isCompleteToday'] as bool,
-      lastCompleted: json['lastCompleted'] != null
-          ? DateTime.parse(json['lastCompleted'])
-          : null,
       streakCount: json['streakCount'] as int,
       bestStreak: json['bestStreak'] as int,
       countThisMonth: json['countThisMonth'] as int,
@@ -66,7 +60,8 @@ class HabitModel extends Habit {
     );
   }
 
-  /// ✅ Convert HabitModel → JSON
+  // ─── toJson ─────────────────────────────────────────────────────────────────
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -80,10 +75,7 @@ class HabitModel extends Habit {
       'reminder': reminder,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate?.toIso8601String(),
-      'goalCompletedCount': goalCompletedCount,
       'goalRecordCount': goalRecordCount,
-      'isCompleteToday': isCompleteToday,
-      'lastCompleted': lastCompleted?.toIso8601String(),
       'streakCount': streakCount,
       'bestStreak': bestStreak,
       'countThisMonth': countThisMonth,
@@ -97,63 +89,58 @@ class HabitModel extends Habit {
     };
   }
 
-  /// ✅ Convert Entity → Model
-  factory HabitModel.fromEntity(Habit habit) => HabitModel(
-    id: habit.id,
-    name: habit.name,
-    icon: habit.icon,
-    color: habit.color,
-    type: habit.type,
-    goalValue: habit.goalValue,
-    goalCount: habit.goalCount,
-    time: habit.time,
-    reminder: habit.reminder,
-    startDate: habit.startDate,
-    endDate: habit.endDate,
-    goalCompletedCount: habit.goalCompletedCount,
-    goalRecordCount: habit.goalRecordCount,
-    isCompleteToday: habit.isCompleteToday,
-    lastCompleted: habit.lastCompleted,
-    streakCount: habit.streakCount,
-    bestStreak: habit.bestStreak,
-    countThisMonth: habit.countThisMonth,
-    countLastMonth: habit.countLastMonth,
-    countThisWeek: habit.countThisWeek,
-    countLastWeek: habit.countLastWeek,
-    countThisYear: habit.countThisYear,
-    countLastYear: habit.countLastYear,
-    completedDays: habit.completedDays,
-    achievements: habit.achievements,
-  );
+  // ─── Entity ↔ Model ─────────────────────────────────────────────────────────
 
-  /// ✅ Convert Model → Entity
+  factory HabitModel.fromEntity(Habit habit) => HabitModel(
+        id: habit.id,
+        name: habit.name,
+        icon: habit.icon,
+        color: habit.color,
+        type: habit.type,
+        goalValue: habit.goalValue,
+        goalCount: habit.goalCount,
+        time: habit.time,
+        reminder: habit.reminder,
+        startDate: habit.startDate,
+        endDate: habit.endDate,
+        goalRecordCount: habit.goalRecordCount,
+        streakCount: habit.streakCount,
+        bestStreak: habit.bestStreak,
+        countThisMonth: habit.countThisMonth,
+        countLastMonth: habit.countLastMonth,
+        countThisWeek: habit.countThisWeek,
+        countLastWeek: habit.countLastWeek,
+        countThisYear: habit.countThisYear,
+        countLastYear: habit.countLastYear,
+        completedDays: habit.completedDays,
+        achievements: habit.achievements,
+      );
+
   Habit toEntity() => Habit(
-    id: id,
-    name: name,
-    icon: icon,
-    color: color,
-    type: type,
-    goalValue: goalValue,
-    goalCount: goalCount,
-    time: time,
-    reminder: reminder,
-    startDate: startDate,
-    endDate: endDate,
-    goalCompletedCount: goalCompletedCount,
-    goalRecordCount: goalRecordCount,
-    isCompleteToday: isCompleteToday,
-    lastCompleted: lastCompleted,
-    streakCount: streakCount,
-    bestStreak: bestStreak,
-    countThisMonth: countThisMonth,
-    countLastMonth: countLastMonth,
-    countThisWeek: countThisWeek,
-    countLastWeek: countLastWeek,
-    countThisYear: countThisYear,
-    countLastYear: countLastYear,
-    completedDays: completedDays,
-    achievements: achievements,
-  );
+        id: id,
+        name: name,
+        icon: icon,
+        color: color,
+        type: type,
+        goalValue: goalValue,
+        goalCount: goalCount,
+        time: time,
+        reminder: reminder,
+        startDate: startDate,
+        endDate: endDate,
+        goalRecordCount: goalRecordCount,
+        streakCount: streakCount,
+        bestStreak: bestStreak,
+        countThisMonth: countThisMonth,
+        countLastMonth: countLastMonth,
+        countThisWeek: countThisWeek,
+        countLastWeek: countLastWeek,
+        countThisYear: countThisYear,
+        countLastYear: countLastYear,
+        completedDays: completedDays,
+        achievements: achievements,
+      );
+
   @override
   HabitModel copyWith({
     String? id,
@@ -167,10 +154,7 @@ class HabitModel extends Habit {
     String? reminder,
     DateTime? startDate,
     DateTime? endDate,
-    int? goalCompletedCount,
     int? goalRecordCount,
-    bool? isCompleteToday,
-    DateTime? lastCompleted,
     int? streakCount,
     int? bestStreak,
     int? countThisMonth,
@@ -194,10 +178,7 @@ class HabitModel extends Habit {
       reminder: reminder ?? this.reminder,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
-      goalCompletedCount: goalCompletedCount ?? this.goalCompletedCount,
       goalRecordCount: goalRecordCount ?? this.goalRecordCount,
-      isCompleteToday: isCompleteToday ?? this.isCompleteToday,
-      lastCompleted: lastCompleted ?? this.lastCompleted,
       streakCount: streakCount ?? this.streakCount,
       bestStreak: bestStreak ?? this.bestStreak,
       countThisMonth: countThisMonth ?? this.countThisMonth,

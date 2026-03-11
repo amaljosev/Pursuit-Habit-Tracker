@@ -284,81 +284,64 @@ class _HabitView extends StatelessWidget {
   }) async {
     final formState = formKey.currentState;
     if (formState == null || !formState.validate()) return;
+
     final bloc = context.read<HabitBloc>();
     final state = bloc.state;
-    if (state is AddHabitInitial) {
-      Habit? habit;
-      habit = Habit(
-        id: updateHabit?.id ?? DateTime.now().toString(),
-        name: nameController.text,
-        icon: state.icon,
-        color: state.color,
-        type: state.habitType,
-        goalValue: state.goalValue,
-        goalCount: state.goalCount,
-        time: state.goalTime,
-        endDate: state.isExpanded
-            ? HelperFunctions.parseDate(state.endDate)
-            : null,
-        reminder: state.hasRemainder ? state.remainderTime : null,
-        startDate: DateTime.now(),
-        goalCompletedCount: updateHabit?.goalCompletedCount ?? 0,
-        goalRecordCount: updateHabit?.goalRecordCount ?? 0,
-        isCompleteToday: updateHabit?.isCompleteToday ?? false,
-        streakCount: updateHabit?.streakCount ?? 0,
-        bestStreak: updateHabit?.bestStreak ?? 0,
-        countThisMonth: updateHabit?.countThisMonth ?? 0,
-        countLastMonth: updateHabit?.countLastMonth ?? 0,
-        countThisWeek: updateHabit?.countThisWeek ?? 0,
-        countLastWeek: updateHabit?.countLastWeek ?? 0,
-        countThisYear: updateHabit?.countThisYear ?? 0,
-        countLastYear: updateHabit?.countLastYear ?? 0,
-        completedDays: updateHabit?.completedDays ?? [],
-        achievements: updateHabit?.achievements ?? {},
-      );
 
-      if (habit.goalCount < habit.goalCompletedCount) {
-        final reset = await _onResetHabit(context: context);
-        if (reset) {
-          habit = Habit(
-            id: updateHabit?.id ?? DateTime.now().toString(),
-            name: nameController.text,
-            icon: state.icon,
-            color: state.color,
-            type: state.habitType,
-            goalValue: state.goalValue,
-            goalCount: state.goalCount,
-            time: state.goalTime,
-            endDate: state.isExpanded
-                ? HelperFunctions.parseDate(state.endDate)
-                : null,
-            reminder: state.hasRemainder ? state.remainderTime : null,
-            startDate: DateTime.now(),
-            goalCompletedCount: 0,
-            goalRecordCount: updateHabit?.goalRecordCount ?? 0,
-            isCompleteToday: updateHabit?.isCompleteToday ?? false,
-            streakCount: updateHabit?.streakCount ?? 0,
-            bestStreak: updateHabit?.bestStreak ?? 0,
-            countThisMonth: updateHabit?.countThisMonth ?? 0,
-            countLastMonth: updateHabit?.countLastMonth ?? 0,
-            countThisWeek: updateHabit?.countThisWeek ?? 0,
-            countLastWeek: updateHabit?.countLastWeek ?? 0,
-            countThisYear: updateHabit?.countThisYear ?? 0,
-            countLastYear: updateHabit?.countLastYear ?? 0,
-            completedDays: updateHabit?.completedDays ?? [],
-            achievements: updateHabit?.achievements ?? {},
-          );
+    if (state is! AddHabitInitial) return;
 
-          isUpdate
-              ? bloc.add(UpdateHabitEvent(habit))
-              : bloc.add(AddHabitEvent(habit));
-        }
-      } else {
-        isUpdate
-            ? bloc.add(UpdateHabitEvent(habit))
-            : bloc.add(AddHabitEvent(habit));
+    Habit habit = Habit(
+      id: updateHabit?.id ?? DateTime.now().toString(),
+      name: nameController.text,
+      icon: state.icon,
+      color: state.color,
+      type: state.habitType,
+      goalValue: state.goalValue,
+      goalCount: state.goalCount,
+      time: state.goalTime,
+      endDate: state.isExpanded
+          ? HelperFunctions.parseDate(state.endDate)
+          : null,
+      reminder: state.hasRemainder ? state.remainderTime : null,
+      startDate: updateHabit?.startDate ?? DateTime.now(),
+      // ── Preserved stats (carry over on edit, zero on create) ──
+      goalRecordCount: updateHabit?.goalRecordCount ?? 0,
+      streakCount: updateHabit?.streakCount ?? 0,
+      bestStreak: updateHabit?.bestStreak ?? 0,
+      countThisMonth: updateHabit?.countThisMonth ?? 0,
+      countLastMonth: updateHabit?.countLastMonth ?? 0,
+      countThisWeek: updateHabit?.countThisWeek ?? 0,
+      countLastWeek: updateHabit?.countLastWeek ?? 0,
+      countThisYear: updateHabit?.countThisYear ?? 0,
+      countLastYear: updateHabit?.countLastYear ?? 0,
+      // ── History always carried over (never reset) ──
+      completedDays: updateHabit?.completedDays ?? [],
+      achievements: updateHabit?.achievements ?? {},
+    );
+
+    // If the user lowered the goalCount below current progress, confirm reset.
+    final currentCount = updateHabit?.goalCompletedCount ?? 0;
+    if (state.goalCount < currentCount) {
+      final reset = await _onResetHabit(context: context);
+      if (!reset) return; // user cancelled
+
+      // Re-build with today's record zeroed out in completedDays
+      final today = DateTime.now();
+      final todayKey =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+      final updatedDays =
+          List<Map<String, dynamic>>.from(updateHabit?.completedDays ?? []);
+      final idx = updatedDays.indexWhere((e) => e['date'] == todayKey);
+      if (idx >= 0) {
+        updatedDays[idx] = {'date': todayKey, 'count': 0, 'isCompleted': false};
       }
+
+      habit = habit.copyWith(completedDays: updatedDays);
     }
+
+    isUpdate ? bloc.add(UpdateHabitEvent(habit)) : bloc.add(AddHabitEvent(habit));
+  }
   }
 
   Future<bool> _onResetHabit({required BuildContext context}) async {
@@ -406,7 +389,7 @@ class _HabitView extends StatelessWidget {
     );
     return reset;
   }
-}
+
 
 class GoalWidget extends StatelessWidget {
   const GoalWidget({

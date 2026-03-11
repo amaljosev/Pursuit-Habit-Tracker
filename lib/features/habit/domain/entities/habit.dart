@@ -1,4 +1,3 @@
-// domain/entities/habit.dart
 import 'package:equatable/equatable.dart';
 
 class Habit extends Equatable {
@@ -13,10 +12,7 @@ class Habit extends Equatable {
   final String? reminder;
   final DateTime startDate;
   final DateTime? endDate;
-  final int goalCompletedCount;
   final int goalRecordCount;
-  final bool isCompleteToday;
-  final DateTime? lastCompleted;
   final int streakCount;
   final int bestStreak;
   final int countThisMonth;
@@ -40,10 +36,7 @@ class Habit extends Equatable {
     this.reminder,
     required this.startDate,
     this.endDate,
-    required this.goalCompletedCount,
     required this.goalRecordCount,
-    required this.isCompleteToday,
-    this.lastCompleted,
     required this.streakCount,
     required this.bestStreak,
     required this.countThisMonth,
@@ -55,6 +48,45 @@ class Habit extends Equatable {
     required this.completedDays,
     required this.achievements,
   });
+
+
+  Map<String, dynamic>? _recordFor(DateTime date) {
+    final key = _dateKey(date);
+    try {
+      return completedDays.firstWhere((e) => e['date'] == key);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String _dateKey(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  bool isCompletedOnDate(DateTime date) =>
+      _recordFor(date)?['isCompleted'] == true;
+
+  int getCountForDate(DateTime date) =>
+      (_recordFor(date)?['count'] as int?) ?? 0;
+
+  /// Convenience – true when TODAY is marked completed.
+  bool get isCompleteToday => isCompletedOnDate(DateTime.now());
+
+  /// The most recent date that was marked completed (null if none).
+  DateTime? get lastCompleted {
+    final completed = completedDays
+        .where((e) => e['isCompleted'] == true)
+        .map((e) => DateTime.tryParse(e['date'] as String? ?? ''))
+        .whereType<DateTime>()
+        .toList();
+    if (completed.isEmpty) return null;
+    completed.sort((a, b) => b.compareTo(a));
+    return completed.first;
+  }
+
+  /// Today's progress count (derived).
+  int get goalCompletedCount => getCountForDate(DateTime.now());
+
+  // ─── copyWith ───────────────────────────────────────────────────────────────
 
   Habit copyWith({
     String? id,
@@ -68,10 +100,7 @@ class Habit extends Equatable {
     String? reminder,
     DateTime? startDate,
     DateTime? endDate,
-    int? goalCompletedCount,
     int? goalRecordCount,
-    bool? isCompleteToday,
-    DateTime? lastCompleted,
     int? streakCount,
     int? bestStreak,
     int? countThisMonth,
@@ -95,10 +124,7 @@ class Habit extends Equatable {
       reminder: reminder ?? this.reminder,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
-      goalCompletedCount: goalCompletedCount ?? this.goalCompletedCount,
       goalRecordCount: goalRecordCount ?? this.goalRecordCount,
-      isCompleteToday: isCompleteToday ?? this.isCompleteToday,
-      lastCompleted: lastCompleted ?? this.lastCompleted,
       streakCount: streakCount ?? this.streakCount,
       bestStreak: bestStreak ?? this.bestStreak,
       countThisMonth: countThisMonth ?? this.countThisMonth,
@@ -114,30 +140,9 @@ class Habit extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        icon,
-        color,
-        type,
-        goalValue,
-        goalCount,
-        time,
-        reminder,
-        startDate,
-        endDate,
-        goalCompletedCount,
-        goalRecordCount,
-        isCompleteToday,
-        lastCompleted,
-        streakCount,
-        bestStreak,
-        countThisMonth,
-        countLastMonth,
-        countThisWeek,
-        countLastWeek,
-        countThisYear,
-        countLastYear,
-        completedDays,
-        achievements,
+        id, name, icon, color, type, goalValue, goalCount, time, reminder,
+        startDate, endDate, goalRecordCount, streakCount, bestStreak,
+        countThisMonth, countLastMonth, countThisWeek, countLastWeek,
+        countThisYear, countLastYear, completedDays, achievements,
       ];
 }

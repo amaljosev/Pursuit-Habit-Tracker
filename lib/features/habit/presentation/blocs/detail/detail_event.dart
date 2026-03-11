@@ -36,6 +36,7 @@ final class DeleteHabitDetailEvent extends DetailEvent {
   List<Object> get props => [id];
 }
 
+/// ➕ Update today's goal count
 class GoalCountUpdateDetailEvent extends DetailEvent {
   final String id;
   final int value;
@@ -48,4 +49,23 @@ class GoalCountUpdateDetailEvent extends DetailEvent {
 
   @override
   List<Object> get props => [id, value, habit];
+}
+
+/// 📅 NEW — mark any date (past or present) as completed/incomplete.
+/// Used by CalendarScreen to edit historical completion.
+class MarkHabitForDateDetailEvent extends DetailEvent {
+  final String habitId;
+  final DateTime date;
+  final int count;
+  final bool isCompleted;
+
+  const MarkHabitForDateDetailEvent({
+    required this.habitId,
+    required this.date,
+    required this.count,
+    required this.isCompleted,
+  });
+
+  @override
+  List<Object> get props => [habitId, date, count, isCompleted];
 }

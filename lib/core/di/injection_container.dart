@@ -7,7 +7,7 @@ import 'package:pursuit/features/habit/domain/repositories/habit_repository.dart
 import 'package:pursuit/features/habit/domain/repositories/notification_repository.dart';
 import 'package:pursuit/features/habit/domain/usecases/cancel_all_habit_notifications_usecase.dart';
 import 'package:pursuit/features/habit/domain/usecases/cancel_habit_notification_usecase.dart';
-import 'package:pursuit/features/habit/domain/usecases/check_daily_reset.dart';
+import 'package:pursuit/features/habit/domain/usecases/mark_habit_for_date.dart';
 import 'package:pursuit/features/habit/domain/usecases/delete_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_habit_by_id.dart';
 import 'package:pursuit/features/habit/domain/usecases/insert_habit.dart';
@@ -15,45 +15,45 @@ import 'package:pursuit/features/habit/domain/usecases/get_all_habits.dart';
 import 'package:pursuit/features/habit/domain/usecases/schedule_habit_notification_usecase.dart';
 import 'package:pursuit/features/habit/domain/usecases/update_goal_count.dart';
 import 'package:pursuit/features/habit/domain/usecases/update_habit.dart';
+import 'package:pursuit/features/habit/presentation/blocs/cubit/calendar_cubit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/detail/detail_bloc.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 
-final sl = GetIt.instance; // sl = service locator
+final sl = GetIt.instance;
 
 Future<void> init() async {
-  // 🔹 External
+  // ─── External ─────────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => FlutterLocalNotificationsPlugin());
 
-  // 🔹 Notification repository
+  // ─── Notification ──────────────────────────────────────────────────────────
   sl.registerLazySingleton<NotificationRepository>(
     () => LocalNotificationRepositoryImpl(sl()),
   );
-
-  // 🔹 Notification use case
   sl.registerLazySingleton(() => ScheduleHabitNotificationUseCase(sl()));
-  // 🔹 Data source
+  sl.registerLazySingleton(() => CancelHabitNotificationUseCase(sl()));
+  sl.registerLazySingleton(() => CancelAllHabitNotificationsUseCase(sl()));
+
+  // ─── Data source ───────────────────────────────────────────────────────────
   sl.registerLazySingleton<HabitLocalDataSource>(
     () => HabitLocalDataSourceImpl(),
   );
-  sl.registerLazySingleton(() => CancelHabitNotificationUseCase(sl()));
 
-  sl.registerLazySingleton(() => CancelAllHabitNotificationsUseCase(sl()));
-
-  // 🔹 Repository
+  // ─── Repository ────────────────────────────────────────────────────────────
   sl.registerLazySingleton<HabitRepository>(
     () => HabitRepositoryImpl(localDataSource: sl()),
   );
 
-  // 🔹 Use cases
+  // ─── Use cases ─────────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => InsertHabitUseCase(sl()));
   sl.registerLazySingleton(() => GetAllHabitsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateHabitUseCase(sl()));
   sl.registerLazySingleton(() => DeleteHabitUseCase(sl()));
   sl.registerLazySingleton(() => GetHabitByIdUseCase(sl()));
   sl.registerLazySingleton(() => UpdateGoalCountUseCase(sl()));
-  sl.registerLazySingleton(() => CheckDailyResetUseCase(sl()));
+  sl.registerLazySingleton(() => MarkHabitForDateUseCase(sl()));
+  sl.registerLazySingleton(() => GetHabitsForDateUseCase(sl()));
 
-  // 🔹 Bloc
+  // ─── Blocs / Cubits ────────────────────────────────────────────────────────
   sl.registerFactory(
     () => HabitBloc(
       insertHabitUseCase: sl(),
@@ -62,18 +62,28 @@ Future<void> init() async {
       deleteHabitUseCase: sl(),
       getHabitByIdUseCase: sl(),
       updateGoalCountUseCase: sl(),
-      checkDailyResetUseCase: sl(),
+      markHabitForDateUseCase: sl(), 
       scheduleHabitNotificationUseCase: sl(),
       cancelHabitNotificationUseCase: sl(),
       cancelAllHabitNotificationsUseCase: sl(),
     ),
   );
+
   sl.registerFactory(
     () => DetailBloc(
       updateHabitUseCase: sl(),
       deleteHabitUseCase: sl(),
       getHabitByIdUseCase: sl(),
       updateGoalCountUseCase: sl(),
+      markHabitForDateUseCase: sl(),
+    ),
+  );
+
+  // CalendarCubit
+  sl.registerFactory(
+    () => CalendarCubit(
+      getHabitsForDateUseCase: sl(),
+      markHabitForDateUseCase: sl(),
     ),
   );
 }

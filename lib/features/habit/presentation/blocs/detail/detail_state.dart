@@ -19,11 +19,13 @@ class HabitDetailLoaded extends DetailState {
     required this.habit,
     required this.goalCompletedCount,
   });
+
   HabitDetailLoaded copyWith({Habit? habit, int? goalCompletedCount}) =>
       HabitDetailLoaded(
         habit: habit ?? this.habit,
         goalCompletedCount: goalCompletedCount ?? this.goalCompletedCount,
       );
+
   @override
   List<Object> get props => [habit, goalCompletedCount];
 }
@@ -51,9 +53,11 @@ class HabitDetailCountUpdateSuccess extends DetailState {
     required this.updatedCount,
     required this.habit,
   });
+
   @override
   List<Object> get props => [updatedCount, habit];
 }
+
 class HabitDetailUpdateSuccessState extends DetailState {
   final String message;
   const HabitDetailUpdateSuccessState(this.message);

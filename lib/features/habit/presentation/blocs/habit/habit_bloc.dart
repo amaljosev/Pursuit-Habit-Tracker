@@ -11,7 +11,7 @@ import 'package:pursuit/features/habit/constants/habit_icons.dart';
 import 'package:pursuit/features/habit/domain/entities/habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/cancel_all_habit_notifications_usecase.dart';
 import 'package:pursuit/features/habit/domain/usecases/cancel_habit_notification_usecase.dart';
-import 'package:pursuit/features/habit/domain/usecases/check_daily_reset.dart';
+import 'package:pursuit/features/habit/domain/usecases/mark_habit_for_date.dart';
 import 'package:pursuit/features/habit/domain/usecases/delete_habit.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_all_habits.dart';
 import 'package:pursuit/features/habit/domain/usecases/get_habit_by_id.dart';
@@ -31,7 +31,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   final DeleteHabitUseCase deleteHabitUseCase;
   final GetHabitByIdUseCase getHabitByIdUseCase;
   final UpdateGoalCountUseCase updateGoalCountUseCase;
-  final CheckDailyResetUseCase checkDailyResetUseCase;
+  final MarkHabitForDateUseCase markHabitForDateUseCase;
   final ScheduleHabitNotificationUseCase scheduleHabitNotificationUseCase;
   final CancelHabitNotificationUseCase cancelHabitNotificationUseCase;
   final CancelAllHabitNotificationsUseCase cancelAllHabitNotificationsUseCase;
@@ -43,12 +43,12 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     required this.deleteHabitUseCase,
     required this.getHabitByIdUseCase,
     required this.updateGoalCountUseCase,
-    required this.checkDailyResetUseCase,
+    required this.markHabitForDateUseCase,
     required this.scheduleHabitNotificationUseCase,
     required this.cancelHabitNotificationUseCase,
     required this.cancelAllHabitNotificationsUseCase,
   }) : super(HabitInitial()) {
-    // UI update events - only handle when state is AddHabitInitial
+    // UI form events
     on<AddHabitInitialEvent>(_onAddHabitInitialEvent);
     on<CustomHabitInitialEvent>(_onCustomHabitInitialEvent);
     on<UpdateHabitInitialEvent>(_onUpdateHabitInitialEvent);
@@ -64,24 +64,24 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     on<HabitEndDateExpand>(_onHabitEndDateExpand);
     on<HabitRemainderEvent>(_onHabitRemainderEvent);
     on<HabitRemainderToggleEvent>(_onHabitRemainderToggleEvent);
-
-    // Domain layer events
+    // Domain events
     on<AddHabitEvent>(_onInsertHabit);
     on<GetAllHabitsEvent>(_onGetAllHabits);
     on<UpdateHabitEvent>(_onUpdateHabit);
     on<DeleteHabitEvent>(_onDeleteHabit);
-    // on<GetHabitByIdEvent>(_onGetHabitById);
 
-    //Operations
+    // Tracking events
     on<GoalCountUpdateEvent>(_onCountIncrement);
+    on<MarkHabitForDateEvent>(_onMarkHabitForDate);
 
-    // Add daily reset event handler
-    on<CheckDailyResetEvent>(_onCheckDailyReset);
+    // Notification events
     on<CancelAllHabitNotificationsEvent>(_onCancelAllNotifications);
   }
 
+  // ─── Form UI handlers (unchanged) ─────────────────────────────────────────
+
   void _onAddHabitInitialEvent(
-    AddHabitInitialEvent event,
+    AddHabitInitialEvent e,
     Emitter<HabitState> emit,
   ) {
     emit(
@@ -103,15 +103,15 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   }
 
   void _onCustomHabitInitialEvent(
-    CustomHabitInitialEvent event,
+    CustomHabitInitialEvent e,
     Emitter<HabitState> emit,
   ) {
     emit(
       AddHabitInitial(
         color: getRandomInt(AppColors.lightColors.length - 1),
-        icon: event.customHabit.icon,
+        icon: e.customHabit.icon,
         name: '',
-        habitType: event.customHabit.cat,
+        habitType: e.customHabit.cat,
         goalCount: 1,
         goalValue: 0,
         goalTime: 0,
@@ -125,143 +125,111 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   }
 
   void _onUpdateHabitInitialEvent(
-    UpdateHabitInitialEvent event,
+    UpdateHabitInitialEvent e,
     Emitter<HabitState> emit,
   ) {
     emit(
       AddHabitInitial(
-        color: event.habit.color,
-        icon: event.habit.icon,
-        name: event.habit.name,
-        habitType: event.habit.type,
-        goalCount: event.habit.goalCount,
-        goalValue: event.habit.goalValue,
-        goalTime: event.habit.time,
-        startDate: event.habit.startDate.toString(),
-        endDate: event.habit.endDate != null
-            ? HelperFunctions.formatDate(event.habit.endDate!)
+        color: e.habit.color,
+        icon: e.habit.icon,
+        name: e.habit.name,
+        habitType: e.habit.type,
+        goalCount: e.habit.goalCount,
+        goalValue: e.habit.goalValue,
+        goalTime: e.habit.time,
+        startDate: e.habit.startDate.toString(),
+        endDate: e.habit.endDate != null
+            ? HelperFunctions.formatDate(e.habit.endDate!)
             : '',
-        isExpanded: event.habit.endDate != null,
-        hasRemainder:
-            event.habit.reminder != null && event.habit.reminder!.isNotEmpty,
-        remainderTime: event.habit.reminder ?? '',
+        isExpanded: e.habit.endDate != null,
+        hasRemainder: e.habit.reminder != null && e.habit.reminder!.isNotEmpty,
+        remainderTime: e.habit.reminder ?? '',
       ),
     );
   }
 
   void _onRenewalHabitInitialEvent(
-    RenewalHabitInitialEvent event,
+    RenewalHabitInitialEvent e,
     Emitter<HabitState> emit,
   ) {
     emit(
       AddHabitInitial(
-        color: event.habit.color,
-        icon: event.habit.icon,
-        name: event.habit.name,
-        habitType: event.habit.type,
-        goalCount: event.habit.goalCount,
-        goalValue: event.habit.goalValue,
-        goalTime: event.habit.time,
-        startDate: event.habit.startDate.toString(),
+        color: e.habit.color,
+        icon: e.habit.icon,
+        name: e.habit.name,
+        habitType: e.habit.type,
+        goalCount: e.habit.goalCount,
+        goalValue: e.habit.goalValue,
+        goalTime: e.habit.time,
+        startDate: e.habit.startDate.toString(),
         endDate: '',
-        isExpanded: event.habit.endDate != null,
-        hasRemainder:
-            event.habit.reminder != null && event.habit.reminder!.isNotEmpty,
-        remainderTime: event.habit.reminder ?? '',
+        isExpanded: e.habit.endDate != null,
+        hasRemainder: e.habit.reminder != null && e.habit.reminder!.isNotEmpty,
+        remainderTime: e.habit.reminder ?? '',
       ),
     );
   }
 
-  // UI Event Handlers - only process if current state is AddHabitInitial
-  void _onHabitColorEvent(HabitColorEvent event, Emitter<HabitState> emit) {
-    if (state is AddHabitInitial) {
-      emit((state as AddHabitInitial).copyWith(color: event.color));
-    }
+  void _onHabitColorEvent(HabitColorEvent e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(color: e.color));
   }
 
-  void _onHabitNameEvent(HabitNameEvent event, Emitter<HabitState> emit) {
-    if (state is AddHabitInitial) {
-      emit((state as AddHabitInitial).copyWith(name: event.name));
-    }
+  void _onHabitNameEvent(HabitNameEvent e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(name: e.name));
   }
 
-  void _onHabitIconEvent(HabitIconEvent event, Emitter<HabitState> emit) {
-    if (state is AddHabitInitial) {
-      emit((state as AddHabitInitial).copyWith(icon: event.icon));
-    }
+  void _onHabitIconEvent(HabitIconEvent e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(icon: e.icon));
   }
 
-  void _onHabitTypeEvent(HabitTypeEvent event, Emitter<HabitState> emit) {
-    if (state is AddHabitInitial) {
-      emit((state as AddHabitInitial).copyWith(habitType: event.habitType));
-    }
+  void _onHabitTypeEvent(HabitTypeEvent e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(habitType: e.habitType));
   }
 
-  void _onHabitGoalCountEvent(
-    HabitGoalCountEvent event,
-    Emitter<HabitState> emit,
-  ) {
-    if (state is AddHabitInitial) {
-      emit((state as AddHabitInitial).copyWith(goalCount: event.goalCount));
-    }
+  void _onHabitGoalCountEvent(HabitGoalCountEvent e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(goalCount: e.goalCount));
   }
 
-  void _onHabitGoalValueEvent(
-    HabitGoalValueEvent event,
-    Emitter<HabitState> emit,
-  ) {
-    if (state is AddHabitInitial) {
-      emit((state as AddHabitInitial).copyWith(goalValue: event.goalValue));
-    }
+  void _onHabitGoalValueEvent(HabitGoalValueEvent e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(goalValue: e.goalValue));
   }
 
-  void _onHabitGoalTimeEvent(
-    HabitGoalTimeEvent event,
-    Emitter<HabitState> emit,
-  ) {
-    if (state is AddHabitInitial) {
-      emit((state as AddHabitInitial).copyWith(goalTime: event.goalTime));
-    }
+  void _onHabitGoalTimeEvent(HabitGoalTimeEvent e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(goalTime: e.goalTime));
   }
 
-  void _onHabitEndDateEvent(HabitEndDateEvent event, Emitter<HabitState> emit) {
-    if (state is AddHabitInitial) {
-      emit((state as AddHabitInitial).copyWith(endDate: event.endDate));
-    }
+  void _onHabitEndDateEvent(HabitEndDateEvent e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(endDate: e.endDate));
   }
 
-  void _onHabitEndDateExpand(
-    HabitEndDateExpand event,
-    Emitter<HabitState> emit,
-  ) {
-    if (state is AddHabitInitial) {
-      emit((state as AddHabitInitial).copyWith(isExpanded: event.isExpand));
-    }
+  void _onHabitEndDateExpand(HabitEndDateExpand e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(isExpanded: e.isExpand));
   }
 
-  void _onHabitRemainderEvent(
-    HabitRemainderEvent event,
-    Emitter<HabitState> emit,
-  ) {
-    if (state is AddHabitInitial) {
-      emit(
-        (state as AddHabitInitial).copyWith(remainderTime: event.remainderTime),
-      );
-    }
+  void _onHabitRemainderEvent(HabitRemainderEvent e, Emitter<HabitState> emit) {
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(remainderTime: e.remainderTime));
   }
 
   void _onHabitRemainderToggleEvent(
-    HabitRemainderToggleEvent event,
+    HabitRemainderToggleEvent e,
     Emitter<HabitState> emit,
   ) {
-    if (state is AddHabitInitial) {
-      emit(
-        (state as AddHabitInitial).copyWith(hasRemainder: event.hasRemainder),
-      );
-    }
+    if (state is AddHabitInitial)
+      emit((state as AddHabitInitial).copyWith(hasRemainder: e.hasRemainder));
   }
 
-  // 🟢 INSERT HABIT
+  // ─── INSERT ────────────────────────────────────────────────────────────────
+
   Future<void> _onInsertHabit(
     AddHabitEvent event,
     Emitter<HabitState> emit,
@@ -269,135 +237,96 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     try {
       emit(HabitLoading());
       final result = await insertHabitUseCase(event.habit);
-
-      await result.match(
-        (failure) async {
-          emit(HabitError(failure.message));
-          log(failure.toString());
-        },
-        (_) async {
-          // ✅ Schedule notification ONLY after success
-          if (event.habit.reminder != null &&
-              event.habit.reminder!.isNotEmpty) {
-            final time = HelperFunctions.parse12HourTime(event.habit.reminder!);
-            // log(time.toString());
-            if (time != null && time.isAfter(DateTime.now())) {
-              await scheduleHabitNotificationUseCase(
-                habitId: event.habit.id.hashCode,
-                habitName: event.habit.name,
-                reminderTime: time,
-              );
-            }
+      await result.match((failure) async => emit(HabitError(failure.message)), (
+        _,
+      ) async {
+        if (event.habit.reminder != null && event.habit.reminder!.isNotEmpty) {
+          final time = HelperFunctions.parse12HourTime(event.habit.reminder!);
+          if (time != null && time.isAfter(DateTime.now())) {
+            await scheduleHabitNotificationUseCase(
+              habitId: event.habit.id.hashCode,
+              habitName: event.habit.name,
+              reminderTime: time,
+            );
           }
-
-          emit(HabitOperationSuccess("Habit inserted successfully"));
-        },
-      );
+        }
+        emit(const HabitOperationSuccess("Habit inserted successfully"));
+      });
     } catch (e, s) {
       log('InsertHabit error: $e\n$s');
       emit(HabitError(e.toString()));
     }
   }
 
-  // 🔵 GET ALL HABITS
+  // ─── GET ALL ───────────────────────────────────────────────────────────────
+
   Future<void> _onGetAllHabits(
     GetAllHabitsEvent event,
     Emitter<HabitState> emit,
   ) async {
     emit(HabitLoading());
     final result = await getAllHabitsUseCase(NoParams());
-
     result.match(
       (failure) => emit(HabitError(failure.message)),
       (habits) => emit(HabitLoaded(habits)),
     );
   }
 
-  // 🟠 UPDATE HABIT
+  // ─── UPDATE ────────────────────────────────────────────────────────────────
+
   Future<void> _onUpdateHabit(
     UpdateHabitEvent event,
     Emitter<HabitState> emit,
   ) async {
     try {
       emit(HabitLoading());
-
       final result = await updateHabitUseCase(event.habit);
+      await result.match((failure) async => emit(HabitError(failure.message)), (
+        _,
+      ) async {
+        final notificationId = event.habit.id.hashCode;
+        final isCompletedToday = event.habit.isCompleteToday;
 
-      await result.match(
-        (failure) async {
-          emit(HabitError(failure.message));
-          log(failure.toString());
-        },
-        (_) async {
-          final int notificationId = event.habit.id.hashCode;
-
-          // Check if habit is completed for today
-          final isCompletedToday =
-              event.habit.isCompleteToday &&
-              event.habit.lastCompleted != null &&
-              HelperFunctions.isToday(event.habit.lastCompleted!);
-
-          if (isCompletedToday &&
-              event.habit.reminder != null &&
-              event.habit.reminder!.isNotEmpty) {
-            final time = HelperFunctions.parse12HourTime(event.habit.reminder!);
-            if (time != null) {
-              if (isHourMinuteAfterNow(time)) {
-                await SharedPrefsUtils.addSkippedReminder(event.habit.id);
-              }
-            }
-            // 🚫 Cancel notification if habit is completed today
-            await cancelHabitNotificationUseCase(notificationId);
-          } else {
-            // Only reschedule if habit is not completed AND has reminder
-            if (event.habit.reminder != null &&
-                event.habit.reminder!.isNotEmpty) {
-              final time = HelperFunctions.parse12HourTime(
-                event.habit.reminder!,
-              );
-
-              if (time != null) {
-                await scheduleHabitNotificationUseCase(
-                  habitId: notificationId,
-                  habitName: event.habit.name,
-                  reminderTime: time,
-                );
-              }
-            }
+        if (isCompletedToday &&
+            event.habit.reminder != null &&
+            event.habit.reminder!.isNotEmpty) {
+          final time = HelperFunctions.parse12HourTime(event.habit.reminder!);
+          if (time != null && _isHourMinuteAfterNow(time)) {
+            await SharedPrefsUtils.addSkippedReminder(event.habit.id);
           }
-
-          emit(HabitUpdateSuccessState("Habit updated successfully"));
-        },
-      );
+          await cancelHabitNotificationUseCase(notificationId);
+        } else if (event.habit.reminder != null &&
+            event.habit.reminder!.isNotEmpty) {
+          final time = HelperFunctions.parse12HourTime(event.habit.reminder!);
+          if (time != null) {
+            await scheduleHabitNotificationUseCase(
+              habitId: notificationId,
+              habitName: event.habit.name,
+              reminderTime: time,
+            );
+          }
+        }
+        emit(const HabitUpdateSuccessState("Habit updated successfully"));
+      });
     } catch (e, s) {
       log('UpdateHabit error: $e\n$s');
       emit(HabitError(e.toString()));
     }
   }
 
-  // 🔴 DELETE HABIT
+  // ─── DELETE ────────────────────────────────────────────────────────────────
+
   Future<void> _onDeleteHabit(
     DeleteHabitEvent event,
     Emitter<HabitState> emit,
   ) async {
     try {
       emit(HabitLoading());
-
-      final int notificationId = event.id.hashCode;
-
-      // 🛑 Cancel notification BEFORE deleting habit
-      await cancelHabitNotificationUseCase(notificationId);
-     // await SharedPrefsUtils.removeSkippedReminder(event.id);
-
+      await cancelHabitNotificationUseCase(event.id.hashCode);
       final result = await deleteHabitUseCase(event.id);
-
       result.match(
-        (failure) {
-          emit(HabitError(failure.message));
-        },
-        (_) {
-          emit(HabitOperationSuccess("Habit deleted successfully"));
-        },
+        (failure) => emit(HabitError(failure.message)),
+        (_) => emit(const HabitOperationSuccess("Habit deleted successfully")),
       );
     } catch (e, s) {
       log('DeleteHabit error: $e\n$s');
@@ -405,28 +334,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     }
   }
 
-  // // 🔍 GET HABIT BY ID
-  // Future<void> _onGetHabitById(
-  //   GetHabitByIdEvent event,
-  //   Emitter<HabitState> emit,
-  // ) async {
-  //   emit(HabitLoading());
-  //   // await Future.delayed(Duration(seconds: 1));
-  //   final result = await getHabitByIdUseCase(event.id);
-
-  //   result.match((failure) => emit(HabitError(failure.message)), (habit) {
-  //     if (habit == null) {
-  //       emit(const HabitError("Habit not found"));
-  //     } else {
-  //       emit(
-  //         HabitDetailLoaded(
-  //           habit: habit,
-  //           goalCompletedCount: habit.goalCompletedCount,
-  //         ),
-  //       );
-  //     }
-  //   });
-  // }
+  // ─── GOAL COUNT (today only, backward compat) ──────────────────────────────
 
   FutureOr<void> _onCountIncrement(
     GoalCountUpdateEvent event,
@@ -435,7 +343,6 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     final result = await updateGoalCountUseCase(
       UpdateGoalCountParams(id: event.id, value: event.value),
     );
-
     result.match(
       (failure) => emit(HabitError(failure.message)),
       (_) => emit(
@@ -444,32 +351,34 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     );
   }
 
-  Future<void> _onCheckDailyReset(
-    CheckDailyResetEvent event,
+  // ─── MARK FOR DATE (new — any date) ───────────────────────────────────────
+
+  Future<void> _onMarkHabitForDate(
+    MarkHabitForDateEvent event,
     Emitter<HabitState> emit,
   ) async {
     try {
       emit(HabitLoading());
-
-      final result = await checkDailyResetUseCase();
-
-      await result.fold(
-        (failure) async {
-          emit(HabitError(failure.message));
-          log('❌ Daily reset failed: ${failure.message}');
-        },
-        (_) async {
-          await _rescheduleSkippedReminders();
-
-          emit(HabitDailyResetCompleted());
-          log('✅ Daily reset & reminder reschedule completed');
-        },
+      final result = await markHabitForDateUseCase(
+        MarkHabitForDateParams(
+          id: event.habitId,
+          date: event.date,
+          count: event.count,
+          isCompleted: event.isCompleted,
+        ),
+      );
+      result.match(
+        (failure) => emit(HabitError(failure.message)),
+        (updatedHabit) =>
+            emit(HabitMarkedForDate(habit: updatedHabit, date: event.date)),
       );
     } catch (e, s) {
-      log('CheckDailyReset error: $e\n$s');
-      emit(HabitError('Daily reset failed: $e'));
+      log('MarkHabitForDate error: $e\n$s');
+      emit(HabitError(e.toString()));
     }
   }
+
+  // ─── CANCEL NOTIFICATIONS ──────────────────────────────────────────────────
 
   Future<void> _onCancelAllNotifications(
     CancelAllHabitNotificationsEvent event,
@@ -477,9 +386,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   ) async {
     try {
       emit(HabitLoading());
-
       await cancelAllHabitNotificationsUseCase();
-
       emit(CancelAllNotifications(event.isActive));
     } catch (e, s) {
       log('CancelAllNotifications error: $e\n$s');
@@ -487,45 +394,32 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     }
   }
 
-  bool isHourMinuteAfterNow(DateTime input) {
-    final now = DateTime.now();
+  // ─── Reschedule skipped reminders (called externally on app resume) ─────────
 
-    if (input.hour > now.hour) return true;
-    if (input.hour < now.hour) return false;
+  Future<void> rescheduleSkippedReminders() async {
+    final skippedIds = await SharedPrefsUtils.getSkippedReminders();
+    if (skippedIds.isEmpty) return;
 
-    // hours are equal → compare minutes
-    return input.minute > now.minute;
+    for (final habitId in skippedIds) {
+      final result = await getHabitByIdUseCase(habitId);
+      await result.fold((fail) async => log(fail.toString()), (habit) async {
+        if (habit == null || habit.reminder == null || habit.reminder!.isEmpty)
+          return;
+        final time = HelperFunctions.parse12HourTime(habit.reminder!);
+        if (time == null) return;
+        await scheduleHabitNotificationUseCase(
+          habitId: habit.id.hashCode,
+          habitName: habit.name,
+          reminderTime: time,
+        );
+      });
+    }
+    await SharedPrefsUtils.clearSkippedReminders();
   }
 
-  Future<void> _rescheduleSkippedReminders() async {
-    final skippedHabitIds = await SharedPrefsUtils.getSkippedReminders();
-    log(skippedHabitIds.toString());
-    if (skippedHabitIds.isEmpty) return;
-
-    for (final habitId in skippedHabitIds) {
-      final habitResult = await getHabitByIdUseCase(habitId);
-
-      await habitResult.fold(
-        (fail) async {
-          log(fail.toString());
-        },
-        (habit) async {
-          if (habit == null) return;
-          if (habit.reminder == null || habit.reminder!.isEmpty) return;
-
-          final time = HelperFunctions.parse12HourTime(habit.reminder!);
-          if (time == null) return;
-
-          await scheduleHabitNotificationUseCase(
-            habitId: habit.id.hashCode,
-            habitName: habit.name,
-            reminderTime: time,
-          );
-        },
-      );
-    }
-
-    // 🚨 CRITICAL: clear after rescheduling
-    await SharedPrefsUtils.clearSkippedReminders();
+  bool _isHourMinuteAfterNow(DateTime input) {
+    final now = DateTime.now();
+    if (input.hour != now.hour) return input.hour > now.hour;
+    return input.minute > now.minute;
   }
 }

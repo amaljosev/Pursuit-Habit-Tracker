@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/app.dart';
 import 'package:pursuit/core/di/injection_container.dart' as di;
 import 'package:pursuit/features/habit/domain/repositories/notification_repository.dart';
+import 'package:pursuit/features/habit/presentation/blocs/cubit/calendar_cubit.dart';
 import 'package:pursuit/features/habit/presentation/blocs/detail/detail_bloc.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 
@@ -16,11 +17,12 @@ void main() async {
       providers: [
         BlocProvider(
           create: (_) => di.sl<HabitBloc>()..add(GetAllHabitsEvent()),
-          
         ),
         BlocProvider(
           create: (_) => di.sl<DetailBloc>(),
-          
+        ),
+        BlocProvider(
+          create: (_) => di.sl<CalendarCubit>(),
         ),
       ],
       child: const MyApp(),

@@ -6,12 +6,13 @@ import 'package:pursuit/core/components/error_widget.dart';
 import 'package:pursuit/core/components/loading_widget.dart';
 import 'package:pursuit/core/extensions/context_extensions.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
-import 'package:pursuit/features/habit/presentation/pages/detail/functions/habit_complete_func.dart';
+import 'package:pursuit/features/habit/presentation/pages/calendar/calendar_screen.dart';
 import 'package:pursuit/features/habit/presentation/pages/goals/goals_library_screen.dart';
 import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/goals_empty_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/header_widget.dart';
 import 'package:sqflite/sqflite.dart';
+
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -21,9 +22,10 @@ class GoalsScreen extends StatefulWidget {
 }
 
 class _GoalsScreenState extends State<GoalsScreen> {
-  bool isCompleteToday = false;
+  bool _showPartyAnimation = false;
   final _formKey = GlobalKey<FormState>();
   final _valueCtrl = TextEditingController();
+
   @override
   void initState() {
     context.read<HabitBloc>().add(GetAllHabitsEvent());
@@ -32,9 +34,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Size size=MediaQuery.of(context).size;
+    final Size size = MediaQuery.of(context).size;
     final bool isTablet = size.shortestSide >= 600;
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(10),
@@ -43,34 +46,41 @@ class _GoalsScreenState extends State<GoalsScreen> {
           children: [
             BlocConsumer<HabitBloc, HabitState>(
               buildWhen: (previous, current) {
-                if (current is HabitLoading) {
-                  return true;
-                }
+                if (current is HabitLoading) return true;
                 if (previous is HabitCountUpdateSuccess &&
                     current is HabitCountUpdateSuccess) {
                   return previous.updatedCount != current.updatedCount;
-                } else if (current is HabitLoaded) {
-                  return true;
-                } else if (current is HabitOperationSuccess) {
-                  return true;
                 }
+                if (current is HabitLoaded) return true;
+                if (current is HabitOperationSuccess) return true;
                 return false;
               },
               listener: (context, state) {
+                // Refresh list after insert/delete
                 if (state is HabitOperationSuccess) {
                   context.read<HabitBloc>().add(GetAllHabitsEvent());
                 }
+
+                // HabitCountUpdateSuccess — repo already wrote completedDays
+                // and recalculated all stats. Just refresh the list.
                 if (state is HabitCountUpdateSuccess) {
-                  if (state.updatedCount >= state.habit.goalCount &&
-                      !state.habit.isCompleteToday) {
-                    isCompleteToday = true;
-                    final updatedHabit = updateHabitOnCompletion(state.habit);
-                    context.read<HabitBloc>().add(
-                      UpdateHabitEvent(updatedHabit),
-                    );
+                  context.read<HabitBloc>().add(GetAllHabitsEvent());
+                }
+
+                // HabitMarkedForDate — fires after MarkHabitForDateEvent completes.
+                // Show party animation if the habit is now complete for today.
+                if (state is HabitMarkedForDate) {
+                  if (state.habit.isCompleteToday) {
+                    setState(() => _showPartyAnimation = true);
+                    // Auto-hide after animation (~3 s)
+                    Future.delayed(const Duration(seconds: 3), () {
+                      if (mounted) setState(() => _showPartyAnimation = false);
+                    });
                   }
                   context.read<HabitBloc>().add(GetAllHabitsEvent());
                 }
+
+                // Refresh after any habit metadata update
                 if (state is HabitUpdateSuccessState) {
                   context.read<HabitBloc>().add(GetAllHabitsEvent());
                 }
@@ -80,9 +90,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   return const AppLoading();
                 } else if (state is HabitLoaded) {
                   final habits = state.habits;
-                  if (habits.isEmpty) {
-                    return const GoalsEmptyWidget();
-                  }
+                  if (habits.isEmpty) return const GoalsEmptyWidget();
+
                   return Stack(
                     children: [
                       CustomScrollView(
@@ -110,7 +119,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                         .textTheme
                                         .displayMedium
                                         ?.copyWith(
-                                          fontSize: size.width*0.09,
+                                          fontSize: size.width * 0.09,
                                           color: isDarkMode
                                               ? Colors.white12
                                               : Colors.black12,
@@ -122,7 +131,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                         .textTheme
                                         .displaySmall
                                         ?.copyWith(
-                                          fontSize: size.width*0.08,
+                                          fontSize: size.width * 0.08,
                                           color: isDarkMode
                                               ? Colors.white12
                                               : Colors.black12,
@@ -134,9 +143,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
                           ),
                         ],
                       ),
-                      if (isCompleteToday)
+
+                      // Party animation
+                      if (_showPartyAnimation)
                         IgnorePointer(
-                          ignoring: true,
                           child: Lottie.asset(
                             'assets/lottie/party_pop.json',
                             fit: isTablet ? BoxFit.contain : BoxFit.fitHeight,
@@ -153,17 +163,34 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         context.read<HabitBloc>().add(GetAllHabitsEvent()),
                   );
                 } else {
-                  return SizedBox.shrink();
+                  return const SizedBox.shrink();
                 }
               },
             ),
-            FloatingActionButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => GoalsLibraryScreen()),
-                );
-              },
-              child: const Icon(Icons.add),
+
+            // FABs
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'fab_add',
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const GoalsLibraryScreen()),
+                  ),
+                  child: const Icon(Icons.add),
+                ),
+                const SizedBox(width: 12),
+                FloatingActionButton(
+                  heroTag: 'fab_calendar',
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const CalendarScreen()),
+                  ),
+                  child: const Icon(Icons.calendar_month),
+                ),
+              ],
             ),
           ],
         ),
@@ -177,25 +204,11 @@ Future<void> showDatabaseDump(BuildContext context) async {
   final tables = await db.rawQuery(
     "SELECT name FROM sqlite_master WHERE type='table'",
   );
-
   final result = <String, dynamic>{};
-
   for (var t in tables) {
     final tableName = t['name'];
     final rows = await db.query(tableName as String);
     result[tableName] = rows;
   }
   log(result.toString());
-
-  // showDialog(
-  //   context: context,
-  //   builder: (_) {
-
-  //     return AlertDialog(
-  //     title: Text("Database Dump"),
-  //     content: SingleChildScrollView(
-  //       child: Text(result.toString()),
-  //     ),
-  //   );},
-  // );
 }

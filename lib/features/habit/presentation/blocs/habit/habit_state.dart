@@ -1,8 +1,8 @@
+// presentation/blocs/habit/habit_state.dart
 part of 'habit_bloc.dart';
 
 sealed class HabitState extends Equatable {
   const HabitState();
-
   @override
   List<Object> get props => [];
 }
@@ -37,31 +37,18 @@ final class AddHabitInitial extends HabitState {
     required this.remainderTime,
     required this.hasRemainder,
   });
+
   AddHabitInitial copyWith({
-    int? icon,
-    int? color,
-    String? name,
-    int? habitType,
-    int? goalCount,
-    int? goalValue,
-    int? goalTime,
-    String? startDate,
-    String? endDate,
-    bool? isExpanded,
-    bool? hasRemainder,
-    String? remainderTime,
+    int? icon, int? color, String? name, int? habitType, int? goalCount,
+    int? goalValue, int? goalTime, String? startDate, String? endDate,
+    bool? isExpanded, bool? hasRemainder, String? remainderTime,
   }) {
     return AddHabitInitial(
-      icon: icon ?? this.icon,
-      color: color ?? this.color,
-      name: name ?? this.name,
-      habitType: habitType ?? this.habitType,
-      goalCount: goalCount ?? this.goalCount,
-      goalValue: goalValue ?? this.goalValue,
-      goalTime: goalTime ?? this.goalTime,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      isExpanded: isExpanded ?? this.isExpanded,
+      icon: icon ?? this.icon, color: color ?? this.color,
+      name: name ?? this.name, habitType: habitType ?? this.habitType,
+      goalCount: goalCount ?? this.goalCount, goalValue: goalValue ?? this.goalValue,
+      goalTime: goalTime ?? this.goalTime, startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate, isExpanded: isExpanded ?? this.isExpanded,
       hasRemainder: hasRemainder ?? this.hasRemainder,
       remainderTime: remainderTime ?? this.remainderTime,
     );
@@ -69,18 +56,8 @@ final class AddHabitInitial extends HabitState {
 
   @override
   List<Object> get props => [
-    icon,
-    color,
-    name,
-    habitType,
-    goalCount,
-    goalValue,
-    goalTime,
-    startDate,
-    endDate,
-    isExpanded,
-    hasRemainder,
-    remainderTime,
+    icon, color, name, habitType, goalCount, goalValue, goalTime,
+    startDate, endDate, isExpanded, hasRemainder, remainderTime,
   ];
 }
 
@@ -88,16 +65,14 @@ class HabitLoading extends HabitState {}
 
 class HabitLoaded extends HabitState {
   final List<Habit> habits;
-
   const HabitLoaded(this.habits);
-
   @override
   List<Object> get props => [habits];
 }
+
 class HabitError extends HabitState {
   final String message;
   const HabitError(this.message);
-
   @override
   List<Object> get props => [message];
 }
@@ -105,10 +80,7 @@ class HabitError extends HabitState {
 class HabitCountUpdateSuccess extends HabitState {
   final Habit habit;
   final int updatedCount;
-  const HabitCountUpdateSuccess({
-    required this.updatedCount,
-    required this.habit,
-  });
+  const HabitCountUpdateSuccess({required this.updatedCount, required this.habit});
   @override
   List<Object> get props => [updatedCount, habit];
 }
@@ -116,26 +88,28 @@ class HabitCountUpdateSuccess extends HabitState {
 class HabitOperationSuccess extends HabitState {
   final String message;
   const HabitOperationSuccess(this.message);
-
   @override
   List<Object> get props => [message];
 }
 
-
-class HabitDailyResetCompleted extends HabitState {}
-
 class HabitUpdateSuccessState extends HabitState {
   final String message;
   const HabitUpdateSuccessState(this.message);
-
   @override
   List<Object> get props => [message];
+}
+
+class HabitMarkedForDate extends HabitState {
+  final Habit habit;
+  final DateTime date;
+  const HabitMarkedForDate({required this.habit, required this.date});
+  @override
+  List<Object> get props => [habit, date];
 }
 
 class CancelAllNotifications extends HabitState {
   final bool isActive;
   const CancelAllNotifications(this.isActive);
-
   @override
   List<Object> get props => [isActive];
 }
