@@ -92,7 +92,7 @@ class GoalsLibraryScreen extends StatelessWidget {
                               shape: BoxShape.circle,
                               color: _getCategoryColor(
                                 category['id'],
-                              ).withOpacity(0.1),
+                              ).withValues(alpha: 0.1),
                             ),
                             child: Text(
                               HelperFunctions.getEmojiById(category['icon']),
@@ -194,6 +194,8 @@ class _HabitListByCategory extends StatelessWidget {
                 title: habit['name'],
                 icon: habit['icon'],
                 cat: habit['category'],
+                defaultGoal: habit['defaultGoal'],
+                measure: habit['measure']
               );
 
               Navigator.of(context).push(
@@ -245,6 +247,15 @@ class LibraryModel {
   final String title;
   final int icon;
   final int cat;
+  final int measure;
+  final int defaultGoal;
 
-  LibraryModel({required this.title, required this.icon, required this.cat});
+  LibraryModel({
+    required this.title,
+    required this.icon,
+    required this.cat,
+    this.measure = 0,
+    this.defaultGoal = 1,
+  });
+  
 }

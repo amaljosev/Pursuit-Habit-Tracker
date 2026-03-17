@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pursuit/core/extensions/context_extensions.dart';
+import 'package:pursuit/core/functions/helper_functions.dart';
 import 'package:pursuit/features/habit/constants/habit_icons.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
 
@@ -18,8 +19,8 @@ class IconPickerWidget extends StatelessWidget {
       },
       builder: (context, state) {
         if (state is AddHabitInitial) {
-          final selectedIcon = HabitIcons.emojis[state.icon]['emoji'];
-          final selectedIconId = HabitIcons.emojis[state.icon]['id'];
+          final selectedIcon = HelperFunctions.getEmojiById(state.icon);
+          final selectedIconId = state.icon;
           return GestureDetector(
             onTap: () => _showIconPicker(context, selectedIconId),
             child: Text(
