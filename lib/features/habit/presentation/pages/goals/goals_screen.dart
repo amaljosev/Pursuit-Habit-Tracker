@@ -6,13 +6,11 @@ import 'package:pursuit/core/components/error_widget.dart';
 import 'package:pursuit/core/components/loading_widget.dart';
 import 'package:pursuit/core/extensions/context_extensions.dart';
 import 'package:pursuit/features/habit/presentation/blocs/habit/habit_bloc.dart';
-import 'package:pursuit/features/habit/presentation/pages/calendar/calendar_screen.dart';
-import 'package:pursuit/features/habit/presentation/pages/goals/goals_library_screen.dart';
 import 'package:pursuit/features/habit/presentation/widgets/body_widget.dart';
+import 'package:pursuit/features/habit/presentation/widgets/bottom_nav.dart';
 import 'package:pursuit/features/habit/presentation/widgets/goals_empty_widget.dart';
 import 'package:pursuit/features/habit/presentation/widgets/header_widget.dart';
 import 'package:sqflite/sqflite.dart';
-
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -167,31 +165,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 }
               },
             ),
-
-            // FABs
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FloatingActionButton(
-                  heroTag: 'fab_add',
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (_) => const GoalsLibraryScreen()),
-                  ),
-                  child: const Icon(Icons.add),
-                ),
-                const SizedBox(width: 12),
-                FloatingActionButton(
-                  heroTag: 'fab_calendar',
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const CalendarScreen()),
-                  ),
-                  child: const Icon(Icons.calendar_month),
-                ),
-              ],
-            ),
+           const CustomBottomNav(),
+          
           ],
         ),
       ),

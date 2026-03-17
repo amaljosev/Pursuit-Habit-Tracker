@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:pursuit/features/habit/presentation/pages/profile/profile_screen.dart';
 
 SliverAppBar buildHeader(BuildContext context) {
   return SliverAppBar.large(
@@ -45,18 +43,6 @@ SliverAppBar buildHeader(BuildContext context) {
     elevation: 0,
     pinned: true,
     actionsPadding: const EdgeInsets.only(right: 10),
-    actions: [
-      GestureDetector(
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => const ProfileScreen())),
-        child: Icon(
-          CupertinoIcons.settings,
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white
-              : Colors.black,
-        ),
-      ),
-    ],
+    
   );
 }
