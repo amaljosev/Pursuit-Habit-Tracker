@@ -206,6 +206,7 @@ class _HabitView extends StatelessWidget {
                             children: [
                               const IconPickerWidget(),
                               InputFieldWidget(
+                                isCustom: customHabit == null&&habit==null,
                                 controller: nameController,
                                 color: backgroundColorDark,
                                 formKey: formKey,

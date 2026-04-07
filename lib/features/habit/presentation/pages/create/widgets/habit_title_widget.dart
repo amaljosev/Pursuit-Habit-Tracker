@@ -6,12 +6,13 @@ class InputFieldWidget extends StatelessWidget {
   final TextEditingController controller;
   final Color color;
   final GlobalKey<FormState> formKey;
+  final bool isCustom;
 
   const InputFieldWidget({
     super.key,
     required this.controller,
     required this.color,
-    required this.formKey,
+    required this.formKey, required this.isCustom,
   });
 
   @override
@@ -19,7 +20,7 @@ class InputFieldWidget extends StatelessWidget {
     return TextFormField(
       controller: controller,
       textAlign: TextAlign.center,
-
+      autofocus: isCustom,
       cursorColor: color,
       decoration: InputDecoration.collapsed(
         hintText: 'New Goal',
@@ -46,12 +47,7 @@ class InputFieldWidget extends StatelessWidget {
           : null,
       errorBuilder: (context, errorText) {
         return Center(
-          child: Text(
-            errorText,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall,
-          ),
+          child: Text(errorText, style: Theme.of(context).textTheme.titleSmall),
         );
       },
     );
