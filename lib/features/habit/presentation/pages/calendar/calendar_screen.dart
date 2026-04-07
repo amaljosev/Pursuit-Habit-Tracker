@@ -20,6 +20,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
     super.initState();
     final cubit = context.read<CalendarCubit>();
     final selected = cubit.state.selectedDate;
+
+    // Load dot indicators for the current month
+    cubit.loadMonthStatus(cubit.state.focusedMonth);
+
     if (selected != null) {
       cubit.refreshDate(selected);
     } else {
@@ -130,9 +134,9 @@ class _AppBar extends StatelessWidget {
               'History',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
             ),
           ),
           // Spacer to balance back button
@@ -207,17 +211,18 @@ class _CalendarCard extends StatelessWidget {
                   children: [
                     Text(
                       _months[m.month - 1],
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.3,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.3,
+                              ),
                     ),
                     Text(
                       '${m.year}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                   ],
                 ),
@@ -254,9 +259,53 @@ class _CalendarCard extends StatelessWidget {
 
             // Day grid
             _DayGrid(state: state),
+
+            // ── DOT LEGEND ──
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _LegendDot(color: Colors.green.shade400, label: 'All done'),
+                const SizedBox(width: 16),
+                _LegendDot(color: Colors.orange.shade400, label: 'Partial'),
+                const SizedBox(width: 16),
+                _LegendDot(color: Colors.red.shade400, label: 'Missed'),
+              ],
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+// ─── Legend Dot ───────────────────────────────────────────────────────────────
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _LegendDot({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -294,9 +343,15 @@ class _DayGrid extends StatelessWidget {
             final date = DateTime(month.year, month.month, day);
             final isFuture = date.isAfter(todayNorm);
             final isToday = date == todayNorm;
-            final isSelected =
-                state.selectedDate != null &&
+            final isSelected = state.selectedDate != null &&
                 _sameDay(date, state.selectedDate!);
+
+            // Look up dot status
+            final key =
+                '${date.year.toString().padLeft(4, '0')}-'
+                '${date.month.toString().padLeft(2, '0')}-'
+                '${date.day.toString().padLeft(2, '0')}';
+            final dotStatus = state.monthDayStatus[key] ?? '';
 
             return Expanded(
               child: GestureDetector(
@@ -306,6 +361,7 @@ class _DayGrid extends StatelessWidget {
                   isToday: isToday,
                   isSelected: isSelected,
                   isFuture: isFuture,
+                  dotStatus: dotStatus,
                 ),
               ),
             );
@@ -319,17 +375,21 @@ class _DayGrid extends StatelessWidget {
       a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
+// ─── Day Cell ─────────────────────────────────────────────────────────────────
+
 class _DayCell extends StatelessWidget {
   final int day;
   final bool isToday;
   final bool isSelected;
   final bool isFuture;
+  final String dotStatus;
 
   const _DayCell({
     required this.day,
     required this.isToday,
     required this.isSelected,
     required this.isFuture,
+    required this.dotStatus,
   });
 
   @override
@@ -351,27 +411,50 @@ class _DayCell extends StatelessWidget {
       fg = Colors.grey.shade400;
     }
 
+    // Dot color — hidden when day is selected (bg already communicates state)
+    final Color? dotColor = isSelected || dotStatus.isEmpty
+        ? null
+        : dotStatus == 'done'
+            ? Colors.green.shade400
+            : dotStatus == 'partial'
+                ? Colors.orange.shade400
+                : Colors.red.shade400; // missed
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       margin: const EdgeInsets.all(2.5),
-      height: 36,
+      height: 40,
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(10),
         border: border,
       ),
-      child: Center(
-        child: Text(
-          '$day',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 13,
-            fontWeight: isSelected || isToday
-                ? FontWeight.w700
-                : FontWeight.w400,
-            color: fg,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '$day',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              fontWeight:
+                  isSelected || isToday ? FontWeight.w700 : FontWeight.w400,
+              color: fg,
+            ),
           ),
-        ),
+          const SizedBox(height: 2),
+          // Always reserve dot space to keep cell height stable
+          dotColor != null
+              ? Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                )
+              : const SizedBox(width: 5, height: 5),
+        ],
       ),
     );
   }
@@ -414,8 +497,7 @@ class _SelectedDateHeader extends StatelessWidget {
     final now = DateTime.now();
     final isToday =
         date.year == now.year && date.month == now.month && date.day == now.day;
-    final isYesterday =
-        date ==
+    final isYesterday = date ==
         DateTime(
           now.year,
           now.month,
@@ -447,17 +529,17 @@ class _SelectedDateHeader extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.2,
-            ),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.2,
+                ),
           ),
           const SizedBox(width: 6),
           Text(
             '${_months[date.month]} ${date.day}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
         ],
       ),
@@ -478,9 +560,10 @@ class _EmptySelection extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Tap a date to view habits',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: Colors.grey),
           ),
         ],
       ),
@@ -513,9 +596,10 @@ class _HabitTimeline extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               'No habits on this day',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: Colors.grey),
             ),
           ],
         ),
@@ -598,11 +682,12 @@ class _TimelineItem extends StatelessWidget {
                     color: isCompleted
                         ? color
                         : isDark
-                        ? Colors.grey.shade800
-                        : Colors.grey.shade200,
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade200,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isCompleted ? color : Colors.grey.shade400,
+                      color:
+                          isCompleted ? color : Colors.grey.shade400,
                       width: 2,
                     ),
                   ),
@@ -659,8 +744,8 @@ class _TimelineItem extends StatelessWidget {
                       color: isCompleted
                           ? color.withValues(alpha: 0.35)
                           : isDark
-                          ? Colors.grey.shade800
-                          : Colors.grey.shade200,
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade200,
                       width: 1.2,
                     ),
                   ),
@@ -690,7 +775,9 @@ class _TimelineItem extends StatelessWidget {
                           children: [
                             Text(
                               habit.name,
-                              style: Theme.of(context).textTheme.titleSmall
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     decoration: isCompleted
@@ -708,14 +795,11 @@ class _TimelineItem extends StatelessWidget {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
                                 child: LinearProgressIndicator(
-                                  value: (count / habit.goalCount).clamp(
-                                    0.0,
-                                    1.0,
-                                  ),
+                                  value:
+                                      (count / habit.goalCount).clamp(0.0, 1.0),
                                   minHeight: 5,
-                                  backgroundColor: color.withValues(
-                                    alpha: 0.15,
-                                  ),
+                                  backgroundColor:
+                                      color.withValues(alpha: 0.15),
                                   valueColor: AlwaysStoppedAnimation(color),
                                 ),
                               ),
@@ -839,15 +923,14 @@ class _HabitEditSheetState extends State<_HabitEditSheet> {
 
   void _save() {
     context.read<CalendarCubit>().toggleHabitOnDate(
-      habitId: widget.habit.id,
-      date: widget.date,
-      markCompleted: _count >= widget.habit.goalCount,
-      count: _count,
-    );
+          habitId: widget.habit.id,
+          date: widget.date,
+          markCompleted: _count >= widget.habit.goalCount,
+          count: _count,
+        );
     Navigator.pop(context);
   }
 
-  /// Opens the same numberInputField used in GoalDetailScreen
   Future<void> _openNumberInput() async {
     _ctrl.text = _count > 0 ? _count.toString() : '1';
     final result = await numberInputField(
@@ -871,9 +954,8 @@ class _HabitEditSheetState extends State<_HabitEditSheet> {
     final habit = widget.habit;
     final color = widget.color;
     final isDark = widget.isDark;
-    final progress = habit.goalCount > 0
-        ? (_count / habit.goalCount).clamp(0.0, 1.0)
-        : 0.0;
+    final progress =
+        habit.goalCount > 0 ? (_count / habit.goalCount).clamp(0.0, 1.0) : 0.0;
 
     // Date label
     final now = DateTime.now();
@@ -957,15 +1039,18 @@ class _HabitEditSheetState extends State<_HabitEditSheet> {
                     children: [
                       Text(
                         habit.name,
-                        style: Theme.of(context).textTheme.titleMedium
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         dateLabel,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: Colors.grey),
                       ),
                     ],
                   ),
@@ -996,9 +1081,9 @@ class _HabitEditSheetState extends State<_HabitEditSheet> {
                 Text(
                   '$_count / ${habit.goalCount} ${widget.measureLabel}',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: color,
-                  ),
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
                 ),
                 GestureDetector(
                   onTap: _openNumberInput,
@@ -1065,9 +1150,8 @@ class _HabitEditSheetState extends State<_HabitEditSheet> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _count == 0
-                        ? null
-                        : () => setState(() => _count = 0),
+                    onPressed:
+                        _count == 0 ? null : () => setState(() => _count = 0),
                     icon: const Icon(Icons.refresh_rounded, size: 16),
                     label: const Text('Clear'),
                     style: OutlinedButton.styleFrom(
@@ -1120,9 +1204,9 @@ class _HabitEditSheetState extends State<_HabitEditSheet> {
                 child: Text(
                   'Save',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
                 ),
               ),
             ),

@@ -14,11 +14,15 @@ class CalendarState extends Equatable {
   final bool isLoadingDay;
   final String? error;
 
+  /// key: 'yyyy-MM-dd', value: 'done' | 'partial' | 'missed'
+  final Map<String, String> monthDayStatus;
+
   const CalendarState({
     required this.focusedMonth,
     required this.selectedDate,
     required this.habitsForDate,
     required this.isLoadingDay,
+    required this.monthDayStatus,
     this.error,
   });
 
@@ -26,9 +30,10 @@ class CalendarState extends Equatable {
     final now = DateTime.now();
     return CalendarState(
       focusedMonth: DateTime(now.year, now.month, 1),
-      selectedDate: null,
+      selectedDate: DateTime(now.year, now.month, now.day),
       habitsForDate: [],
-      isLoadingDay: false,
+      isLoadingDay: true,
+      monthDayStatus: const {},
     );
   }
 
@@ -38,17 +43,25 @@ class CalendarState extends Equatable {
     List<Habit>? habitsForDate,
     bool? isLoadingDay,
     String? error,
+    Map<String, String>? monthDayStatus,
   }) {
     return CalendarState(
       focusedMonth: focusedMonth ?? this.focusedMonth,
       selectedDate: selectedDate ?? this.selectedDate,
       habitsForDate: habitsForDate ?? this.habitsForDate,
       isLoadingDay: isLoadingDay ?? this.isLoadingDay,
+      monthDayStatus: monthDayStatus ?? this.monthDayStatus,
       error: error,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [focusedMonth, selectedDate, habitsForDate, isLoadingDay, error];
+  List<Object?> get props => [
+        focusedMonth,
+        selectedDate,
+        habitsForDate,
+        isLoadingDay,
+        error,
+        monthDayStatus,
+      ];
 }
